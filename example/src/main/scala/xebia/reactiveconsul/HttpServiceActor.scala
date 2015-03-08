@@ -1,9 +1,9 @@
 package nl.webresource.gin
 
 import akka.actor.{Actor, Props}
-import spray.routing._
 
 import scala.concurrent.ExecutionContext
+import spray.routing._
 
 class HttpServiceActor extends Actor with HttpService {
 
@@ -13,7 +13,7 @@ class HttpServiceActor extends Actor with HttpService {
 }
 
 object HttpServiceActor {
-  def props(dataGatheringService: ScraperService) = Props(classOf[HttpServiceActor], dataGatheringService)
+  def props() = Props(classOf[HttpServiceActor])
 }
 
 trait HttpService extends HttpService {
