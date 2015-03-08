@@ -1,26 +1,26 @@
 package xebia.consul.example
 
 import akka.actor.{Actor, Props}
+import spray.routing.HttpService
 
 import scala.concurrent.ExecutionContext
-import spray.routing._
 
-class HttpServiceActor extends Actor with HttpService {
+class ReactiveConsulHttpServiceActor extends Actor with ReactiveConsulHttpService {
 
   def actorRefFactory = context
 
   def receive = runRoute(reactiveConsulRoute)
 }
 
-object HttpServiceActor {
-  def props() = Props(classOf[HttpServiceActor])
+object ReactiveConsulHttpServiceActor {
+  def props() = Props(classOf[ReactiveConsulHttpServiceActor])
 }
 
-trait HttpService extends HttpService {
+trait ReactiveConsulHttpService extends HttpService {
   implicit def executionContext: ExecutionContext = actorRefFactory.dispatcher
 
   val reactiveConsulRoute =
     path("api" / "ping") {
-      get { "PONG" }
+      get { complete("PONG") }
     }
 }
