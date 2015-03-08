@@ -17,6 +17,6 @@ lazy val tools = (project in file("tools"))
 lazy val example = (project in file("example"))
   .aggregate(client, tools)
   .dependsOn(client, tools)
-  .settings(libraryDependencies ++= Seq(akkaActor, sprayClient, sprayJson))
+  .settings(libraryDependencies ++= Seq(akkaActor, sprayClient, sprayRouting, sprayJson))
 
 Revolver.settings
