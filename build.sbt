@@ -3,7 +3,7 @@ lazy val root = (project in file(".")).
     name := "reactive-consul",
     organization := "nl.stormlantern",
     version := "0.1.0",
-    scalaVersion := "2.11.4"
+    scalaVersion := "2.11.5"
   )
 
 lazy val client = (project in file("client"))
@@ -21,10 +21,10 @@ libraryDependencies ++= {
   val sprayV = "1.3.2"
   Seq(
     "io.spray"                    %%  "spray-client"  % sprayV,
-    "io.spray"                    %%  "spray-json"    % sprayV,
+    "io.spray"                    %%  "spray-json"    % "1.3.1",
     "com.typesafe.akka"           %%  "akka-actor"    % akkaV,
-    "com.typesafe.akka"           %%  "akka-testkit"  % akkaV   % "test",
-    "org.specs2"                  %%  "specs2-core"   % "2.4.13" % "test"
+    "com.typesafe.akka"           %%  "akka-testkit"  % akkaV     % "test",
+    "org.specs2"                  %%  "specs2-core"   % "2.4.13"  % "test"
   )
 }
 
