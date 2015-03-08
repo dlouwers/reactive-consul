@@ -1,4 +1,4 @@
-package nl.webresource.gin
+package xebia.consul.example
 
 import akka.actor.{Actor, Props}
 

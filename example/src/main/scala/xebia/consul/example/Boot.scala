@@ -1,10 +1,9 @@
-package xebia.reactiveconsul
+package xebia.consul.example
 
 import akka.actor.ActorSystem
 import akka.io.IO
-import akka.pattern.ask
 import akka.util.Timeout
-import nl.webresource.gin.HttpServiceActor
+import akka.pattern._
 import spray.can.Http
 
 import scala.concurrent.duration._
