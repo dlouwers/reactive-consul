@@ -1,5 +1,7 @@
 package xebia.consul.client
 
+import scala.concurrent.Future
+
 //[
 //  {
 //    "Node": "foobar",
@@ -14,7 +16,7 @@ package xebia.consul.client
 case class Service(node: String, address: String, serviceId: String, serviceName: String, serviceTags: Seq[String], serviceAddress: String, servicePort: Int)
 
 trait Catalog {
-  def findService(service: String, dataCenter: Option[String] = None): Seq[Service]
+  def findService(service: String, dataCenter: Option[String] = None): Future[Seq[Service]]
 }
 
 

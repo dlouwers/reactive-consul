@@ -14,7 +14,7 @@ object Boot extends App {
 
   val service = system.actorOf(ReactiveConsulHttpServiceActor.props(), "webservice")
 
-  implicit val timeout = Timeout(5 seconds)
+  implicit val timeout = Timeout(5.seconds)
 
   IO(Http) ? Http.Bind(service, interface = "localhost", port = 8080)
 }

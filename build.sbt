@@ -11,6 +11,7 @@ lazy val root = (project in file("."))
 
 lazy val client = (project in file("client"))
   .settings(
+    libraryDependencies ++= Seq(sprayClient, sprayJson, akkaActor),
     scalaVersion := "2.11.5"
   )
 
@@ -27,7 +28,8 @@ lazy val example = (project in file("example"))
   .settings(libraryDependencies ++= Seq(akkaActor, sprayClient, sprayRouting, sprayJson))
   .settings(
     libraryDependencies ++= Seq(akkaActor, sprayClient, sprayJson),
-    scalaVersion := "2.11.5"
+    scalaVersion := "2.11.5",
+    scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
   )
 
 Revolver.settings
