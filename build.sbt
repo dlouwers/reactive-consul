@@ -11,9 +11,12 @@ lazy val root = (project in file("."))
 
 lazy val client = (project in file("client"))
   .settings(
-    libraryDependencies ++= Seq(sprayClient, sprayJson, akkaActor),
+    libraryDependencies ++= Seq(sprayClient, sprayJson, akkaActor, specs2),
     scalaVersion := "2.11.5"
   )
+  .configs( IntegrationTest )
+  .settings( Defaults.itSettings : _*)
+  .settings( libraryDependencies += spotifyDocker )
 
 lazy val tools = (project in file("tools"))
   .aggregate(client)
