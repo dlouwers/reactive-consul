@@ -20,6 +20,8 @@ class SprayCatalog(host: URL)(implicit actorSystem: ActorSystem) extends Catalog
   val pipeline: HttpRequest => Future[HttpResponse] = sendReceive
 
   // TODO: Check if there is a more reliable library offering these type of retries
+  // TODO: Change implementation to read and return the X-Consul-Index value in the return value
+  // TODO: Add an optional consulIndex parameter to send as the X-Consul_index header to watch for changes
   override def findService(service: String, dataCenter: Option[String]): Future[Seq[Service]] = {
     logger.info(s"Connecting to $host/catalog/service/$service")
     val request = Get(s"$host/v1/catalog/service/$service")
