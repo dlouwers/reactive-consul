@@ -19,4 +19,3 @@ trait Catalog {
   def findService(service: String, dataCenter: Option[String] = None): Future[Seq[Service]]
 }
 
-

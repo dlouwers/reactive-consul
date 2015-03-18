@@ -11,12 +11,24 @@ lazy val root = (project in file("."))
 
 lazy val client = (project in file("client"))
   .settings(
-    libraryDependencies ++= Seq(sprayClient, sprayJson, akkaActor, specs2),
-    scalaVersion := "2.11.5"
+    resolvers ++= Dependencies.resolutionRepos,
+    libraryDependencies ++= Seq(
+      sprayClient,
+      sprayJson,
+      akkaActor,
+      specs2,
+      spotifyDocker,
+      retry,
+      slf4j,
+      logback % "test,it"
+    ),
+    scalaVersion := "2.11.5",
+    scalacOptions in Test ++= Seq("-Yrangepos"),
+    scalacOptions in IntegrationTest ++= Seq("-Yrangepos")
   )
   .configs( IntegrationTest )
   .settings( Defaults.itSettings : _*)
-  .settings( libraryDependencies += spotifyDocker )
+  .settings( scalariformSettings : _* )
 
 lazy val tools = (project in file("tools"))
   .aggregate(client)
