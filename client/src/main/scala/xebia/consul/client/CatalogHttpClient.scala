@@ -2,6 +2,9 @@ package xebia.consul.client
 
 import scala.concurrent.Future
 
+trait CatalogHttpClient {
+  def findServiceChange(service: String, dataCenter: Option[String] = None): Future[IndexedServices]
+}
 //[
 //  {
 //    "Node": "foobar",
@@ -14,8 +17,5 @@ import scala.concurrent.Future
 //  }
 //]
 case class Service(node: String, address: String, serviceId: String, serviceName: String, serviceTags: Seq[String], serviceAddress: String, servicePort: Int)
-
-trait Catalog {
-  def findService(service: String, dataCenter: Option[String] = None): Future[Seq[Service]]
-}
+case class IndexedServices(index: String, instances: Seq[Service])
 
