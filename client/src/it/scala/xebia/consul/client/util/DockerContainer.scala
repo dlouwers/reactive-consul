@@ -1,10 +1,9 @@
 package xebia.consul.client.util
 
-
 import java.net.URI
 
 import com.spotify.docker.client.messages._
-import org.specs2.execute.{AsResult, Result}
+import org.specs2.execute.{ AsResult, Result }
 import org.specs2.specification.BeforeAfterAll
 
 import scala.collection.JavaConversions._
@@ -48,7 +47,7 @@ trait DockerContainer extends BeforeAfterAll with Logging {
     def hostname: String = {
       val uri = new URI(System.getenv("DOCKER_HOST"))
       uri.getScheme match {
-        case "tcp"  ⇒ uri.getHost
+        case "tcp" ⇒ uri.getHost
         case "unix" ⇒ "localhost"
       }
     }
@@ -65,7 +64,7 @@ trait DockerContainer extends BeforeAfterAll with Logging {
 
     def start(config: HostConfig): Unit = {
       docker.startContainer(id, config)
-      val info:  ContainerInfo = docker.inspectContainer(id)
+      val info: ContainerInfo = docker.inspectContainer(id)
       if (!info.state().running()) {
         throw new IllegalStateException("Could not start Postgres container")
       }

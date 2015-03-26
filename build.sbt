@@ -1,5 +1,7 @@
 import Dependencies._
 
+import scalariform.formatter.preferences._
+
 lazy val root = (project in file("."))
   .settings(
     name := "reactive-consul",
@@ -22,13 +24,18 @@ lazy val client = (project in file("client"))
       slf4j,
       logback % "test,it"
     ),
+    ScalariformKeys.preferences := ScalariformKeys.preferences.value
+      .setPreference(AlignSingleLineCaseStatements, true)
+      .setPreference(DoubleIndentClassDeclaration, true)
+      .setPreference(PreserveDanglingCloseParenthesis, true)
+      .setPreference(RewriteArrowSymbols, true),
     scalaVersion := "2.11.5",
     scalacOptions in Test ++= Seq("-Yrangepos"),
     scalacOptions in IntegrationTest ++= Seq("-Yrangepos")
   )
   .configs( IntegrationTest )
   .settings( Defaults.itSettings : _*)
-  .settings( scalariformSettings : _* )
+  .settings( scalariformSettingsWithIt : _* )
 
 lazy val tools = (project in file("tools"))
   .aggregate(client)
