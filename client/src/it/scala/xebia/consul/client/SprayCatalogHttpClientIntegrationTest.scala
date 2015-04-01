@@ -15,6 +15,7 @@ class SprayCatalogHttpClientIntegrationTest extends Specification with DockerCon
   override def command: Seq[String] = Seq("-server", "-bootstrap")
   implicit val actorSystem = ActorSystem("test")
 
+  // TODO: Remove the dead letter messages caused by the testing procedure
   "The SprayCatalogHttpClient" should {
     "Retrieve a single Consul service from a freshly started Consul instance" in withDockerHost("8500/tcp") { (host, port) =>
       val subject: CatalogHttpClient = new SprayCatalogHttpClient(new URL(s"http://$host:$port"))
