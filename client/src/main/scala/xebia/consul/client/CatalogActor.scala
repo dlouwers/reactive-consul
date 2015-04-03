@@ -1,6 +1,6 @@
 package xebia.consul.client
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{ Actor, ActorRef, Props }
 import akka.event.Logging
 import xebia.consul.client.CatalogActor._
 
@@ -13,7 +13,7 @@ class CatalogActor(httpClient: CatalogHttpClient) extends Actor {
 
   // Actor state
   case class ServiceAvailability(listeners: mutable.Set[ActorRef], state: IndexedServices)
-  case class SystemAvailability(services: mutable.Map[String, ServiceAvailability] = Map.empty) {
+  case class SystemAvailability(services: mutable.Map[String, ServiceAvailability] = mutable.Map.empty) {
 
     def registerListener(name: String, listener: ActorRef): Unit = {
       if (services.contains(name)) {
@@ -88,7 +88,7 @@ class CatalogActor(httpClient: CatalogHttpClient) extends Actor {
 
 object CatalogActor {
 
-  def props(httpClient: CatalogHttpClient, services: Seq[String]): Props = Props(new CatalogActor(httpClient))
+  def props(httpClient: CatalogHttpClient): Props = Props(new CatalogActor(httpClient))
 
   // Messages
   private case class FindServiceAvailabilityChanges(name: String, index: Option[Long] = None)
@@ -96,5 +96,5 @@ object CatalogActor {
   private case class RegisterServiceAvailabilityListener(name: String, ref: ActorRef)
   private case class UnregisterServiceAvailabilityListener(name: String, ref: ActorRef)
 
-  private case class ServiceAvailabilityUpdate(added: Set[Service], removed: Set[Service])
+  private[client] case class ServiceAvailabilityUpdate(added: Set[Service], removed: Set[Service])
 }
