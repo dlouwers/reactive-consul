@@ -20,7 +20,9 @@ trait ReactiveConsulHttpService extends HttpService {
   implicit def executionContext: ExecutionContext = actorRefFactory.dispatcher
 
   val reactiveConsulRoute =
-    path("api" / "ping") {
-      get { complete("PONG") }
+    path("api" / "identify") {
+      get {
+        complete(s"Hi, I'm a ${System.getenv("SERVICE_TYPE")}")
+      }
     }
 }
