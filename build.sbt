@@ -53,5 +53,13 @@ lazy val example = (project in file("example"))
     scalaVersion := "2.11.5",
     scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
   )
+  .enablePlugins(JavaAppPackaging)
+  .settings(
+    packageName in Docker := "reactive-consul-example",
+    maintainer in Docker := "Dirk Louwers <dlouwers@xebia.com> & Marc Rooding <mrooding@xebia.com>",
+//    dockerBaseImage in Docker := "java:latest",
+    dockerExposedPorts in Docker := Seq(8080),
+    dockerExposedVolumes in Docker := Seq("/opt/docker/logs")
+  )
 
 Revolver.settings
