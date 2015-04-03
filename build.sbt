@@ -57,7 +57,6 @@ lazy val example = (project in file("example"))
   .settings(
     packageName in Docker := "reactive-consul-example",
     maintainer in Docker := "Dirk Louwers <dlouwers@xebia.com> & Marc Rooding <mrooding@xebia.com>",
-//    dockerBaseImage in Docker := "java:latest",
     dockerExposedPorts in Docker := Seq(8080),
     dockerExposedVolumes in Docker := Seq("/opt/docker/logs")
   )
