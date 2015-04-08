@@ -46,8 +46,8 @@ class ServiceAvailabilityActor(httpClient: CatalogHttpClient, serviceName: Strin
   }
 
   def createServiceAvailabilityUpdate(oldState: IndexedServiceInstances, newState: IndexedServiceInstances): ServiceAvailabilityUpdate = {
-    val deleted = oldState.instances.filterNot(sv => newState.instances.contains(sv)).toSet
-    val added = newState.instances.filterNot(s => oldState.instances.contains(s)).toSet
+    val deleted = oldState.instances.filterNot(sv => newState.instances.contains(sv))
+    val added = newState.instances.filterNot(s => oldState.instances.contains(s))
     ServiceAvailabilityUpdate(added, deleted)
   }
 

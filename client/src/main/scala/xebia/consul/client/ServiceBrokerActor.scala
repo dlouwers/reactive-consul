@@ -1,27 +1,51 @@
 package xebia.consul.client
 
-import akka.actor.{ Actor, ActorRef, Props }
+import akka.actor.{ Actor, Props }
 import akka.event.Logging
 import xebia.consul.client.ServiceAvailabilityActor._
 
-class ServiceBrokerActor(serviceAvailabilityPropsFactory: (String, ActorRef) => Props, services: Set[String]) extends Actor with ActorSupport {
+import scala.collection.mutable
+
+class ServiceBrokerActor(services: Map[String, ConnectionStrategy], httpClient: CatalogHttpClient) extends Actor with ActorSupport {
 
   val log = Logging(context.system, this)
 
+  // Actor state
+  val loadBalancers: mutable.Map[String, LoadBalancer] = mutable.Map.empty
+
   override def preStart(): Unit = {
-    services.foreach { s =>
-      log.debug(s"Starting Service Availability Actor for $s")
-      createChild(serviceAvailabilityPropsFactory(s, self))
+    services.foreach {
+      case (name, strategy) =>
+        loadBalancers.put(name, strategy.loadbalancer)
+        log.debug(s"Starting Service Availability Actor for $name")
+        createChild(ServiceAvailabilityActor.props(httpClient, name, self))
     }
   }
+
   def receive = {
-    case ServiceAvailabilityUpdate(added, deleted) =>
-      log.debug(s"Need to add connection pools for $added")
-      log.debug(s"Need to clean up conection pools for $deleted")
+    case ServiceAvailabilityUpdate(added, removed) =>
+      log.debug(s"Adding connection providers for $added")
+      addConnectionProviders(added)
+      log.debug(s"Removing conection providers for $removed")
+      removeCoonectionProviders(removed)
+  }
+
+  def addConnectionProviders(added: Set[Service]): Unit = {
+    added.foreach { s =>
+      val connectionProvider = services(s.serviceName).factory.create(s.serviceAddress, s.servicePort)
+      loadBalancers(s.serviceName).addConnectionProvider(s.serviceId, connectionProvider)
+    }
+  }
+
+  def removeCoonectionProviders(removed: Set[Service]): Unit = {
+    removed.foreach { s =>
+      loadBalancers(s.serviceName).removeConnectionProvider(s.serviceId)
+    }
   }
 
 }
 
 object ServiceBrokerActor {
-  def props(serviceAvailabilityPropsFactory: (String, ActorRef) => Props, services: Set[String]): Props = Props(new ServiceBrokerActor(serviceAvailabilityPropsFactory, services))
+  def props(services: Map[String, ConnectionStrategy], httpClient: CatalogHttpClient): Props = Props(new ServiceBrokerActor(services, httpClient))
+  case class GetServiceConnection(name: String)
 }

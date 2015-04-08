@@ -1,6 +1,6 @@
 package xebia.consul.client
 
-import akka.actor.{ Actor, ActorRef, ActorSystem, Props }
+import akka.actor.{ ActorSystem, Props }
 import akka.testkit.{ ImplicitSender, TestActorRef, TestKit }
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
@@ -11,19 +11,23 @@ class ServiceBrokerActorSpec extends Specification with Mockito with Logging {
 
   abstract class ActorScope extends TestKit(ActorSystem("TestSystem")) with specification.After with ImplicitSender {
 
-    class ForwardingActor(next: ActorRef) extends Actor {
-      def receive = {
-        case msg => next ! msg
-      }
-    }
-
     override def after: Any = TestKit.shutdownActorSystem(system)
-    val serviceAvailabilityActorFactory = (s: String, p: ActorRef) => Props(new ForwardingActor(self))
+    val httpClient = mock[CatalogHttpClient]
+    val serviceVerifier = mock[Props => Unit]
+    val connectionProviderFactory = mock[ConnectionProviderFactory]
+    val loadBalancer = mock[LoadBalancer]
+    val connectionStrategy = ConnectionStrategy(connectionProviderFactory, loadBalancer)
   }
 
   "The ServiceBrokerActor" should {
-    "receive one service update when there are no changes" in new ActorScope {
-      val sut = TestActorRef(ServiceBrokerActor.props(serviceAvailabilityActorFactory, Set("service1")))
+    "create a child actor per service" in new ActorScope {
+      val sut = TestActorRef(Props(new ServiceBrokerActor(Map("service1" -> connectionStrategy), httpClient) {
+        override def createChild(props: Props) = {
+          serviceVerifier(props)
+          self
+        }
+      }))
+      there were one(serviceVerifier).apply(any[Props])
     }
   }
 }
