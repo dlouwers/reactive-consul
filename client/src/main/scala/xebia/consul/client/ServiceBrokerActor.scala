@@ -3,6 +3,7 @@ package xebia.consul.client
 import akka.actor.{ Actor, Props }
 import akka.event.Logging
 import xebia.consul.client.ServiceAvailabilityActor._
+import xebia.consul.client.ServiceBrokerActor.{ ReturnServiceConnection, GetServiceConnection }
 
 import scala.collection.mutable
 
@@ -27,7 +28,21 @@ class ServiceBrokerActor(services: Map[String, ConnectionStrategy], httpClient: 
       log.debug(s"Adding connection providers for $added")
       addConnectionProviders(added)
       log.debug(s"Removing conection providers for $removed")
-      removeCoonectionProviders(removed)
+      removeConnectionProviders(removed)
+    case GetServiceConnection(name: String) =>
+      log.debug(s"Getting a service connection for $name")
+      sender ! getServiceConnection(name: String)
+    case ReturnServiceConnection(name: String, connection: Any) =>
+      log.debug(s"Returning service connection for $name")
+
+  }
+
+  def getServiceConnection(name: String): Any = {
+    loadBalancers(name).getConnection
+  }
+
+  def returnServiceConnection(name: String, connection: Any): Unit = {
+    loadBalancers(name).returnConnection(connection)
   }
 
   def addConnectionProviders(added: Set[Service]): Unit = {
@@ -37,7 +52,7 @@ class ServiceBrokerActor(services: Map[String, ConnectionStrategy], httpClient: 
     }
   }
 
-  def removeCoonectionProviders(removed: Set[Service]): Unit = {
+  def removeConnectionProviders(removed: Set[Service]): Unit = {
     removed.foreach { s =>
       loadBalancers(s.serviceName).removeConnectionProvider(s.serviceId)
     }
@@ -48,4 +63,5 @@ class ServiceBrokerActor(services: Map[String, ConnectionStrategy], httpClient: 
 object ServiceBrokerActor {
   def props(services: Map[String, ConnectionStrategy], httpClient: CatalogHttpClient): Props = Props(new ServiceBrokerActor(services, httpClient))
   case class GetServiceConnection(name: String)
+  case class ReturnServiceConnection[T](name: String, connection: T)
 }

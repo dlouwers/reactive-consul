@@ -14,6 +14,7 @@ trait ConnectionProvider {
 
 trait LoadBalancer {
   def getConnection[T]: Future[T]
+  def returnConnection[T](connection: T): Unit
   def addConnectionProvider(key: String, provider: ConnectionProvider): Unit
   def removeConnectionProvider(key: String): Unit
 }
