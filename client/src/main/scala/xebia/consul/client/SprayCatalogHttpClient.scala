@@ -32,10 +32,10 @@ class SprayCatalogHttpClient(host: URL)(implicit actorSystem: ActorSystem) exten
     response ⇒
       if (response.status.isSuccess)
         extractIndex(response) { idx =>
-          response.as[Option[Seq[Service]]] match {
+          response.as[Option[Set[Service]]] match {
             case Right(value) ⇒ value.map { v =>
               IndexedServiceInstances(idx, v)
-            }.getOrElse(IndexedServiceInstances(idx, Seq.empty[Service]))
+            }.getOrElse(IndexedServiceInstances(idx, Set.empty[Service]))
             case Left(error: MalformedContent) ⇒
               throw new PipelineException(error.errorMessage, error.cause.orNull)
             case Left(error) ⇒ throw new PipelineException(error.toString)

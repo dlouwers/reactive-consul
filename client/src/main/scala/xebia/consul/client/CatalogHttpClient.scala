@@ -17,8 +17,8 @@ trait CatalogHttpClient {
 //  }
 //]
 case class Service(node: String, address: String, serviceId: String, serviceName: String, serviceTags: Seq[String], serviceAddress: String, servicePort: Int)
-case class IndexedServiceInstances(index: Long, instances: Seq[Service])
+case class IndexedServiceInstances(index: Long, instances: Set[Service])
 object IndexedServiceInstances {
-  def empty = IndexedServiceInstances(0, Seq.empty)
+  def empty = IndexedServiceInstances(0, Set.empty)
 }
 
