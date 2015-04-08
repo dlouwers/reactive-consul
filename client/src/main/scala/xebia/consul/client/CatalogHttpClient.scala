@@ -3,7 +3,7 @@ package xebia.consul.client
 import scala.concurrent.Future
 
 trait CatalogHttpClient {
-  def findServiceChange(service: String, index: Option[Long] = None, wait: Option[String] = None, dataCenter: Option[String] = None): Future[IndexedServices]
+  def findServiceChange(service: String, index: Option[Long] = None, wait: Option[String] = None, dataCenter: Option[String] = None): Future[IndexedServiceInstances]
 }
 //[
 //  {
@@ -17,5 +17,8 @@ trait CatalogHttpClient {
 //  }
 //]
 case class Service(node: String, address: String, serviceId: String, serviceName: String, serviceTags: Seq[String], serviceAddress: String, servicePort: Int)
-case class IndexedServices(index: Long, instances: Seq[Service])
+case class IndexedServiceInstances(index: Long, instances: Seq[Service])
+object IndexedServiceInstances {
+  def empty = IndexedServiceInstances(0, Seq.empty)
+}
 

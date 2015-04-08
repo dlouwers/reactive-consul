@@ -19,10 +19,12 @@ lazy val client = (project in file("client"))
       sprayJson,
       akkaActor,
       specs2,
+      specs2mock,
       spotifyDocker,
       retry,
       slf4j,
-      logback % "test,it"
+      logback % "test,it",
+      akkaTestKit
     ),
     ScalariformKeys.preferences := ScalariformKeys.preferences.value
       .setPreference(AlignSingleLineCaseStatements, true)
@@ -34,7 +36,7 @@ lazy val client = (project in file("client"))
     scalacOptions in IntegrationTest ++= Seq("-Yrangepos")
   )
   .configs( IntegrationTest )
-  .settings( Defaults.itSettings : _*)
+  .settings( Defaults.itSettings : _* )
   .settings( scalariformSettingsWithIt : _* )
 
 lazy val tools = (project in file("tools"))

@@ -22,20 +22,20 @@ class SprayCatalogHttpClient(host: URL)(implicit actorSystem: ActorSystem) exten
 
   val pipeline: HttpRequest => Future[HttpResponse] = sendReceive
 
-  def extractIndex(response: HttpResponse)(block: Long => IndexedServices): IndexedServices = {
+  def extractIndex(response: HttpResponse)(block: Long => IndexedServiceInstances): IndexedServiceInstances = {
     response.headers.find(h => h.name == "X-Consul-Index").map { idx =>
       block(Try(idx.value.toLong).getOrElse(throw new PipelineException("X-Consul-Index header needs to be numerical")))
     }.getOrElse(throw new PipelineException("X-Consul-Index header not found"))
   }
 
-  def unmarshalWithIndex: HttpResponse ⇒ IndexedServices =
+  def unmarshalWithIndex: HttpResponse ⇒ IndexedServiceInstances =
     response ⇒
       if (response.status.isSuccess)
         extractIndex(response) { idx =>
           response.as[Option[Seq[Service]]] match {
             case Right(value) ⇒ value.map { v =>
-              IndexedServices(idx, v)
-            }.getOrElse(IndexedServices(idx, Seq.empty[Service]))
+              IndexedServiceInstances(idx, v)
+            }.getOrElse(IndexedServiceInstances(idx, Seq.empty[Service]))
             case Left(error: MalformedContent) ⇒
               throw new PipelineException(error.errorMessage, error.cause.orNull)
             case Left(error) ⇒ throw new PipelineException(error.toString)
@@ -44,13 +44,13 @@ class SprayCatalogHttpClient(host: URL)(implicit actorSystem: ActorSystem) exten
       else throw new UnsuccessfulResponseException(response)
 
   // TODO: Check if there is a more reliable library offering these type of retries
-  def findServiceChange(service: String, index: Option[Long], wait: Option[String], dataCenter: Option[String] = None): Future[IndexedServices] = {
+  def findServiceChange(service: String, index: Option[Long], wait: Option[String], dataCenter: Option[String] = None): Future[IndexedServiceInstances] = {
     val dcParameter = dataCenter.map(dc => s"dc=$dc").getOrElse("")
     val waitParameter = wait.map(w => s"wait=$w").getOrElse("")
     val indexParameter = index.map(i => s"index=$i").getOrElse("")
     val parameters = Seq(dcParameter, waitParameter, indexParameter).mkString("&")
     val request = Get(s"$host/v1/catalog/service/$service?$parameters")
-    val myPipeline: HttpRequest => Future[IndexedServices] = pipeline ~> unmarshalWithIndex
+    val myPipeline: HttpRequest => Future[IndexedServiceInstances] = pipeline ~> unmarshalWithIndex
     implicit val success = Success[Any](r => true)
     retry { () =>
       myPipeline(request)

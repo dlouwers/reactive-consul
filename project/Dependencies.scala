@@ -9,7 +9,7 @@ object Dependencies {
 
   val sprayVersion  = "1.3.2"
   val akkaVersion   = "2.3.7"
-  val specsVersion  = "3.0.1"
+  val specsVersion  = "3.3.1"
 
   val sprayClient   = "io.spray"                    %%  "spray-client"    % sprayVersion
   val sprayRouting  = "io.spray"                    %%  "spray-routing"   % sprayVersion
@@ -20,5 +20,6 @@ object Dependencies {
   val retry         = "me.lessis"                   %%  "retry"           % "0.2.0"
   val akkaTestKit   = "com.typesafe.akka"           %%  "akka-testkit"    % akkaVersion   % "test,it"
   val specs2        = "org.specs2"                  %%  "specs2-core"     % specsVersion  % "test,it"
+  val specs2mock    = "org.specs2"                  %%  "specs2-mock"     % specsVersion  % "test,it"
   val spotifyDocker = "com.spotify"                 %   "docker-client"   % "2.7.14"      % "test,it"
 }
