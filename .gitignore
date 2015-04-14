@@ -17,5 +17,8 @@ project/plugins/project/
 .worksheet
 
 # Intellij specific
-.sc
+*.sc
 .idea
+.idea_modules
+projectFilesBackup
+
