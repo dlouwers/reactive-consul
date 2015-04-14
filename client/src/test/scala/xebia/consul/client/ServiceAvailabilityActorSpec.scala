@@ -6,6 +6,7 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification
 import xebia.consul.client.ServiceAvailabilityActor.Stop
+import xebia.consul.client.helpers.ModelHelpers
 import xebia.consul.client.util.Logging
 
 import scala.concurrent.Future
@@ -32,15 +33,7 @@ class ServiceAvailabilityActorSpec extends Specification with Mockito with Loggi
     }
 
     "receive two service updates when there is a change" in new ActorScope {
-      val service = Service(
-        node = "host",
-        address = "host",
-        serviceId = "serviceId",
-        serviceName = "bogus",
-        serviceTags = Seq("tag1", "tag2"),
-        serviceAddress = "host",
-        servicePort = 666
-      )
+      val service = ModelHelpers.createService("bogus")
       httpClient.findServiceChange("bogus", None) returns Future.successful(IndexedServiceInstances(1, Set.empty))
       httpClient.findServiceChange("bogus", Some(1)) returns Future.successful(IndexedServiceInstances(2, Set(service)))
       httpClient.findServiceChange("bogus", Some(2)) returns Future {

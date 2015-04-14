@@ -12,12 +12,12 @@ class ServiceBrokerActor(services: Map[String, ConnectionStrategy], httpClient: 
   val log = Logging(context.system, this)
 
   // Actor state
-  val loadBalancers: mutable.Map[String, LoadBalancer] = mutable.Map.empty
+  val loadbalancers: mutable.Map[String, LoadBalancer] = mutable.Map.empty
 
   override def preStart(): Unit = {
     services.foreach {
       case (name, strategy) =>
-        loadBalancers.put(name, strategy.loadbalancer)
+        loadbalancers.put(name, strategy.loadbalancer)
         log.debug(s"Starting Service Availability Actor for $name")
         createChild(ServiceAvailabilityActor.props(httpClient, name, self))
     }
@@ -38,23 +38,23 @@ class ServiceBrokerActor(services: Map[String, ConnectionStrategy], httpClient: 
   }
 
   def getServiceConnection(name: String): Any = {
-    loadBalancers(name).getConnection
+    loadbalancers(name).getConnection
   }
 
   def returnServiceConnection(name: String, connection: Any): Unit = {
-    loadBalancers(name).returnConnection(connection)
+    loadbalancers(name).returnConnection(connection)
   }
 
   def addConnectionProviders(added: Set[Service]): Unit = {
     added.foreach { s =>
       val connectionProvider = services(s.serviceName).factory.create(s.serviceAddress, s.servicePort)
-      loadBalancers(s.serviceName).addConnectionProvider(s.serviceId, connectionProvider)
+      loadbalancers(s.serviceName).addConnectionProvider(s.serviceId, connectionProvider)
     }
   }
 
   def removeConnectionProviders(removed: Set[Service]): Unit = {
     removed.foreach { s =>
-      loadBalancers(s.serviceName).removeConnectionProvider(s.serviceId)
+      loadbalancers(s.serviceName).removeConnectionProvider(s.serviceId)
     }
   }
 
