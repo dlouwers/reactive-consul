@@ -5,6 +5,12 @@ consulserver:
     - "8500:8500"
     - "8600:53/udp"
   command: -server -bootstrap
+registrator:
+  image: "progrium/registrator"
+  volumes:
+    - "/var/run/docker.sock:/tmp/docker.sock"
+  hostname: 192.168.59.103
+  command: consul://192.168.59.103:8500
 example1:
   image: "reactive-consul-example:0.1-SNAPSHOT"
   ports:
@@ -12,7 +18,7 @@ example1:
   environment:
     - SERVICE_TYPE=example-service-1
   dns:
-      - 172.17.42.1
+    - 172.17.42.1
 example2:
   image: "reactive-consul-example:0.1-SNAPSHOT"
   ports:

@@ -41,7 +41,7 @@ class ServiceBrokerActor(services: Map[String, ConnectionStrategy], httpClient: 
     loadbalancers(name).getConnection
   }
 
-  def returnServiceConnection(name: String, connection: Any): Unit = {
+  def returnServiceConnection(name: String, connection: ConnectionHolder): Unit = {
     loadbalancers(name).returnConnection(connection)
   }
 

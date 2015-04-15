@@ -26,7 +26,6 @@ trait DockerContainer extends BeforeAfterAll with Logging {
     // Find the random port in the network settings
     val (hostIp, hostPort) = container.mappedPort(port).headOption.map(pb => (container.hostname, pb.hostPort().toInt))
       .getOrElse(throw new IndexOutOfBoundsException(s"Cannot find mapped port $port"))
-    logger.info(s"Container on $hostIp:$hostPort ready")
     AsResult(block(hostIp, hostPort))
   }
 

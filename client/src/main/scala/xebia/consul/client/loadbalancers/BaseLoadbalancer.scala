@@ -1,14 +1,12 @@
 package xebia.consul.client.loadbalancers
 
-import xebia.consul.client.{ ConnectionProvider, LoadBalancer }
-
-import scala.concurrent.Future
+import xebia.consul.client.{ ConnectionHolder, ConnectionProvider, LoadBalancer }
 
 class BaseLoadbalancer extends LoadBalancer {
 
-  override def getConnection[T]: Future[T] = ???
+  override def getConnection: ConnectionHolder = ???
 
-  override def returnConnection[T](connection: T): Unit = ???
+  override def returnConnection(connection: ConnectionHolder): Unit = ???
 
   override def removeConnectionProvider(key: String): Unit = ???
 
