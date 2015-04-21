@@ -1,15 +1,12 @@
 package xebia.consul.client
 
 import akka.actor.{ Actor, Props }
-import akka.event.Logging
 import xebia.consul.client.ServiceAvailabilityActor._
-import xebia.consul.client.ServiceBrokerActor.{ ReturnServiceConnection, GetServiceConnection }
+import xebia.consul.client.ServiceBrokerActor.{ GetServiceConnection, ReturnServiceConnection }
 
 import scala.collection.mutable
 
 class ServiceBrokerActor(services: Map[String, ConnectionStrategy], httpClient: CatalogHttpClient) extends Actor with ActorSupport {
-
-  val log = Logging(context.system, this)
 
   // Actor state
   val loadbalancers: mutable.Map[String, LoadBalancer] = mutable.Map.empty

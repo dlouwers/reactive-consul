@@ -1,6 +1,7 @@
 package xebia.consul.client
 
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 trait ConnectionProviderFactory {
   def create[T](host: String, port: Int): ConnectionProvider
@@ -12,9 +13,12 @@ trait ConnectionProvider {
   def destroy(): Unit
 }
 
-case class ConnectionHolder() {
+abstract class ConnectionHolder(connectionProvider: ConnectionProvider) {
+  def connection[A]: Future[A]
   def withConnection[A, B](f: A => Future[B]): Future[B] = try {
-    ???
+    connection.flatMap((c: A) => f(c))
+  } finally {
+    connectionProvider.returnConnection(this)
   }
 }
 

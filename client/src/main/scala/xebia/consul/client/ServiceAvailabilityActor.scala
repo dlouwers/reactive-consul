@@ -1,14 +1,12 @@
 package xebia.consul.client
 
-import akka.actor.{ ActorRef, Actor, Props }
-import akka.event.Logging
+import akka.actor.{ Actor, ActorRef, Props }
 import xebia.consul.client.ServiceAvailabilityActor._
 
 import scala.concurrent.Future
 
 class ServiceAvailabilityActor(httpClient: CatalogHttpClient, serviceName: String, listener: ActorRef) extends Actor {
 
-  val log = Logging(context.system, this)
   implicit val ec = context.dispatcher
 
   // Actor state

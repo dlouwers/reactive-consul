@@ -1,7 +1,7 @@
 package xebia.consul.client
 
-import akka.actor.{ Props, Actor }
+import akka.actor.{ ActorLogging, Props, Actor }
 
-trait ActorSupport { this: Actor =>
+trait ActorSupport extends ActorLogging { this: Actor =>
   def createChild(props: Props) = this.context.actorOf(props)
 }
