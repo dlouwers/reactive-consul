@@ -54,7 +54,6 @@ class ServiceBrokerActor(services: Map[String, ConnectionStrategy], httpClient: 
       loadbalancers(s.serviceName).removeConnectionProvider(s.serviceId)
     }
   }
-
 }
 
 object ServiceBrokerActor {

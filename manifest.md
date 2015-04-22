@@ -1,6 +1,6 @@
 # Solid testing manifest
 
-1. Most systems should contain three type of tests: unit tests, integration tests and end-to-end Tests.
+1. Most systems should contain three type of tests: unit tests, integration tests and end-to-end tests.
 2. Developers should strive to be able to run all three types of tests locally in full isolation.
 3. Developers should strive to be able to run all three types of tests on a build server, in parallel and in isolation.
 4. Developers should strive to generate deliverables that behave as consistent as possible in different environments.
