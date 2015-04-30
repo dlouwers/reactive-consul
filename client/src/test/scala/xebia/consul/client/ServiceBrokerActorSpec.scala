@@ -6,8 +6,10 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification
 import xebia.consul.client.helpers.ModelHelpers
+import xebia.consul.client.loadbalancers.LoadBalancer
 import xebia.consul.client.util.Logging
 
+import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 
 class ServiceBrokerActorSpec extends Specification with Mockito with Logging {
@@ -15,6 +17,7 @@ class ServiceBrokerActorSpec extends Specification with Mockito with Logging {
   abstract class ActorScope extends TestKit(ActorSystem("TestSystem")) with specification.After with ImplicitSender {
 
     override def after: Any = TestKit.shutdownActorSystem(system)
+    implicit val ec = system.dispatcher
     val httpClient = mock[CatalogHttpClient]
     val serviceVerifier = mock[Props => Unit]
     val connectionProviderFactory = mock[ConnectionProviderFactory]
@@ -31,7 +34,7 @@ class ServiceBrokerActorSpec extends Specification with Mockito with Logging {
           serviceVerifier(props)
           self
         }
-      }))
+      }), "ServiceBroker")
       there were one(serviceVerifier).apply(any[Props])
       sut.underlyingActor.loadbalancers must haveKey("service1")
     }
@@ -42,7 +45,7 @@ class ServiceBrokerActorSpec extends Specification with Mockito with Logging {
           serviceVerifier(props)
           self
         }
-      }))
+      }), "ServiceBroker")
       val service = ModelHelpers.createService("service1")
       connectionProviderFactory.create(service.serviceAddress, service.servicePort) returns connectionProvider
       sut ! ServiceAvailabilityActor.ServiceAvailabilityUpdate(Set(service), Set.empty)
@@ -56,12 +59,11 @@ class ServiceBrokerActorSpec extends Specification with Mockito with Logging {
           serviceVerifier(props)
           self
         }
-      }))
+      }), "ServiceBroker")
       val service = ModelHelpers.createService("service1")
-      sut.underlyingActor.loadbalancers(service.serviceName).addConnectionProvider(service.serviceId, connectionProvider)
-      loadBalancer.getConnection returns connectionHolder
+      loadBalancer.getConnection returns Future.successful(connectionHolder)
       sut ! ServiceBrokerActor.GetServiceConnection(service.serviceName)
-      expectMsg(Duration(1, "s"), connectionHolder)
+      expectMsg(Duration(10, "s"), connectionHolder)
     }
   }
 }

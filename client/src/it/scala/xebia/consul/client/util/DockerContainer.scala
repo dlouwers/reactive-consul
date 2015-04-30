@@ -65,7 +65,7 @@ trait DockerContainer extends BeforeAfterAll with Logging {
       docker.startContainer(id, config)
       val info: ContainerInfo = docker.inspectContainer(id)
       if (!info.state().running()) {
-        throw new IllegalStateException("Could not start Postgres container")
+        throw new IllegalStateException("Could not start Docker container")
       }
     }
 

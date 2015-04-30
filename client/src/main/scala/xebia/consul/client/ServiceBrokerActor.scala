@@ -1,12 +1,16 @@
 package xebia.consul.client
 
-import akka.actor.{ Actor, Props }
+import akka.actor.{ ActorLogging, Actor, Props }
 import xebia.consul.client.ServiceAvailabilityActor._
 import xebia.consul.client.ServiceBrokerActor.{ GetServiceConnection, ReturnServiceConnection }
+import xebia.consul.client.loadbalancers.LoadBalancer
 
 import scala.collection.mutable
+import scala.concurrent.{ ExecutionContext, Future }
 
-class ServiceBrokerActor(services: Map[String, ConnectionStrategy], httpClient: CatalogHttpClient) extends Actor with ActorSupport {
+class ServiceBrokerActor(services: Map[String, ConnectionStrategy], httpClient: CatalogHttpClient)(implicit ec: ExecutionContext) extends Actor with ActorLogging with ActorSupport {
+
+  import akka.pattern.pipe
 
   // Actor state
   val loadbalancers: mutable.Map[String, LoadBalancer] = mutable.Map.empty
@@ -28,13 +32,13 @@ class ServiceBrokerActor(services: Map[String, ConnectionStrategy], httpClient: 
       removeConnectionProviders(removed)
     case GetServiceConnection(name: String) =>
       log.debug(s"Getting a service connection for $name")
-      sender ! getServiceConnection(name: String)
+      getServiceConnection(name: String) pipeTo sender
     case ReturnServiceConnection(name: String, connection: Any) =>
       log.debug(s"Returning service connection for $name")
 
   }
 
-  def getServiceConnection(name: String): Any = {
+  def getServiceConnection(name: String): Future[ConnectionHolder] = {
     loadbalancers(name).getConnection
   }
 
@@ -57,7 +61,7 @@ class ServiceBrokerActor(services: Map[String, ConnectionStrategy], httpClient: 
 }
 
 object ServiceBrokerActor {
-  def props(services: Map[String, ConnectionStrategy], httpClient: CatalogHttpClient): Props = Props(new ServiceBrokerActor(services, httpClient))
+  def props(services: Map[String, ConnectionStrategy], httpClient: CatalogHttpClient)(implicit ec: ExecutionContext): Props = Props(new ServiceBrokerActor(services, httpClient))
   case class GetServiceConnection(name: String)
   case class ReturnServiceConnection[T](name: String, connection: T)
 }

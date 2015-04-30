@@ -8,5 +8,6 @@
 * Set up automated testing using Travis. This must skip integration testing ofc.
 * Find out how to get debug logging from the tests
 * Find out if Registrator can deal with mappings to any available port (-P)
+* Actors should be named to provide better logging
 
 

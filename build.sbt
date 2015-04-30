@@ -23,6 +23,7 @@ lazy val client = (project in file("client"))
       spotifyDocker,
       retry,
       slf4j,
+      akkaSlf4j,
       logback % "test,it",
       akkaTestKit
     ),

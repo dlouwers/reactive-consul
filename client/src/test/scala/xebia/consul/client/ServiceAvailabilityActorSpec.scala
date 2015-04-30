@@ -1,6 +1,6 @@
 package xebia.consul.client
 
-import akka.actor.ActorSystem
+import akka.actor.{ Actor, ActorSystem }
 import akka.testkit.{ TestActorRef, ImplicitSender, TestKit }
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification

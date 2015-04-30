@@ -1,15 +1,35 @@
 package xebia.consul.client.loadbalancers
 
-import xebia.consul.client.{ ConnectionHolder, ConnectionProvider, LoadBalancer }
+import akka.actor.Actor
+import xebia.consul.client.loadbalancers.BaseLoadBalancerActor.{ AddConnectionProvider, GetConnection, RemoveConnectionProvider, ReturnConnection }
+import xebia.consul.client.{ ConnectionHolder, ConnectionProvider }
 
-class BaseLoadbalancer extends LoadBalancer {
+import scala.collection.mutable
 
-  override def getConnection: ConnectionHolder = ???
+trait BaseLoadBalancerActor extends Actor {
 
-  override def returnConnection(connection: ConnectionHolder): Unit = ???
+  // Actor state
+  val connectionProviders = mutable.Map.empty[String, ConnectionProvider]
 
-  override def removeConnectionProvider(key: String): Unit = ???
+  def selectConnection: Option[ConnectionHolder]
 
-  override def addConnectionProvider(key: String, provider: ConnectionProvider): Unit = ???
+  def receive = {
+    case GetConnection =>
+      sender ! selectConnection
+    case ReturnConnection(connection) =>
+      connectionProviders.get(connection.key).foreach(_.returnConnection(connection))
+    case AddConnectionProvider(key, provider) =>
+      connectionProviders.put(key, provider)
+    case RemoveConnectionProvider(key) =>
+      connectionProviders.remove(key).foreach(_.destroy())
+  }
 
+}
+
+object BaseLoadBalancerActor {
+  // Messsages
+  case object GetConnection
+  case class ReturnConnection(connection: ConnectionHolder)
+  case class AddConnectionProvider(key: String, provider: ConnectionProvider)
+  case class RemoveConnectionProvider(key: String)
 }

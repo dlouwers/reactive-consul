@@ -4,21 +4,18 @@ import java.net.URL
 
 import akka.actor.ActorSystem
 import org.specs2.mutable.Specification
-import xebia.consul.client.util.{ DockerContainer, Logging }
-import scala.concurrent.ExecutionContext.Implicits.global
+import xebia.consul.client.util.{ConsulDockerContainer, DockerContainer, Logging}
 
 import scala.concurrent.duration.Duration
 
-class SprayCatalogHttpClientIntegrationTest extends Specification with DockerContainer with Logging {
+class SprayCatalogHttpClientIntegrationTest extends Specification with ConsulDockerContainer with Logging {
 
-  override def image: String = "progrium/consul"
-  override def command: Seq[String] = Seq("-server", "-bootstrap")
   implicit val actorSystem = ActorSystem("test")
   import java.util.concurrent.TimeUnit._
 
   // TODO: Remove the dead letter messages caused by the testing procedure
   "The SprayCatalogHttpClient" should {
-    "Retrieve a single Consul service from a freshly started Consul instance" in withDockerHost("8500/tcp") { (host, port) =>
+    "Retrieve a single Consul service from a freshly started Consul instance" in withConsulHost { (host, port) =>
       val subject: CatalogHttpClient = new SprayCatalogHttpClient(new URL(s"http://$host:$port"))
       subject.findServiceChange("consul").map { result =>
         result.instances must have size 1
@@ -26,7 +23,7 @@ class SprayCatalogHttpClientIntegrationTest extends Specification with DockerCon
       }.await(retries = 0, timeout = Duration(10, SECONDS))
 
     }
-    "Retrieve no unknown service from a freshly started Consul instance" in withDockerHost("8500/tcp") { (host, port) =>
+    "Retrieve no unknown service from a freshly started Consul instance" in withConsulHost { (host, port) =>
       val subject: CatalogHttpClient = new SprayCatalogHttpClient(new URL(s"http://$host:$port"))
       subject.findServiceChange("bogus").map { result =>
         logger.info(s"Index is ${result.index}")
@@ -34,7 +31,7 @@ class SprayCatalogHttpClientIntegrationTest extends Specification with DockerCon
       }.await(retries = 0, timeout = Duration(10, SECONDS))
     }
 
-    "Retrieve a single Consul service from a freshly started Consul instance and timeout after the second request if nothing changes" in withDockerHost("8500/tcp") { (host, port) =>
+    "Retrieve a single Consul service from a freshly started Consul instance and timeout after the second request if nothing changes" in withConsulHost { (host, port) =>
       val subject: CatalogHttpClient = new SprayCatalogHttpClient(new URL(s"http://$host:$port"))
       subject.findServiceChange("consul").flatMap { result =>
         result.instances must have size 1

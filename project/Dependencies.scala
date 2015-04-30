@@ -15,6 +15,7 @@ object Dependencies {
   val sprayRouting  = "io.spray"                    %%  "spray-routing"   % sprayVersion
   val sprayJson     = "io.spray"                    %%  "spray-json"      % "1.3.1"
   val akkaActor     = "com.typesafe.akka"           %%  "akka-actor"      % akkaVersion
+  val akkaSlf4j     = "com.typesafe.akka"           %%  "akka-slf4j"      % akkaVersion
   val slf4j         = "org.slf4j"                   %   "slf4j-api"       % "1.7.5"
   val logback       = "ch.qos.logback"              %   "logback-classic" % "1.0.9"
   val retry         = "me.lessis"                   %%  "retry"           % "0.2.0"
