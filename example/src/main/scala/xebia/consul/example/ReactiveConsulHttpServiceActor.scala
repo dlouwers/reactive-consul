@@ -22,7 +22,7 @@ trait ReactiveConsulHttpService extends HttpService {
   val reactiveConsulRoute =
     path("api" / "identify") {
       get {
-        complete(s"Hi, I'm a ${System.getenv("SERVICE_TYPE")}")
+        complete(s"Hi, I'm a ${System.getenv("SERVICE_NAME")}")
       }
     }
 }
