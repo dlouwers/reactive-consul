@@ -63,7 +63,7 @@ class ServiceBrokerActorSpec extends Specification with Mockito with Logging {
       val service = ModelHelpers.createService("service1")
       loadBalancer.getConnection returns Future.successful(connectionHolder)
       sut ! ServiceBrokerActor.GetServiceConnection(service.serviceName)
-      expectMsg(Duration(10, "s"), connectionHolder)
+      expectMsg(Duration(1, "s"), connectionHolder)
     }
   }
 }

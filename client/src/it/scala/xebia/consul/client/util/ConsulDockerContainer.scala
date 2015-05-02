@@ -1,6 +1,6 @@
 package xebia.consul.client.util
 
-import org.specs2.execute.{Result, AsResult}
+import org.specs2.execute.{ Result, AsResult }
 
 trait ConsulDockerContainer extends DockerContainer {
 
