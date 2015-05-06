@@ -1,6 +1,6 @@
 package xebia.consul.client
 
-import akka.actor.{ ActorLogging, ActorSystem, Props }
+import akka.actor._
 import akka.testkit.{ ImplicitSender, TestActorRef, TestKit }
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
@@ -19,7 +19,7 @@ class ServiceBrokerActorSpec extends Specification with Mockito with Logging {
     override def after: Any = TestKit.shutdownActorSystem(system)
     implicit val ec = system.dispatcher
     val httpClient = mock[CatalogHttpClient]
-    val serviceVerifier = mock[Props => Unit]
+    val serviceAvailabilityActorFactory = mock[(ActorRefFactory, String, ActorRef) => ActorRef]
     val connectionProviderFactory = mock[ConnectionProviderFactory]
     val connectionProvider = mock[ConnectionProvider]
     val connectionHolder = mock[ConnectionHolder]
@@ -28,23 +28,16 @@ class ServiceBrokerActorSpec extends Specification with Mockito with Logging {
 
   "The ServiceBrokerActor" should {
     "create a child actor per service" in new ActorScope {
-      val sut = TestActorRef[ServiceBrokerActor](Props(new ServiceBrokerActor(Map("service1" -> connectionStrategy), httpClient) {
-        override def createChild(props: Props) = {
-          serviceVerifier(props)
-          self
-        }
-      }), "ServiceBroker")
-      there was one(serviceVerifier).apply(any[Props])
+      serviceAvailabilityActorFactory.apply(any[ActorRefFactory], ===("service1"), any[ActorRef]) returns self
+      val sut = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(Map("service1" -> connectionStrategy), serviceAvailabilityActorFactory), "ServiceBroker")
+      there was one(serviceAvailabilityActorFactory).apply(sut.underlyingActor.context, "service1", sut)
       sut.underlyingActor.loadbalancers must haveKey("service1")
     }
 
     "create a load balancer for each new service" in new ActorScope {
-      val sut = TestActorRef[ServiceBrokerActor](Props(new ServiceBrokerActor(Map("service1" -> connectionStrategy), httpClient) {
-        override def createChild(props: Props) = {
-          serviceVerifier(props)
-          self
-        }
-      }), "ServiceBroker")
+      serviceAvailabilityActorFactory.apply(any[ActorRefFactory], ===("service1"), any[ActorRef]) returns self
+      val sut = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(Map("service1" -> connectionStrategy), serviceAvailabilityActorFactory), "ServiceBroker")
+      there was one(serviceAvailabilityActorFactory).apply(sut.underlyingActor.context, "service1", sut)
       val service = ModelHelpers.createService("service1")
       connectionProviderFactory.create(service.serviceAddress, service.servicePort) returns connectionProvider
       sut ! ServiceAvailabilityActor.ServiceAvailabilityUpdate(added = Set(service), removed = Set.empty)
@@ -53,12 +46,9 @@ class ServiceBrokerActorSpec extends Specification with Mockito with Logging {
     }
 
     "request a connection from a loadbalancer" in new ActorScope {
-      val sut = TestActorRef[ServiceBrokerActor](Props(new ServiceBrokerActor(Map("service1" -> connectionStrategy), httpClient) {
-        override def createChild(props: Props) = {
-          serviceVerifier(props)
-          self
-        }
-      }), "ServiceBroker")
+      serviceAvailabilityActorFactory.apply(any[ActorRefFactory], ===("service1"), any[ActorRef]) returns self
+      val sut = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(Map("service1" -> connectionStrategy), serviceAvailabilityActorFactory), "ServiceBroker")
+      there was one(serviceAvailabilityActorFactory).apply(sut.underlyingActor.context, "service1", sut)
       val service = ModelHelpers.createService("service1")
       sut ! ServiceBrokerActor.GetServiceConnection(service.serviceName)
       expectMsg(LoadBalancerActor.GetConnection)

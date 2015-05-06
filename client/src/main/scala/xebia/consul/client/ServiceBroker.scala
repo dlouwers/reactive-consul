@@ -28,7 +28,9 @@ class ServiceBroker(serviceBrokerActor: ActorRef)(implicit ec: ExecutionContext)
 }
 
 object ServiceBroker {
-  def apply(factory: ActorRefFactory, httpClient: CatalogHttpClient, services: Map[String, ConnectionStrategy])(implicit ec: ExecutionContext): ServiceBroker = {
-    new ServiceBroker(factory.actorOf(ServiceBrokerActor.props(services, httpClient)))
+  def apply(rootActor: ActorRefFactory, httpClient: CatalogHttpClient, services: Map[String, ConnectionStrategy])(implicit ec: ExecutionContext): ServiceBroker = {
+    val serviceAvailabilityActorFactory = (factory: ActorRefFactory, service: String, listener: ActorRef) => factory.actorOf(ServiceAvailabilityActor.props(httpClient, service, listener))
+    val actorRef = rootActor.actorOf(ServiceBrokerActor.props(services, serviceAvailabilityActorFactory), "ServiceBroker")
+    new ServiceBroker(actorRef)
   }
 }

@@ -1,6 +1,6 @@
 package xebia.consul.client
 
-import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
+import akka.actor._
 import xebia.consul.client.ServiceAvailabilityActor._
 import xebia.consul.client.ServiceBrokerActor.GetServiceConnection
 import xebia.consul.client.loadbalancers.LoadBalancerActor
@@ -8,7 +8,7 @@ import xebia.consul.client.loadbalancers.LoadBalancerActor
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
 
-class ServiceBrokerActor(services: Map[String, ConnectionStrategy], httpClient: CatalogHttpClient)(implicit ec: ExecutionContext) extends Actor with ActorLogging with ActorSupport {
+class ServiceBrokerActor(services: Map[String, ConnectionStrategy], serviceAvailabilityActorFactory: (ActorRefFactory, String, ActorRef) => ActorRef)(implicit ec: ExecutionContext) extends Actor with ActorLogging with ActorSupport {
 
   // Actor state
   val loadbalancers: mutable.Map[String, ActorRef] = mutable.Map.empty
@@ -18,7 +18,7 @@ class ServiceBrokerActor(services: Map[String, ConnectionStrategy], httpClient: 
       case (name, strategy) =>
         loadbalancers.put(name, strategy.loadbalancer)
         log.debug(s"Starting Service Availability Actor for $name")
-        createChild(ServiceAvailabilityActor.props(httpClient, name, self))
+        serviceAvailabilityActorFactory(context, name, self)
     }
   }
 
@@ -49,6 +49,6 @@ class ServiceBrokerActor(services: Map[String, ConnectionStrategy], httpClient: 
 }
 
 object ServiceBrokerActor {
-  def props(services: Map[String, ConnectionStrategy], httpClient: CatalogHttpClient)(implicit ec: ExecutionContext): Props = Props(new ServiceBrokerActor(services, httpClient))
+  def props(services: Map[String, ConnectionStrategy], serviceAvailabilityActorFactory: (ActorRefFactory, String, ActorRef) => ActorRef)(implicit ec: ExecutionContext): Props = Props(new ServiceBrokerActor(services, serviceAvailabilityActorFactory))
   case class GetServiceConnection(name: String)
 }
