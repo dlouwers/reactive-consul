@@ -1,19 +1,17 @@
 package xebia.consul.client
 
-import akka.actor.{ ActorLogging, Actor, Props }
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import xebia.consul.client.ServiceAvailabilityActor._
-import xebia.consul.client.ServiceBrokerActor.{ GetServiceConnection, ReturnServiceConnection }
-import xebia.consul.client.loadbalancers.LoadBalancer
+import xebia.consul.client.ServiceBrokerActor.GetServiceConnection
+import xebia.consul.client.loadbalancers.LoadBalancerActor
 
 import scala.collection.mutable
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.ExecutionContext
 
 class ServiceBrokerActor(services: Map[String, ConnectionStrategy], httpClient: CatalogHttpClient)(implicit ec: ExecutionContext) extends Actor with ActorLogging with ActorSupport {
 
-  import akka.pattern.pipe
-
   // Actor state
-  val loadbalancers: mutable.Map[String, LoadBalancer] = mutable.Map.empty
+  val loadbalancers: mutable.Map[String, ActorRef] = mutable.Map.empty
 
   override def preStart(): Unit = {
     services.foreach {
@@ -32,30 +30,20 @@ class ServiceBrokerActor(services: Map[String, ConnectionStrategy], httpClient: 
       removeConnectionProviders(removed)
     case GetServiceConnection(name: String) =>
       log.debug(s"Getting a service connection for $name")
-      getServiceConnection(name: String) pipeTo sender
-    case ReturnServiceConnection(name: String, connection: Any) =>
-      log.debug(s"Returning service connection for $name")
+      loadbalancers(name) forward LoadBalancerActor.GetConnection
 
-  }
-
-  def getServiceConnection(name: String): Future[ConnectionHolder] = {
-    loadbalancers(name).getConnection
-  }
-
-  def returnServiceConnection(name: String, connection: ConnectionHolder): Unit = {
-    loadbalancers(name).returnConnection(connection)
   }
 
   def addConnectionProviders(added: Set[Service]): Unit = {
     added.foreach { s =>
       val connectionProvider = services(s.serviceName).factory.create(s.serviceAddress, s.servicePort)
-      loadbalancers(s.serviceName).addConnectionProvider(s.serviceId, connectionProvider)
+      loadbalancers(s.serviceName) ! LoadBalancerActor.AddConnectionProvider(s.serviceId, connectionProvider)
     }
   }
 
   def removeConnectionProviders(removed: Set[Service]): Unit = {
     removed.foreach { s =>
-      loadbalancers(s.serviceName).removeConnectionProvider(s.serviceId)
+      loadbalancers(s.serviceName) ! LoadBalancerActor.RemoveConnectionProvider(s.serviceId)
     }
   }
 }
@@ -63,5 +51,4 @@ class ServiceBrokerActor(services: Map[String, ConnectionStrategy], httpClient: 
 object ServiceBrokerActor {
   def props(services: Map[String, ConnectionStrategy], httpClient: CatalogHttpClient)(implicit ec: ExecutionContext): Props = Props(new ServiceBrokerActor(services, httpClient))
   case class GetServiceConnection(name: String)
-  case class ReturnServiceConnection[T](name: String, connection: T)
 }

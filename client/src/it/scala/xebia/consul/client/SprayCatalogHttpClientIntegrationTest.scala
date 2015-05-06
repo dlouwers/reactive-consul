@@ -37,9 +37,9 @@ class SprayCatalogHttpClientIntegrationTest extends Specification with ConsulDoc
       subject.findServiceChange("consul").flatMap { result =>
         result.instances must have size 1
         result.instances.head.serviceName mustEqual "consul"
-        subject.findServiceChange("consul", Some(result.index), Some("500ms")).map { result =>
-          result.instances must have size 1
-          result.index mustEqual result.index
+        subject.findServiceChange("consul", Some(result.index), Some("500ms")).map { secondResult =>
+          secondResult.instances must have size 1
+          secondResult.index mustEqual result.index
         }
       }.await(retries = 0, timeout = Duration(10, SECONDS))
     }

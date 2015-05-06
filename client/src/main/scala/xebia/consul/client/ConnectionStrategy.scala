@@ -1,9 +1,10 @@
 package xebia.consul.client
 
-import xebia.consul.client.loadbalancers.LoadBalancer
+import akka.actor.ActorRef
+import xebia.consul.client.loadbalancers.LoadBalancerActor
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 trait ConnectionProviderFactory {
   def create(host: String, port: Int): ConnectionProvider
@@ -17,13 +18,13 @@ trait ConnectionProvider {
 
 trait ConnectionHolder {
   val key: String
-  val loadBalancer: LoadBalancer
+  val loadBalancer: ActorRef
   def connection[A]: Future[A]
   def withConnection[A, B](f: A => Future[B]): Future[B] = try {
     connection.flatMap((c: A) => f(c))
   } finally {
-    loadBalancer.returnConnection(this)
+    loadBalancer ! LoadBalancerActor.ReturnConnection(this)
   }
 }
 
-case class ConnectionStrategy(factory: ConnectionProviderFactory, loadbalancer: LoadBalancer)
+case class ConnectionStrategy(factory: ConnectionProviderFactory, loadbalancer: ActorRef)
