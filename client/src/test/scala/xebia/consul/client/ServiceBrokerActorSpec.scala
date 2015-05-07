@@ -23,7 +23,7 @@ class ServiceBrokerActorSpec extends Specification with Mockito with Logging {
     val connectionProviderFactory = mock[ConnectionProviderFactory]
     val connectionProvider = mock[ConnectionProvider]
     val connectionHolder = mock[ConnectionHolder]
-    val connectionStrategy = ConnectionStrategy(connectionProviderFactory, self)
+    val connectionStrategy = ConnectionStrategy(connectionProviderFactory, ctx => self)
   }
 
   "The ServiceBrokerActor" should {

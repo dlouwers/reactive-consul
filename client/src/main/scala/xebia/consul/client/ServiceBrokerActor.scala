@@ -8,7 +8,7 @@ import xebia.consul.client.loadbalancers.LoadBalancerActor
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
 
-class ServiceBrokerActor(services: Map[String, ConnectionStrategy], serviceAvailabilityActorFactory: (ActorRefFactory, String, ActorRef) => ActorRef)(implicit ec: ExecutionContext) extends Actor with ActorLogging with ActorSupport {
+class ServiceBrokerActor(services: Map[String, ConnectionStrategy], serviceAvailabilityActorFactory: (ActorRefFactory, String, ActorRef) => ActorRef)(implicit ec: ExecutionContext) extends Actor with ActorLogging {
 
   // Actor state
   val loadbalancers: mutable.Map[String, ActorRef] = mutable.Map.empty
@@ -16,7 +16,7 @@ class ServiceBrokerActor(services: Map[String, ConnectionStrategy], serviceAvail
   override def preStart(): Unit = {
     services.foreach {
       case (name, strategy) =>
-        loadbalancers.put(name, strategy.loadbalancer)
+        loadbalancers.put(name, strategy.loadBalancerFactory(context))
         log.debug(s"Starting Service Availability Actor for $name")
         serviceAvailabilityActorFactory(context, name, self)
     }
@@ -36,7 +36,7 @@ class ServiceBrokerActor(services: Map[String, ConnectionStrategy], serviceAvail
 
   def addConnectionProviders(added: Set[Service]): Unit = {
     added.foreach { s =>
-      val connectionProvider = services(s.serviceName).factory.create(s.serviceAddress, s.servicePort)
+      val connectionProvider = services(s.serviceName).connectionProviderFactory.create(s.serviceAddress, s.servicePort)
       loadbalancers(s.serviceName) ! LoadBalancerActor.AddConnectionProvider(s.serviceId, connectionProvider)
     }
   }

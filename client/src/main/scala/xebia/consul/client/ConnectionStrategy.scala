@@ -1,6 +1,6 @@
 package xebia.consul.client
 
-import akka.actor.ActorRef
+import akka.actor.{ ActorRefFactory, ActorRef }
 import xebia.consul.client.loadbalancers.LoadBalancerActor
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -27,4 +27,4 @@ trait ConnectionHolder {
   }
 }
 
-case class ConnectionStrategy(factory: ConnectionProviderFactory, loadbalancer: ActorRef)
+case class ConnectionStrategy(connectionProviderFactory: ConnectionProviderFactory, loadBalancerFactory: ActorRefFactory => ActorRef)
