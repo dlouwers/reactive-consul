@@ -1,8 +1,9 @@
 package xebia.consul.client
 
+import akka.actor.Status.Failure
 import akka.actor._
 import xebia.consul.client.ServiceAvailabilityActor._
-import xebia.consul.client.ServiceBrokerActor.GetServiceConnection
+import xebia.consul.client.ServiceBrokerActor.{ ServiceNotFoundException, GetServiceConnection }
 import xebia.consul.client.loadbalancers.LoadBalancerActor
 
 import scala.collection.mutable
@@ -30,7 +31,12 @@ class ServiceBrokerActor(services: Map[String, ConnectionStrategy], serviceAvail
       removeConnectionProviders(removed)
     case GetServiceConnection(name: String) =>
       log.debug(s"Getting a service connection for $name")
-      loadbalancers(name) forward LoadBalancerActor.GetConnection
+      loadbalancers.get(name) match {
+        case Some(loadbalancer) =>
+          loadbalancer forward LoadBalancerActor.GetConnection
+        case None =>
+          sender ! Failure(new ServiceNotFoundException(name))
+      }
 
   }
 
@@ -51,4 +57,5 @@ class ServiceBrokerActor(services: Map[String, ConnectionStrategy], serviceAvail
 object ServiceBrokerActor {
   def props(services: Map[String, ConnectionStrategy], serviceAvailabilityActorFactory: (ActorRefFactory, String, ActorRef) => ActorRef)(implicit ec: ExecutionContext): Props = Props(new ServiceBrokerActor(services, serviceAvailabilityActorFactory))
   case class GetServiceConnection(name: String)
+  case class ServiceNotFoundException(name: String) extends RuntimeException
 }

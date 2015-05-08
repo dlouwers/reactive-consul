@@ -1,6 +1,7 @@
 package xebia.consul.client.loadbalancers
 
 import akka.actor.ActorSystem
+import akka.actor.Status.Failure
 import akka.testkit.{ TestActorRef, ImplicitSender, TestKit }
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
@@ -18,6 +19,7 @@ class LoadBalancerActorSpec extends Specification with Mockito {
   }
 
   "The BaseLoadBalancerActor" should {
+
     "hand out a connection holder when requested" in new ActorScope {
       val expectedConnectionHolder = Some(connectionHolder)
       val sut = TestActorRef(new LoadBalancerActor {
@@ -26,6 +28,16 @@ class LoadBalancerActorSpec extends Specification with Mockito {
       sut ! LoadBalancerActor.GetConnection
       expectMsg(expectedConnectionHolder)
     }
+
+    "return an error when a connection cannot be provided" in new ActorScope {
+      val expectedException = new RuntimeException
+      val sut = TestActorRef(new LoadBalancerActor {
+        override def selectConnection: Future[Option[ConnectionHolder]] = Future.failed(expectedException)
+      })
+      sut ! LoadBalancerActor.GetConnection
+      expectMsg(Failure(expectedException))
+    }
+
     "return a connection holder when requested" in new ActorScope {
       val sut = TestActorRef(new LoadBalancerActor {
         override def selectConnection: Future[Option[ConnectionHolder]] = Future.successful(Some(connectionHolder))
@@ -35,6 +47,7 @@ class LoadBalancerActorSpec extends Specification with Mockito {
       sut ! LoadBalancerActor.ReturnConnection(connectionHolder)
       there was one(connectionProvider).returnConnection(connectionHolder)
     }
+
     "add a connection provider when requested" in new ActorScope {
       val sut = TestActorRef(new LoadBalancerActor {
         override def selectConnection: Future[Option[ConnectionHolder]] = Future.successful(Some(connectionHolder))
@@ -42,6 +55,7 @@ class LoadBalancerActorSpec extends Specification with Mockito {
       sut ! LoadBalancerActor.AddConnectionProvider("key", connectionProvider)
       sut.underlyingActor.connectionProviders should havePair("key" -> connectionProvider)
     }
+
     "remove a connection provider when requested and tell it to destroy itself" in new ActorScope {
       val sut = TestActorRef(new LoadBalancerActor {
         override def selectConnection: Future[Option[ConnectionHolder]] = Future.successful(Some(connectionHolder))

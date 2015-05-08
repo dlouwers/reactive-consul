@@ -12,17 +12,16 @@ class ServiceBroker(serviceBrokerActor: ActorRef)(implicit ec: ExecutionContext)
 
   import akka.pattern.ask
 
-  implicit val timeout = Timeout(1.second)
-  def withService[A, B](name: String)(f: A => Future[B]): Future[B] = {
-    serviceBrokerActor.ask(ServiceBrokerActor.GetServiceConnection(name)).mapTo[Option[ConnectionHolder]].flatMap {
-      case Some(connectionHolder) =>
+  private[this] implicit val timeout = Timeout(1.second)
+
+  def withService[A: ClassTag, B](name: String)(f: A => Future[B]): Future[B] = {
+    serviceBrokerActor.ask(ServiceBrokerActor.GetServiceConnection(name)).mapTo[ConnectionHolder].flatMap {
+      case connectionHolder: ConnectionHolder =>
         try {
           connectionHolder.connection[A].flatMap(f)
         } finally {
           connectionHolder.loadBalancer ! LoadBalancerActor.ReturnConnection(connectionHolder)
         }
-      case None =>
-        throw new RuntimeException()
     }
   }
 }

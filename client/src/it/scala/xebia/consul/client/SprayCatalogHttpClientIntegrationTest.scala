@@ -16,7 +16,8 @@ class SprayCatalogHttpClientIntegrationTest extends Specification with ConsulDoc
 
   // TODO: Remove the dead letter messages caused by the testing procedure
   "The SprayCatalogHttpClient" should {
-    "Retrieve a single Consul service from a freshly started Consul instance" in withConsulHost { (host, port) =>
+
+    "retrieve a single Consul service from a freshly started Consul instance" in withConsulHost { (host, port) =>
       val subject: CatalogHttpClient = new SprayCatalogHttpClient(new URL(s"http://$host:$port"))
       subject.findServiceChange("consul").map { result =>
         result.instances must have size 1
@@ -24,7 +25,7 @@ class SprayCatalogHttpClientIntegrationTest extends Specification with ConsulDoc
       }.await(retries = 0, timeout = Duration(10, SECONDS))
     }
 
-    "Retrieve no unknown service from a freshly started Consul instance" in withConsulHost { (host, port) =>
+    "retrieve no unknown service from a freshly started Consul instance" in withConsulHost { (host, port) =>
       val subject: CatalogHttpClient = new SprayCatalogHttpClient(new URL(s"http://$host:$port"))
       subject.findServiceChange("bogus").map { result =>
         logger.info(s"Index is ${result.index}")
@@ -32,7 +33,7 @@ class SprayCatalogHttpClientIntegrationTest extends Specification with ConsulDoc
       }.await(retries = 0, timeout = Duration(10, SECONDS))
     }
 
-    "Retrieve a single Consul service from a freshly started Consul instance and timeout after the second request if nothing changes" in withConsulHost { (host, port) =>
+    "retrieve a single Consul service from a freshly started Consul instance and timeout after the second request if nothing changes" in withConsulHost { (host, port) =>
       val subject: CatalogHttpClient = new SprayCatalogHttpClient(new URL(s"http://$host:$port"))
       subject.findServiceChange("consul").flatMap { result =>
         result.instances must have size 1
