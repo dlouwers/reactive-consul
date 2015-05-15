@@ -6,7 +6,7 @@ import akka.testkit.{ TestActorRef, ImplicitSender, TestKit }
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification
-import xebia.consul.client.{ ConnectionProvider, ConnectionHolder }
+import xebia.consul.client.{ ServiceUnavailableException, ConnectionProvider, ConnectionHolder }
 
 import scala.concurrent.Future
 
@@ -18,7 +18,7 @@ class LoadBalancerActorSpec extends Specification with Mockito {
     val connectionProvider = mock[ConnectionProvider]
   }
 
-  "The BaseLoadBalancerActor" should {
+  "The LoadBalancerActor" should {
 
     "hand out a connection holder when requested" in new ActorScope {
       val expectedConnectionHolder = Some(connectionHolder)
@@ -30,7 +30,7 @@ class LoadBalancerActorSpec extends Specification with Mockito {
     }
 
     "return an error when a connection cannot be provided" in new ActorScope {
-      val expectedException = new RuntimeException
+      val expectedException = new ServiceUnavailableException("service1")
       val sut = TestActorRef(new LoadBalancerActor {
         override def selectConnection: Future[Option[ConnectionHolder]] = Future.failed(expectedException)
       })

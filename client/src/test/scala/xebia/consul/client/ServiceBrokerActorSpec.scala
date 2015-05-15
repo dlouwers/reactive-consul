@@ -6,7 +6,6 @@ import akka.testkit.{ ImplicitSender, TestActorRef, TestKit }
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification
-import xebia.consul.client.ServiceBrokerActor.ServiceNotFoundException
 import xebia.consul.client.helpers.ModelHelpers
 import xebia.consul.client.loadbalancers.LoadBalancerActor
 import xebia.consul.client.util.Logging
@@ -26,6 +25,7 @@ class ServiceBrokerActorSpec extends Specification with Mockito with Logging {
   }
 
   "The ServiceBrokerActor" should {
+
     "create a child actor per service" in new ActorScope {
       serviceAvailabilityActorFactory.apply(any[ActorRefFactory], be("service1"), any[ActorRef]) returns self
       val sut = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(Map("service1" -> connectionStrategy), serviceAvailabilityActorFactory), "ServiceBroker")
@@ -57,7 +57,7 @@ class ServiceBrokerActorSpec extends Specification with Mockito with Logging {
       val sut = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(Map.empty, serviceAvailabilityActorFactory), "ServiceBroker")
       val service = ModelHelpers.createService("service1")
       sut ! ServiceBrokerActor.GetServiceConnection(service.serviceName)
-      expectMsg(Failure(ServiceNotFoundException(service.serviceName)))
+      expectMsg(Failure(ServiceUnavailableException(service.serviceName)))
     }
   }
 }

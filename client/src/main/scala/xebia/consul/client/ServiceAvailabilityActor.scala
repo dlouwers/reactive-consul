@@ -19,6 +19,10 @@ class ServiceAvailabilityActor(httpClient: CatalogHttpClient, serviceName: Strin
     }
   }
 
+  override def postStop(): Unit = {
+    self ! Stop
+  }
+
   def receive = {
     case UpdateServiceAvailability(services: IndexedServiceInstances) =>
       val (update, serviceChange) = updateServiceAvailability(services)

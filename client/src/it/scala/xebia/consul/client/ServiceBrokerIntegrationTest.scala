@@ -1,16 +1,17 @@
 package xebia.consul.client
 
 import java.net.URL
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeUnit._
 
-import akka.actor.{ ActorRef, ActorRefFactory, ActorSystem, Props }
+import akka.actor._
 import akka.testkit.TestKit
 import org.specs2.mutable.Specification
 import org.specs2.specification
 import xebia.consul.client.loadbalancers.LoadBalancerActor
 import xebia.consul.client.util.{ Logging, ConsulDockerContainer }
 
-import scala.concurrent.Future
+import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration.Duration
 
 class ServiceBrokerIntegrationTest extends Specification with ConsulDockerContainer with Logging {
@@ -21,11 +22,11 @@ class ServiceBrokerIntegrationTest extends Specification with ConsulDockerContai
   }
 
   "The ServiceBroker" should {
-    "provide a usable connection to consul" in new ActorScope {
-      withConsulHost { (host, port) =>
+    "provide a usable connection to consul" in withConsulHost { (host, port) =>
+      new ActorScope {
         val connectionProviderFactory = new ConnectionProviderFactory {
           override def create(host: String, port: Int): ConnectionProvider = new ConnectionProvider {
-            val httpClient: CatalogHttpClient = new SprayCatalogHttpClient(new URL(s"$host:$port"))
+            val httpClient: CatalogHttpClient = new SprayCatalogHttpClient(new URL(s"http://$host:$port"))
             override def destroy(): Unit = Unit
             override def returnConnection(connection: ConnectionHolder): Unit = Unit
             override def getConnection(lb: ActorRef): Future[ConnectionHolder] = Future.successful(new ConnectionHolder {
@@ -36,14 +37,14 @@ class ServiceBrokerIntegrationTest extends Specification with ConsulDockerContai
           }
         }
         class NaiveLoadBalancer extends LoadBalancerActor {
-          override def selectConnection: Future[Option[ConnectionHolder]] = connectionProviders("consul").getConnection(self).map(Some(_))
+          override def selectConnection: Option[Future[ConnectionHolder]] = connectionProviders.get("consul").map(_.getConnection(self))
         }
-        val loadBalancerFactory = (f: ActorRefFactory) => f.actorOf(Props[NaiveLoadBalancer])
-        val httpClient = new SprayCatalogHttpClient(new URL(s"$host:$port"))
+        val loadBalancerFactory = (f: ActorRefFactory) => f.actorOf(Props(new NaiveLoadBalancer))
+        val httpClient = new SprayCatalogHttpClient(new URL(s"http://$host:$port"))
         val connectionStrategy = ConnectionStrategy(connectionProviderFactory, loadBalancerFactory)
         val sut = ServiceBroker(system, httpClient, services = Map("consul" -> connectionStrategy))
-        sut.withService("consu") { connection: CatalogHttpClient =>
-          Future.successful(failure("bah"))
+        sut.withService("consul") { connection: CatalogHttpClient =>
+          connection.findServiceChange("bogus").map(_ should beAnInstanceOf[IndexedServiceInstances])
         }.await(retries = 0, timeout = Duration(10, SECONDS))
       }
     }

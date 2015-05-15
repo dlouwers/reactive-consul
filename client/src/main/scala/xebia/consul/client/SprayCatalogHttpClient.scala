@@ -1,6 +1,6 @@
 package xebia.consul.client
 
-import java.net.URL
+import java.net.{ URI, URL }
 
 import akka.actor.ActorSystem
 import retry.Success
@@ -45,13 +45,13 @@ class SprayCatalogHttpClient(host: URL)(implicit actorSystem: ActorSystem) exten
 
   // TODO: Check if there is a more reliable library offering these type of retries
   def findServiceChange(service: String, index: Option[Long], wait: Option[String], dataCenter: Option[String] = None): Future[IndexedServiceInstances] = {
-    val dcParameter = dataCenter.map(dc => s"dc=$dc").getOrElse("")
-    val waitParameter = wait.map(w => s"wait=$w").getOrElse("")
-    val indexParameter = index.map(i => s"index=$i").getOrElse("")
-    val parameters = Seq(dcParameter, waitParameter, indexParameter).mkString("&")
+    val dcParameter = dataCenter.map(dc => s"dc=$dc")
+    val waitParameter = wait.map(w => s"wait=$w")
+    val indexParameter = index.map(i => s"index=$i")
+    val parameters = Seq(dcParameter, waitParameter, indexParameter).flatten.mkString("&")
     val request = Get(s"$host/v1/catalog/service/$service?$parameters")
     val myPipeline: HttpRequest => Future[IndexedServiceInstances] = pipeline ~> unmarshalWithIndex
-    implicit val success = Success[Any](r => true)
+    val success = Success[Any](r => true)
     retry { () =>
       myPipeline(request)
     }(success, executionContext)

@@ -1,16 +1,15 @@
 package xebia.consul.client
 
-import akka.actor.{ ActorRef, ActorRefFactory, ActorSystem }
-import akka.testkit.{ ImplicitSender, TestKit }
-import org.specs2.execute.{ Result, AsResult }
+import akka.actor.ActorSystem
+import akka.actor.Status.Failure
+import akka.testkit.{ImplicitSender, TestKit}
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification
-import xebia.consul.client.loadbalancers.{ LoadBalancerActor, LoadBalancer }
+import xebia.consul.client.loadbalancers.LoadBalancerActor
 import xebia.consul.client.util.Logging
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.Future
 
 class ServiceBrokerTest extends Specification with Mockito with Logging {
 
@@ -23,6 +22,7 @@ class ServiceBrokerTest extends Specification with Mockito with Logging {
   }
 
   "The ServiceBroker" should {
+
     "return a service connection when requested" in new ActorScope {
       connectionHolder.connection[Boolean] returns Future.successful(true)
       connectionHolder.loadBalancer returns loadBalancer
@@ -37,6 +37,7 @@ class ServiceBrokerTest extends Specification with Mockito with Logging {
       }
       expectMsg(LoadBalancerActor.ReturnConnection(connectionHolder))
     }
+
     "return the connection when an error occurs" in new ActorScope {
       connectionHolder.connection[Boolean] returns Future.successful(true)
       connectionHolder.loadBalancer returns loadBalancer
@@ -50,6 +51,18 @@ class ServiceBrokerTest extends Specification with Mockito with Logging {
           result.await should throwA[RuntimeException]
       }
       expectMsg(LoadBalancerActor.ReturnConnection(connectionHolder))
+    }
+
+    "throw an error when an excpetion is returned" in new ActorScope {
+      val sut = new ServiceBroker(self)
+      val result = sut.withService("service1") { service: Boolean =>
+        Future.successful(service)
+      }
+      expectMsgPF() {
+        case ServiceBrokerActor.GetServiceConnection("service1") =>
+          lastSender ! Failure(new RuntimeException())
+          result.await should throwA[RuntimeException]
+      }
     }
   }
 }

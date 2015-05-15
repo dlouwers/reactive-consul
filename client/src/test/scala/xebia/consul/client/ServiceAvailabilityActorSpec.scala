@@ -21,6 +21,7 @@ class ServiceAvailabilityActorSpec extends Specification with Mockito with Loggi
   }
 
   "The ServiceAvailabilityActor" should {
+
     "receive one service update when there are no changes" in new ActorScope {
       httpClient.findServiceChange("bogus", None) returns Future.successful(IndexedServiceInstances(1, Set.empty))
       httpClient.findServiceChange("bogus", Some(1)) returns Future {
