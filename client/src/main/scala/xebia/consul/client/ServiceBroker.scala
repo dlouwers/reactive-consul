@@ -2,7 +2,6 @@ package xebia.consul.client
 
 import akka.actor.{ ActorRefFactory, ActorRef }
 import akka.util.Timeout
-import retry.Success
 import xebia.consul.client.loadbalancers.LoadBalancerActor
 import xebia.consul.client.util.RetryPolicy
 import scala.concurrent.duration._
@@ -17,16 +16,13 @@ class ServiceBroker(serviceBrokerActor: ActorRef)(implicit ec: ExecutionContext)
   private[this] implicit val timeout = Timeout(10.second)
 
   def withService[A: ClassTag, B](name: String)(f: A => Future[B]): Future[B] = {
-    implicit val success = Success[Any](r => true)
-    retry { () =>
-      serviceBrokerActor.ask(ServiceBrokerActor.GetServiceConnection(name)).mapTo[ConnectionHolder].flatMap {
-        case connectionHolder: ConnectionHolder =>
-          try {
-            connectionHolder.connection[A].flatMap(f)
-          } finally {
-            connectionHolder.loadBalancer ! LoadBalancerActor.ReturnConnection(connectionHolder)
-          }
-      }
+    serviceBrokerActor.ask(ServiceBrokerActor.GetServiceConnection(name)).mapTo[ConnectionHolder].flatMap {
+      case connectionHolder: ConnectionHolder =>
+        try {
+          connectionHolder.connection[A].flatMap(f)
+        } finally {
+          connectionHolder.loadBalancer ! LoadBalancerActor.ReturnConnection(connectionHolder)
+        }
     }
   }
 }

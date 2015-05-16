@@ -2,7 +2,7 @@ package xebia.consul.client
 
 import akka.actor.ActorSystem
 import akka.actor.Status.Failure
-import akka.testkit.{ImplicitSender, TestKit}
+import akka.testkit.{ ImplicitSender, TestKit }
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification

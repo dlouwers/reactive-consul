@@ -50,7 +50,7 @@ class ServiceBrokerActorSpec extends Specification with Mockito with Logging {
       there was one(serviceAvailabilityActorFactory).apply(sut.underlyingActor.context, "service1", sut)
       val service = ModelHelpers.createService("service1")
       sut ! ServiceBrokerActor.GetServiceConnection(service.serviceName)
-      expectMsg(LoadBalancerActor.GetConnection)
+      expectMsg(LoadBalancerActor.GetConnection("service1"))
     }
 
     "return a failure if a service name cannot be found" in new ActorScope {
@@ -58,6 +58,46 @@ class ServiceBrokerActorSpec extends Specification with Mockito with Logging {
       val service = ModelHelpers.createService("service1")
       sut ! ServiceBrokerActor.GetServiceConnection(service.serviceName)
       expectMsg(Failure(ServiceUnavailableException(service.serviceName)))
+    }
+
+    "forward a query for connection provider availability" in new ActorScope {
+      serviceAvailabilityActorFactory.apply(any[ActorRefFactory], be("service1"), any[ActorRef]) returns self
+      val sut = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(Map("service1" -> connectionStrategy), serviceAvailabilityActorFactory), "ServiceBroker")
+      there was one(serviceAvailabilityActorFactory).apply(sut.underlyingActor.context, "service1", sut)
+      sut ! ServiceBrokerActor.HasAvailableConnectionProviderFor("service1")
+      expectMsg(LoadBalancerActor.HasAvailableConnectionProvider)
+    }
+
+    "return false when every service doesn't have at least one connection provider avaiable" in new ActorScope {
+      serviceAvailabilityActorFactory.apply(any[ActorRefFactory], be("service1"), any[ActorRef]) returns self
+      serviceAvailabilityActorFactory.apply(any[ActorRefFactory], be("service2"), any[ActorRef]) returns self
+      val sut = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(Map("service1" -> connectionStrategy, "service2" -> connectionStrategy), serviceAvailabilityActorFactory), "ServiceBroker")
+      there was one(serviceAvailabilityActorFactory).apply(sut.underlyingActor.context, "service1", sut)
+      there was one(serviceAvailabilityActorFactory).apply(sut.underlyingActor.context, "service2", sut)
+      sut ! ServiceBrokerActor.AllConnectionProvidersAvailable
+      expectMsgPF() {
+        case LoadBalancerActor.HasAvailableConnectionProvider => lastSender ! true
+      }
+      expectMsgPF() {
+        case LoadBalancerActor.HasAvailableConnectionProvider => lastSender ! false
+      }
+      expectMsg(false)
+    }
+
+    "return true when every service has at least one connection provider avaiable" in new ActorScope {
+      serviceAvailabilityActorFactory.apply(any[ActorRefFactory], be("service1"), any[ActorRef]) returns self
+      serviceAvailabilityActorFactory.apply(any[ActorRefFactory], be("service2"), any[ActorRef]) returns self
+      val sut = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(Map("service1" -> connectionStrategy, "service2" -> connectionStrategy), serviceAvailabilityActorFactory), "ServiceBroker")
+      there was one(serviceAvailabilityActorFactory).apply(sut.underlyingActor.context, "service1", sut)
+      there was one(serviceAvailabilityActorFactory).apply(sut.underlyingActor.context, "service2", sut)
+      sut ! ServiceBrokerActor.AllConnectionProvidersAvailable
+      expectMsgPF() {
+        case LoadBalancerActor.HasAvailableConnectionProvider => lastSender ! true
+      }
+      expectMsgPF() {
+        case LoadBalancerActor.HasAvailableConnectionProvider => lastSender ! true
+      }
+      expectMsg(true)
     }
   }
 }

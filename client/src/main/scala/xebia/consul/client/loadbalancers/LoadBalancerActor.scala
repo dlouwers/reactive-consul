@@ -2,7 +2,7 @@ package xebia.consul.client.loadbalancers
 
 import akka.actor.Status.Failure
 import akka.actor.{ Actor, ActorLogging }
-import xebia.consul.client.loadbalancers.LoadBalancerActor.{ AddConnectionProvider, GetConnection, RemoveConnectionProvider, ReturnConnection }
+import xebia.consul.client.loadbalancers.LoadBalancerActor._
 import xebia.consul.client.{ ServiceUnavailableException, ConnectionHolder, ConnectionProvider }
 
 import scala.collection.mutable
@@ -31,8 +31,9 @@ trait LoadBalancerActor extends Actor with LoadBalancer with ActorLogging {
       connectionProviders.put(key, provider)
     case RemoveConnectionProvider(key) =>
       connectionProviders.remove(key).foreach(_.destroy())
+    case HasAvailableConnectionProvider =>
+      sender ! (connectionProviders.size > 0)
   }
-
 }
 
 object LoadBalancerActor {
@@ -41,4 +42,5 @@ object LoadBalancerActor {
   case class ReturnConnection(connection: ConnectionHolder)
   case class AddConnectionProvider(key: String, provider: ConnectionProvider)
   case class RemoveConnectionProvider(key: String)
+  case object HasAvailableConnectionProvider
 }

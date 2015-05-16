@@ -1,15 +1,15 @@
 package xebia.consul.client
 
 import java.net.URL
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeUnit._
 
 import akka.actor._
 import akka.testkit.TestKit
+import org.specs2.execute.Result
 import org.specs2.mutable.Specification
 import org.specs2.specification
 import xebia.consul.client.loadbalancers.LoadBalancerActor
-import xebia.consul.client.util.{ Logging, ConsulDockerContainer }
+import xebia.consul.client.util.{ ConsulDockerContainer, Logging }
 
 import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration.Duration
@@ -43,9 +43,12 @@ class ServiceBrokerIntegrationTest extends Specification with ConsulDockerContai
         val httpClient = new SprayCatalogHttpClient(new URL(s"http://$host:$port"))
         val connectionStrategy = ConnectionStrategy(connectionProviderFactory, loadBalancerFactory)
         val sut = ServiceBroker(system, httpClient, services = Map("consul" -> connectionStrategy))
-        sut.withService("consul") { connection: CatalogHttpClient =>
+        val result = sut.withService("consul") { connection: CatalogHttpClient =>
           connection.findServiceChange("bogus").map(_ should beAnInstanceOf[IndexedServiceInstances])
-        }.await(retries = 0, timeout = Duration(10, SECONDS))
+        }
+        logger.error(result.toString)
+        Await.result(result, Duration("10s")) should beAnInstanceOf[String]
+        false shouldEqual true
       }
     }
   }

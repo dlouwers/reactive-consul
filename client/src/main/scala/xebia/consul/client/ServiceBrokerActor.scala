@@ -2,12 +2,14 @@ package xebia.consul.client
 
 import akka.actor.Status.Failure
 import akka.actor._
+import akka.util.Timeout
 import xebia.consul.client.ServiceAvailabilityActor._
-import xebia.consul.client.ServiceBrokerActor.GetServiceConnection
+import xebia.consul.client.ServiceBrokerActor.{ AllConnectionProvidersAvailable, HasAvailableConnectionProviderFor, GetServiceConnection }
 import xebia.consul.client.loadbalancers.LoadBalancerActor
 
 import scala.collection.mutable
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ Future, ExecutionContext }
+import scala.concurrent.duration._
 
 class ServiceBrokerActor(services: Map[String, ConnectionStrategy], serviceAvailabilityActorFactory: (ActorRefFactory, String, ActorRef) => ActorRef)(implicit ec: ExecutionContext) extends Actor with ActorLogging {
 
@@ -37,6 +39,16 @@ class ServiceBrokerActor(services: Map[String, ConnectionStrategy], serviceAvail
         case None =>
           sender ! Failure(new ServiceUnavailableException(name))
       }
+    case HasAvailableConnectionProviderFor(name: String) =>
+      loadbalancers.get(name) match {
+        case Some(loadbalancer) =>
+          loadbalancer forward LoadBalancerActor.HasAvailableConnectionProvider
+        case None =>
+          sender ! false
+      }
+    case AllConnectionProvidersAvailable =>
+      import akka.pattern.pipe
+      queryConnectionProviderAvailability pipeTo sender
   }
 
   def addConnectionProviders(added: Set[Service]): Unit = {
@@ -51,10 +63,19 @@ class ServiceBrokerActor(services: Map[String, ConnectionStrategy], serviceAvail
       loadbalancers(s.serviceName) ! LoadBalancerActor.RemoveConnectionProvider(s.serviceId)
     }
   }
+
+  def queryConnectionProviderAvailability: Future[Boolean] = {
+    implicit val timeout = Timeout(1.second)
+    import akka.pattern.ask
+    Future.sequence(loadbalancers.values.map(_.ask(LoadBalancerActor.HasAvailableConnectionProvider).mapTo[Boolean])).map(_.forall(p => p))
+  }
 }
 
 object ServiceBrokerActor {
   def props(services: Map[String, ConnectionStrategy], serviceAvailabilityActorFactory: (ActorRefFactory, String, ActorRef) => ActorRef)(implicit ec: ExecutionContext): Props = Props(new ServiceBrokerActor(services, serviceAvailabilityActorFactory))
   case class GetServiceConnection(name: String)
   case object Stop
+  case class HasAvailableConnectionProviderFor(name: String)
+  case object AllConnectionProvidersAvailable
+
 }
