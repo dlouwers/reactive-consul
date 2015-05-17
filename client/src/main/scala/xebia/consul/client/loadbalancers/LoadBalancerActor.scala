@@ -18,6 +18,10 @@ trait LoadBalancerActor extends Actor with LoadBalancer with ActorLogging {
 
   def selectConnection: Option[Future[ConnectionHolder]]
 
+  override def postStop(): Unit = {
+    log.info("CRAP I GOT STOPPED")
+  }
+
   def receive = {
 
     case GetConnection(name) =>

@@ -20,9 +20,13 @@ class ServiceBrokerActor(services: Map[String, ConnectionStrategy], serviceAvail
     services.foreach {
       case (name, strategy) =>
         loadbalancers.put(name, strategy.loadBalancerFactory(context))
-        log.debug(s"Starting Service Availability Actor for $name")
+        log.info(s"Starting Service Availability Actor for $name")
         serviceAvailabilityActorFactory(context, name, self)
     }
+  }
+
+  override def postStop(): Unit = {
+    log.info("CRAP I GOT STOPPED")
   }
 
   def receive = {
@@ -53,7 +57,8 @@ class ServiceBrokerActor(services: Map[String, ConnectionStrategy], serviceAvail
 
   def addConnectionProviders(added: Set[Service]): Unit = {
     added.foreach { s =>
-      val connectionProvider = services(s.serviceName).connectionProviderFactory.create(s.serviceAddress, s.servicePort)
+      val host = if (s.serviceAddress.isEmpty) s.address else s.serviceAddress
+      val connectionProvider = services(s.serviceName).connectionProviderFactory.create(host, s.servicePort)
       loadbalancers(s.serviceName) ! LoadBalancerActor.AddConnectionProvider(s.serviceId, connectionProvider)
     }
   }

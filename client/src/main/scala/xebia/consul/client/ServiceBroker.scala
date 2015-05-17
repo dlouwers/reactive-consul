@@ -3,26 +3,26 @@ package xebia.consul.client
 import akka.actor.{ ActorRefFactory, ActorRef }
 import akka.util.Timeout
 import xebia.consul.client.loadbalancers.LoadBalancerActor
-import xebia.consul.client.util.RetryPolicy
+import xebia.consul.client.util.{ Logging, RetryPolicy }
 import scala.concurrent.duration._
 
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.reflect.ClassTag
 
-class ServiceBroker(serviceBrokerActor: ActorRef)(implicit ec: ExecutionContext) extends RetryPolicy {
+class ServiceBroker(serviceBrokerActor: ActorRef)(implicit ec: ExecutionContext) extends RetryPolicy with Logging {
 
   import akka.pattern.ask
 
-  private[this] implicit val timeout = Timeout(10.second)
+  private[this] implicit val timeout = Timeout(10.seconds)
 
-  def withService[A: ClassTag, B](name: String)(f: A => Future[B]): Future[B] = {
-    serviceBrokerActor.ask(ServiceBrokerActor.GetServiceConnection(name)).mapTo[ConnectionHolder].flatMap {
-      case connectionHolder: ConnectionHolder =>
-        try {
-          connectionHolder.connection[A].flatMap(f)
-        } finally {
-          connectionHolder.loadBalancer ! LoadBalancerActor.ReturnConnection(connectionHolder)
-        }
+  def withService[A, B](name: String)(f: A => Future[B]): Future[B] = {
+    logger.info(s"Trying to get connection for service $name")
+    serviceBrokerActor.ask(ServiceBrokerActor.GetServiceConnection(name)).mapTo[ConnectionHolder].flatMap { connectionHolder =>
+      logger.info(s"Received connectionholder $connectionHolder")
+      try {
+        connectionHolder.connection[A].flatMap(f)
+      } finally {
+        connectionHolder.loadBalancer ! LoadBalancerActor.ReturnConnection(connectionHolder)
+      }
     }
   }
 }

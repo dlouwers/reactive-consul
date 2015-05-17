@@ -3,7 +3,6 @@ package xebia.consul.client.util
 import java.net.URI
 
 import com.spotify.docker.client.messages._
-import org.specs2.execute.{ AsResult, Result }
 import org.specs2.specification.BeforeAfterAll
 
 import scala.collection.JavaConversions._
@@ -22,11 +21,11 @@ trait DockerContainer extends BeforeAfterAll with Logging {
     def mappedPort(port: String): Seq[PortBinding]
   }
 
-  def withDockerHost[T: AsResult](port: String)(block: (String, Int) => T): Result = {
+  def withDockerHost[T](port: String)(f: (String, Int) => T): T = {
     // Find the random port in the network settings
     val (hostIp, hostPort) = container.mappedPort(port).headOption.map(pb => (container.hostname, pb.hostPort().toInt))
       .getOrElse(throw new IndexOutOfBoundsException(s"Cannot find mapped port $port"))
-    AsResult(block(hostIp, hostPort))
+    f(hostIp, hostPort)
   }
 
   override def beforeAll(): Unit = container.start()
