@@ -22,23 +22,26 @@ class LoadBalancerActorSpec extends Specification with Mockito {
 
     "hand out a connection holder when requested" in new ActorScope {
       val sut = TestActorRef(new LoadBalancerActor {
+        override def serviceName: String = "service1"
         override def selectConnection: Option[Future[ConnectionHolder]] = Some(Future.successful(connectionHolder))
       })
-      sut ! LoadBalancerActor.GetConnection("service1")
+      sut ! LoadBalancerActor.GetConnection
       expectMsg(connectionHolder)
     }
 
     "return an error when a connection cannot be provided" in new ActorScope {
       val expectedException = new ServiceUnavailableException("service1")
       val sut = TestActorRef(new LoadBalancerActor {
+        override def serviceName: String = "service1"
         override def selectConnection: Option[Future[ConnectionHolder]] = Some(Future.failed(expectedException))
       })
-      sut ! LoadBalancerActor.GetConnection("service1")
+      sut ! LoadBalancerActor.GetConnection
       expectMsg(Failure(expectedException))
     }
 
     "return a connection holder when requested" in new ActorScope {
       val sut = TestActorRef(new LoadBalancerActor {
+        override def serviceName: String = "service1"
         override def selectConnection: Option[Future[ConnectionHolder]] = Some(Future.successful(connectionHolder))
       })
       sut.underlyingActor.connectionProviders.put("key", connectionProvider)
@@ -49,6 +52,7 @@ class LoadBalancerActorSpec extends Specification with Mockito {
 
     "add a connection provider when requested" in new ActorScope {
       val sut = TestActorRef(new LoadBalancerActor {
+        override def serviceName: String = "service1"
         override def selectConnection: Option[Future[ConnectionHolder]] = Some(Future.successful(connectionHolder))
       })
       sut ! LoadBalancerActor.AddConnectionProvider("key", connectionProvider)
@@ -57,6 +61,7 @@ class LoadBalancerActorSpec extends Specification with Mockito {
 
     "remove a connection provider when requested and tell it to destroy itself" in new ActorScope {
       val sut = TestActorRef(new LoadBalancerActor {
+        override def serviceName: String = "service1"
         override def selectConnection: Option[Future[ConnectionHolder]] = Some(Future.successful(connectionHolder))
       })
       sut.underlyingActor.connectionProviders.put("key", connectionProvider)
@@ -67,6 +72,7 @@ class LoadBalancerActorSpec extends Specification with Mockito {
 
     "return true when it has at least one available connection provider for the service" in new ActorScope {
       val sut = TestActorRef(new LoadBalancerActor {
+        override def serviceName: String = "service1"
         override def selectConnection: Option[Future[ConnectionHolder]] = Some(Future.successful(connectionHolder))
       })
       sut.underlyingActor.connectionProviders.put("key", connectionProvider)
@@ -76,6 +82,7 @@ class LoadBalancerActorSpec extends Specification with Mockito {
 
     "return false when it has no available connection providers for the service" in new ActorScope {
       val sut = TestActorRef(new LoadBalancerActor {
+        override def serviceName: String = "service1"
         override def selectConnection: Option[Future[ConnectionHolder]] = Some(Future.successful(connectionHolder))
       })
       sut ! LoadBalancerActor.HasAvailableConnectionProvider

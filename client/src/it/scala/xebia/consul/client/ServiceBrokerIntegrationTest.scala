@@ -45,6 +45,7 @@ class ServiceBrokerIntegrationTest extends Specification with ConsulDockerContai
           }
         }
         class NaiveLoadBalancer extends LoadBalancerActor {
+          override def serviceName = "consul"
           override def selectConnection: Option[Future[ConnectionHolder]] = connectionProviders.get("consul").map(_.getConnection(self))
         }
         val loadBalancerFactory = (f: ActorRefFactory) => f.actorOf(Props(new NaiveLoadBalancer))

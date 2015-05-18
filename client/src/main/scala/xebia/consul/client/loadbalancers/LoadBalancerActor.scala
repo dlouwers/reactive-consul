@@ -13,21 +13,23 @@ trait LoadBalancerActor extends Actor with LoadBalancer with ActorLogging {
 
   import akka.pattern.pipe
 
+  def serviceName: String
+
   // Actor state
   val connectionProviders = mutable.Map.empty[String, ConnectionProvider]
 
   def selectConnection: Option[Future[ConnectionHolder]]
 
   override def postStop(): Unit = {
-    log.info("CRAP I GOT STOPPED")
+    log.debug(s"LoadBalancerActor for $serviceName stopped")
   }
 
   def receive = {
 
-    case GetConnection(name) =>
+    case GetConnection =>
       selectConnection match {
         case Some(connectionHolder) => connectionHolder pipeTo sender
-        case None => sender ! Failure(new ServiceUnavailableException(name))
+        case None => sender ! Failure(new ServiceUnavailableException(serviceName))
       }
     case ReturnConnection(connection) =>
       connectionProviders.get(connection.key).foreach(_.returnConnection(connection))
@@ -42,7 +44,7 @@ trait LoadBalancerActor extends Actor with LoadBalancer with ActorLogging {
 
 object LoadBalancerActor {
   // Messsages
-  case class GetConnection(name: String)
+  case object GetConnection
   case class ReturnConnection(connection: ConnectionHolder)
   case class AddConnectionProvider(key: String, provider: ConnectionProvider)
   case class RemoveConnectionProvider(key: String)

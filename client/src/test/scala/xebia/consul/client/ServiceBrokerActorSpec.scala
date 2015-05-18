@@ -50,7 +50,7 @@ class ServiceBrokerActorSpec extends Specification with Mockito with Logging {
       there was one(serviceAvailabilityActorFactory).apply(sut.underlyingActor.context, "service1", sut)
       val service = ModelHelpers.createService("service1")
       sut ! ServiceBrokerActor.GetServiceConnection(service.serviceName)
-      expectMsg(LoadBalancerActor.GetConnection("service1"))
+      expectMsg(LoadBalancerActor.GetConnection)
     }
 
     "return a failure if a service name cannot be found" in new ActorScope {

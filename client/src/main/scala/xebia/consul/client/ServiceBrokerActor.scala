@@ -39,7 +39,7 @@ class ServiceBrokerActor(services: Map[String, ConnectionStrategy], serviceAvail
       log.debug(s"Getting a service connection for $name")
       loadbalancers.get(name) match {
         case Some(loadbalancer) =>
-          loadbalancer forward LoadBalancerActor.GetConnection(name)
+          loadbalancer forward LoadBalancerActor.GetConnection
         case None =>
           sender ! Failure(new ServiceUnavailableException(name))
       }
