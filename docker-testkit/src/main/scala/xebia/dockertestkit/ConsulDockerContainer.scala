@@ -1,4 +1,4 @@
-package xebia.consul.client.util
+package xebia.dockertestkit
 
 trait ConsulDockerContainer extends DockerContainer {
 

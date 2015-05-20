@@ -4,7 +4,8 @@ import java.net.URL
 
 import akka.actor.ActorSystem
 import org.specs2.mutable.Specification
-import xebia.consul.client.util.{ ConsulDockerContainer, DockerContainer, Logging }
+import xebia.consul.client.util.Logging
+import xebia.dockertestkit.ConsulDockerContainer
 
 import scala.concurrent.duration.Duration
 

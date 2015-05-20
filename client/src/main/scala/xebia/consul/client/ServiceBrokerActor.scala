@@ -15,18 +15,20 @@ class ServiceBrokerActor(services: Map[String, ConnectionStrategy], serviceAvail
 
   // Actor state
   val loadbalancers: mutable.Map[String, ActorRef] = mutable.Map.empty
+  val serviceAvailability: mutable.Set[ActorRef] = mutable.Set.empty
 
   override def preStart(): Unit = {
     services.foreach {
       case (name, strategy) =>
         loadbalancers.put(name, strategy.loadBalancerFactory(context))
-        log.info(s"Starting Service Availability Actor for $name")
-        serviceAvailabilityActorFactory(context, name, self)
+        log.info(s"Starting service availability Actor for $name")
+        serviceAvailability += serviceAvailabilityActorFactory(context, name, self)
     }
   }
 
   override def postStop(): Unit = {
-    log.info("CRAP I GOT STOPPED")
+    log.info("Stopping all service availability Actors")
+    serviceAvailability.foreach(_ ! ServiceAvailabilityActor.Stop)
   }
 
   def receive = {

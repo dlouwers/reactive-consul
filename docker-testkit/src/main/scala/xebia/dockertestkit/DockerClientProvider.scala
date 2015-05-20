@@ -1,4 +1,4 @@
-package xebia.consul.client.util
+package xebia.dockertestkit
 
 import com.spotify.docker.client.{ DefaultDockerClient, DockerClient }
 

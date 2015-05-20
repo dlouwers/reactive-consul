@@ -1,14 +1,16 @@
-package xebia.consul.client.util
+package xebia.dockertestkit
 
 import java.net.URI
 
 import com.spotify.docker.client.messages._
+import org.slf4j.LoggerFactory
 import org.specs2.specification.BeforeAfterAll
 
 import scala.collection.JavaConversions._
 
-trait DockerContainer extends BeforeAfterAll with Logging {
+trait DockerContainer extends BeforeAfterAll {
 
+  private val logger = LoggerFactory.getLogger(this.getClass)
   def image: String
   def command: Seq[String] = Seq.empty[String]
 

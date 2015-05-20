@@ -21,7 +21,8 @@ trait LoadBalancerActor extends Actor with LoadBalancer with ActorLogging {
   def selectConnection: Option[Future[ConnectionHolder]]
 
   override def postStop(): Unit = {
-    log.debug(s"LoadBalancerActor for $serviceName stopped")
+    log.debug(s"LoadBalancerActor for $serviceName stopped, destroying all connection providers")
+    connectionProviders.values.foreach(_.destroy())
   }
 
   def receive = {

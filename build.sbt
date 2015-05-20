@@ -9,7 +9,7 @@ lazy val root = (project in file("."))
     version := "0.1.0",
     scalaVersion := "2.11.5"
   )
-  .aggregate(client, tools, example)
+  .aggregate(client, dockerTestkit, example)
 
 lazy val client = (project in file("client"))
   .settings(
@@ -18,12 +18,11 @@ lazy val client = (project in file("client"))
       sprayClient,
       sprayJson,
       akkaActor,
-      specs2,
-      specs2mock,
-      spotifyDocker,
       retry,
       slf4j,
       akkaSlf4j,
+      specs2 % "test,it",
+      specs2mock,
       logback % "test,it",
       akkaTestKit
     ),
@@ -39,17 +38,26 @@ lazy val client = (project in file("client"))
   .configs( IntegrationTest )
   .settings( Defaults.itSettings : _* )
   .settings( scalariformSettingsWithIt : _* )
+  .dependsOn(dockerTestkit % "test,it")
 
-lazy val tools = (project in file("tools"))
-  .aggregate(client)
-  .dependsOn(client)
+lazy val dockerTestkit = (project in file("docker-testkit"))
   .settings(
+    libraryDependencies ++= Seq(
+      slf4j,
+      specs2,
+      specs2mock,
+      spotifyDocker
+    ),
     scalaVersion := "2.11.5"
   )
+  .configs( IntegrationTest )
+  .settings( Defaults.itSettings : _* )
+  .settings( scalariformSettingsWithIt : _* )
+
 
 lazy val example = (project in file("example"))
-  .aggregate(client, tools)
-  .dependsOn(client, tools)
+  .aggregate(client)
+  .dependsOn(client)
   .settings(libraryDependencies ++= Seq(akkaActor, sprayClient, sprayRouting, sprayJson))
   .settings(
     libraryDependencies ++= Seq(akkaActor, sprayClient, sprayJson),

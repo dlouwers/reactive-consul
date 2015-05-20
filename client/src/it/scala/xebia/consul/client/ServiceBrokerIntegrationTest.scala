@@ -12,7 +12,8 @@ import org.specs2.mutable.Specification
 import org.specs2.specification
 import retry.Success
 import xebia.consul.client.loadbalancers.LoadBalancerActor
-import xebia.consul.client.util.{ RetryPolicy, ConsulDockerContainer, Logging }
+import xebia.consul.client.util.{ RetryPolicy, Logging }
+import xebia.dockertestkit.ConsulDockerContainer
 
 import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration.Duration
