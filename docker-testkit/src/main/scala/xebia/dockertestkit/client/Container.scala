@@ -7,10 +7,9 @@ import xebia.dockertestkit.DockerClientProvider
 
 import scala.collection.JavaConversions._
 
-class Container(image: String, command: Seq[String]) {
+class Container(config: ContainerConfig) {
 
   private val docker = DockerClientProvider.client
-  private val config: ContainerConfig = ContainerConfig.builder().image(image).cmd(command).build()
   private lazy val container: ContainerCreation = docker.createContainer(config)
   private def id: String = container.id()
 

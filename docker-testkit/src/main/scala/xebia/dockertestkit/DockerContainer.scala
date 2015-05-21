@@ -1,29 +1,18 @@
 package xebia.dockertestkit
 
+import com.spotify.docker.client.messages.ContainerConfig
 import org.slf4j.LoggerFactory
-import org.specs2.specification.BeforeAfterAll
-import xebia.dockertestkit.client.Container
 
-trait DockerContainer extends BeforeAfterAll {
+import scala.collection.JavaConversions._
+
+trait DockerContainer extends DockerContainers {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
   def image: String
   def command: Seq[String] = Seq.empty[String]
+  override def containerConfigs: Set[ContainerConfig] = Set(ContainerConfig.builder().image(image).cmd(command).build())
 
-  def withDockerHost[T](port: String)(f: (String, Int) => T): T = {
-    // Find the random port in the network settings
-    val (hostIp, hostPort) = container.mappedPort(port).headOption.map(pb => (container.hostname, pb.hostPort().toInt))
-      .getOrElse(throw new IndexOutOfBoundsException(s"Cannot find mapped port $port"))
-    f(hostIp, hostPort)
-  }
+  def withDockerHost[T](port: String)(f: (String, Int) => T): T = withDockerHosts(port)(f)
 
-  override def beforeAll(): Unit = container.start()
-
-  override def afterAll(): Unit = {
-    container.stop()
-    container.remove()
-  }
-
-  val container = new Container(image, command)
 }
 
