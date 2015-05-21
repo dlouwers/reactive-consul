@@ -72,4 +72,4 @@ lazy val example = (project in file("example"))
     dockerExposedVolumes in Docker := Seq("/opt/docker/logs")
   )
 
-Revolver.settings
+Revolver.settings.settings
