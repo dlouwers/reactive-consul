@@ -12,7 +12,10 @@ trait DockerContainer extends DockerContainers {
   def command: Seq[String] = Seq.empty[String]
   override def containerConfigs: Set[ContainerConfig] = Set(ContainerConfig.builder().image(image).cmd(command).build())
 
-  def withDockerHost[T](port: String)(f: (String, Int) => T): T = withDockerHosts(port)(f)
+  def withDockerHost[T](port: String)(f: (String, Int) => T): T = withDockerHosts(Set(port)) { hosts =>
+    val (h, p) = hosts(port)
+    f(h, p)
+  }
 
 }
 

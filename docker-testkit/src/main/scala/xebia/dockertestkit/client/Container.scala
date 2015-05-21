@@ -13,14 +13,6 @@ class Container(config: ContainerConfig) {
   private lazy val container: ContainerCreation = docker.createContainer(config)
   private def id: String = container.id()
 
-  def hostname: String = {
-    val uri = new URI(System.getenv("DOCKER_HOST"))
-    uri.getScheme match {
-      case "tcp" ⇒ uri.getHost
-      case "unix" ⇒ "localhost"
-    }
-  }
-
   def start(): Unit = {
     val hostConfig = HostConfig.builder()
       .publishAllPorts(true)

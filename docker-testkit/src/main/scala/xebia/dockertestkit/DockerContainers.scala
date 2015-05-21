@@ -11,11 +11,12 @@ trait DockerContainers extends BeforeAfterAll {
   def containerConfigs: Set[ContainerConfig]
   val containers = containerConfigs.map(new Container(_))
 
-  def withDockerHosts[T](port: String)(f: (String, Int) => T): T = {
-    // Find the mapped available port in the network settings
-    val (hostIp, hostPort) = containers.head.mappedPort(port).headOption.map(pb => (containers.head.hostname, pb.hostPort().toInt))
-      .getOrElse(throw new IndexOutOfBoundsException(s"Cannot find mapped port $port"))
-    f(hostIp, hostPort)
+  def withDockerHosts[T](ports: Set[String])(f: Map[String, (String, Int)] => T): T = {
+    // Find the mapped available ports in the network settings
+    f(ports.zip(ports.flatMap(p => containers.map(c => c.mappedPort(p).headOption))).map {
+      case (port, Some(binding)) => port -> (DockerClientProvider.hostname, binding.hostPort().toInt)
+      case (port, None) => throw new IndexOutOfBoundsException(s"Cannot find mapped port $port")
+    }.toMap)
   }
 
   override def beforeAll(): Unit = containers.foreach(_.start())
