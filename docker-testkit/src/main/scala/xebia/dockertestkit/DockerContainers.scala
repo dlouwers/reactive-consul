@@ -1,13 +1,11 @@
 package xebia.dockertestkit
 
 import com.spotify.docker.client.messages.ContainerConfig
-import org.slf4j.LoggerFactory
 import org.specs2.specification.BeforeAfterAll
 import xebia.dockertestkit.client.Container
 
 trait DockerContainers extends BeforeAfterAll {
 
-  private val logger = LoggerFactory.getLogger(this.getClass)
   def containerConfigs: Set[ContainerConfig]
   val containers = containerConfigs.map(new Container(_))
 
