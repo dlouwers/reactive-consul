@@ -2,10 +2,15 @@ package xebia.dockertestkit
 
 import java.net.URI
 
+import com.spotify.docker.client.DockerClient.ListContainersParam
 import com.spotify.docker.client.{ DefaultDockerClient, DockerClient }
 
+import scala.collection.JavaConversions._
+
 object DockerClientProvider {
+
   val client: DockerClient = DefaultDockerClient.fromEnv().build()
+
   val hostname: String = {
     val uri = new URI(System.getenv("DOCKER_HOST"))
     uri.getScheme match {
@@ -14,4 +19,7 @@ object DockerClientProvider {
     }
   }
 
+  def cleanUp(): Unit = {
+    client.listContainers(ListContainersParam.allContainers()).foreach(c => client.removeContainer(c.id()))
+  }
 }

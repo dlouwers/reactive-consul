@@ -7,12 +7,14 @@ import org.specs2.execute.ResultLike
 import org.specs2.mutable.Specification
 import retry.Success
 import xebia.consul.client.loadbalancers.LoadBalancerActor
-import xebia.consul.client.util.{ ConsulDockerContainer, TestActorSystem, Logging, RetryPolicy }
+import xebia.consul.client.util._
 
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 
-class ServiceBrokerIntegrationTest extends Specification with ConsulDockerContainer with RetryPolicy with TestActorSystem with Logging {
+class ServiceBrokerIntegrationTest extends Specification with ConsulRegistratorDockerContainer with RetryPolicy with TestActorSystem with Logging {
+
+  sequential
 
   import java.util.concurrent.TimeUnit._
 
@@ -25,10 +27,8 @@ class ServiceBrokerIntegrationTest extends Specification with ConsulDockerContai
         val sprayHttpClient = new SprayCatalogHttpClient(new URL(s"http://$host:$port"))
         val connectionProviderFactory = new ConnectionProviderFactory {
           override def create(host: String, port: Int): ConnectionProvider = new ConnectionProvider {
-            // The provided host and port are not correct since they are running inside of docker
-            // TODO: See if this can be solved using registrator
-            // val httpClient: CatalogHttpClient = new SprayCatalogHttpClient(new URL(s"http://$host:$port"))
-            val httpClient: CatalogHttpClient = sprayHttpClient
+            logger.info("CONNECTION PROVIDER CREATED")
+            val httpClient: CatalogHttpClient = new SprayCatalogHttpClient(new URL(s"http://$host:$port"))
 
             override def destroy(): Unit = Unit
 
@@ -43,15 +43,14 @@ class ServiceBrokerIntegrationTest extends Specification with ConsulDockerContai
         }
         class NaiveLoadBalancer extends LoadBalancerActor {
           override def serviceName = "consul"
-
           override def selectConnection: Option[Future[ConnectionHolder]] = connectionProviders.get("consul").map(_.getConnection(self))
         }
         val loadBalancerFactory = (f: ActorRefFactory) => f.actorOf(Props(new NaiveLoadBalancer))
         val connectionStrategy = ConnectionStrategy(connectionProviderFactory, loadBalancerFactory)
-        val sut = ServiceBroker(actorSystem, sprayHttpClient, services = Map("consul" -> connectionStrategy))
+        val sut = ServiceBroker(actorSystem, sprayHttpClient, services = Map("consul-8500" -> connectionStrategy))
         val success = Success[ResultLike](r => true)
         retry { () =>
-          sut.withService("consul") { connection: CatalogHttpClient =>
+          sut.withService("consul-8500") { connection: CatalogHttpClient =>
             connection.findServiceChange("bogus").map(_.instances should haveSize(0))
           }
         }(success, actorSystem.dispatcher).await(0, Duration(20, SECONDS))
