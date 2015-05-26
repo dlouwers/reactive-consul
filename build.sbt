@@ -42,6 +42,7 @@ lazy val client = (project in file("client"))
 
 lazy val dockerTestkit = (project in file("docker-testkit"))
   .settings(
+    resolvers ++= Dependencies.resolutionRepos,
     libraryDependencies ++= Seq(
       slf4j,
       specs2,
