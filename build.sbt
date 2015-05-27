@@ -38,7 +38,8 @@ lazy val client = (project in file("client"))
   .configs( IntegrationTest )
   .settings( Defaults.itSettings : _* )
   .settings( scalariformSettingsWithIt : _* )
-  .dependsOn(dockerTestkit % "test,it")
+  .dependsOn(dockerTestkit % "test,it"
+  )
 
 lazy val dockerTestkit = (project in file("docker-testkit"))
   .settings(

@@ -1,11 +1,14 @@
 # Make sure you have built the example application before running
+# May have to run 'docker-compose rm' before 'docker-compose up' to make sure clean containers are used
 consulserver:
   image: "progrium/consul"
   ports:
     - "8400:8400"
     - "8500:8500"
-    - "8600:53/udp"
-  command: -server -bootstrap
+    - "53/udp:8600"
+  environment:
+    - SERVICE_8500_NAME=consul-http
+  command: -server -bootstrap -ui-dir /ui -advertise 192.168.59.103
 registrator:
   image: "progrium/registrator"
   volumes:

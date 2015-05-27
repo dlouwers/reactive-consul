@@ -1,7 +1,5 @@
 package xebia.dockertestkit.client
 
-import java.net.URI
-
 import com.spotify.docker.client.messages._
 import xebia.dockertestkit.DockerClientProvider
 
@@ -39,7 +37,7 @@ class Container(config: ContainerConfig) {
   }
 
   def mappedPort(port: String): Seq[PortBinding] = {
-    docker.inspectContainer(id).networkSettings().ports().get(port).toSeq
+    Option(docker.inspectContainer(id).networkSettings().ports()).flatMap(pts => Option(pts.get(port))).map(_.toSeq).getOrElse(Seq.empty)
   }
 }
 

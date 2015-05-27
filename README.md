@@ -11,4 +11,16 @@
 Create local docker images for example by running
 docker:publishLocal
 
+## Docker testkit
+* The docker-testkit depedency on Specs2 needs to be "provided" e.g. should not pull it in 
+* docker-testkit needs to be refactored in a way as to offer support for ScalaTest as well
+* If possible see about support or JUnit
+
+## Musings
+
+Since Marc and I already determined that in a build server environment there is need for a shared Consul instance, it
+could be easier to maintain the same philosophy for local builds and separate tests based on tags that could be randomly
+generated. The only difference would be that in a buildserver setting the Consul instance is provided while in a local
+test environment it would have to be started and shared.
+
 
