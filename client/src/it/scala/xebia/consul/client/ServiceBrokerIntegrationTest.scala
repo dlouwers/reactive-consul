@@ -14,8 +14,6 @@ import scala.concurrent.duration.Duration
 
 class ServiceBrokerIntegrationTest extends Specification with ConsulRegistratorDockerContainer with RetryPolicy with TestActorSystem with Logging {
 
-  sequential
-
   import java.util.concurrent.TimeUnit._
 
   import scala.concurrent.ExecutionContext.Implicits.global
@@ -27,8 +25,8 @@ class ServiceBrokerIntegrationTest extends Specification with ConsulRegistratorD
         val sprayHttpClient = new SprayCatalogHttpClient(new URL(s"http://$host:$port"))
         val connectionProviderFactory = new ConnectionProviderFactory {
           override def create(host: String, port: Int): ConnectionProvider = new ConnectionProvider {
-            logger.info("CONNECTION PROVIDER CREATED")
-            val httpClient: CatalogHttpClient = new SprayCatalogHttpClient(new URL(s"http://$host:$port"))
+            //            val httpClient: CatalogHttpClient = new SprayCatalogHttpClient(new URL(s"http://$host:$port"))
+            val httpClient: CatalogHttpClient = sprayHttpClient
 
             override def destroy(): Unit = Unit
 
@@ -47,10 +45,10 @@ class ServiceBrokerIntegrationTest extends Specification with ConsulRegistratorD
         }
         val loadBalancerFactory = (f: ActorRefFactory) => f.actorOf(Props(new NaiveLoadBalancer))
         val connectionStrategy = ConnectionStrategy(connectionProviderFactory, loadBalancerFactory)
-        val sut = ServiceBroker(actorSystem, sprayHttpClient, services = Map("consul-8500" -> connectionStrategy))
+        val sut = ServiceBroker(actorSystem, sprayHttpClient, services = Map("consul" -> connectionStrategy))
         val success = Success[ResultLike](r => true)
         retry { () =>
-          sut.withService("consul-8500") { connection: CatalogHttpClient =>
+          sut.withService("consul") { connection: CatalogHttpClient =>
             connection.findServiceChange("bogus").map(_.instances should haveSize(0))
           }
         }(success, actorSystem.dispatcher).await(0, Duration(20, SECONDS))
