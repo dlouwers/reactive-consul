@@ -6,6 +6,7 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification
 import xebia.consul.client.ServiceAvailabilityActor.Stop
+import xebia.consul.client.dao.{IndexedServiceInstances, ConsulHttpClient}
 import xebia.consul.client.helpers.ModelHelpers
 import xebia.consul.client.util.Logging
 
@@ -17,7 +18,7 @@ class ServiceAvailabilityActorSpec extends Specification with Mockito with Loggi
   abstract class ActorScope extends TestKit(ActorSystem("TestSystem")) with specification.After with ImplicitSender {
     implicit val ec = system.dispatcher
     override def after: Any = system.shutdown()
-    val httpClient = mock[CatalogHttpClient]
+    val httpClient = mock[ConsulHttpClient]
   }
 
   "The ServiceAvailabilityActor" should {

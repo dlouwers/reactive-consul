@@ -5,6 +5,7 @@ import akka.actor._
 import akka.util.Timeout
 import xebia.consul.client.ServiceAvailabilityActor._
 import xebia.consul.client.ServiceBrokerActor.{ AllConnectionProvidersAvailable, HasAvailableConnectionProviderFor, GetServiceConnection }
+import xebia.consul.client.dao.ServiceInstance
 import xebia.consul.client.loadbalancers.LoadBalancerActor
 
 import scala.collection.mutable
@@ -57,7 +58,7 @@ class ServiceBrokerActor(services: Map[String, ConnectionStrategy], serviceAvail
       queryConnectionProviderAvailability pipeTo sender
   }
 
-  def addConnectionProviders(added: Set[Service]): Unit = {
+  def addConnectionProviders(added: Set[ServiceInstance]): Unit = {
     added.foreach { s =>
       val host = if (s.serviceAddress.isEmpty) s.address else s.serviceAddress
       val connectionProvider = services(s.serviceName).connectionProviderFactory.create(host, s.servicePort)
@@ -65,7 +66,7 @@ class ServiceBrokerActor(services: Map[String, ConnectionStrategy], serviceAvail
     }
   }
 
-  def removeConnectionProviders(removed: Set[Service]): Unit = {
+  def removeConnectionProviders(removed: Set[ServiceInstance]): Unit = {
     removed.foreach { s =>
       loadbalancers(s.serviceName) ! LoadBalancerActor.RemoveConnectionProvider(s.serviceId)
     }

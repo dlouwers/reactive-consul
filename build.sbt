@@ -62,6 +62,7 @@ lazy val example = (project in file("example"))
   .dependsOn(client)
   .settings(libraryDependencies ++= Seq(akkaActor, sprayClient, sprayRouting, sprayJson))
   .settings(
+    fork := true,
     libraryDependencies ++= Seq(akkaActor, sprayClient, sprayJson),
     scalaVersion := "2.11.5",
     scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")

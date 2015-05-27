@@ -6,6 +6,7 @@ import akka.actor._
 import org.specs2.execute.ResultLike
 import org.specs2.mutable.Specification
 import retry.Success
+import xebia.consul.client.dao.{ ServiceRegistration, ConsulHttpClient }
 import xebia.consul.client.loadbalancers.LoadBalancerActor
 import xebia.consul.client.util._
 
@@ -22,12 +23,13 @@ class ServiceBrokerIntegrationTest extends Specification with ConsulRegistratorD
 
     "provide a usable connection to consul" in withConsulHost { (host, port) =>
       withActorSystem { implicit actorSystem =>
-        val sprayHttpClient = new SprayCatalogHttpClient(new URL(s"http://$host:$port"))
+        val sprayHttpClient = new SprayConsulHttpClient(new URL(s"http://$host:$port"))
+        // Register the HTTP interface
+        sprayHttpClient.registerService(ServiceRegistration("consul-http", address = Some(host), port = Some(port)))
         val connectionProviderFactory = new ConnectionProviderFactory {
           override def create(host: String, port: Int): ConnectionProvider = new ConnectionProvider {
-            //            val httpClient: CatalogHttpClient = new SprayCatalogHttpClient(new URL(s"http://$host:$port"))
-            val httpClient: CatalogHttpClient = sprayHttpClient
-
+            logger.info(s"Asked to create connection provider for $host:$port")
+            val httpClient: ConsulHttpClient = new SprayConsulHttpClient(new URL(s"http://$host:$port"))
             override def destroy(): Unit = Unit
 
             override def returnConnection(connection: ConnectionHolder): Unit = Unit
@@ -41,15 +43,16 @@ class ServiceBrokerIntegrationTest extends Specification with ConsulRegistratorD
         }
         class NaiveLoadBalancer extends LoadBalancerActor {
           override def serviceName = "consul"
-          override def selectConnection: Option[Future[ConnectionHolder]] = connectionProviders.get("consul").map(_.getConnection(self))
+          // Connection provider gets registered under the serviceID which is the same as the service name when omitted
+          override def selectConnection: Option[Future[ConnectionHolder]] = connectionProviders.get("consul-http").map(_.getConnection(self))
         }
         val loadBalancerFactory = (f: ActorRefFactory) => f.actorOf(Props(new NaiveLoadBalancer))
         val connectionStrategy = ConnectionStrategy(connectionProviderFactory, loadBalancerFactory)
-        val sut = ServiceBroker(actorSystem, sprayHttpClient, services = Map("consul" -> connectionStrategy))
+        val sut = ServiceBroker(actorSystem, sprayHttpClient, services = Map("consul-http" -> connectionStrategy))
         val success = Success[ResultLike](r => true)
         retry { () =>
-          sut.withService("consul") { connection: CatalogHttpClient =>
-            connection.findServiceChange("bogus").map(_.instances should haveSize(0))
+          sut.withService("consul-http") { connection: ConsulHttpClient =>
+            connection.findServiceChange("bogus").map(_.resource should haveSize(0))
           }
         }(success, actorSystem.dispatcher).await(0, Duration(20, SECONDS))
       }

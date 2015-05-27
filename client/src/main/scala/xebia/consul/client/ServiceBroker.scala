@@ -2,6 +2,7 @@ package xebia.consul.client
 
 import akka.actor.{ ActorRefFactory, ActorRef }
 import akka.util.Timeout
+import xebia.consul.client.dao.ConsulHttpClient
 import xebia.consul.client.loadbalancers.LoadBalancerActor
 import xebia.consul.client.util.{ Logging, RetryPolicy }
 import scala.concurrent.duration._
@@ -28,7 +29,7 @@ class ServiceBroker(serviceBrokerActor: ActorRef)(implicit ec: ExecutionContext)
 }
 
 object ServiceBroker {
-  def apply(rootActor: ActorRefFactory, httpClient: CatalogHttpClient, services: Map[String, ConnectionStrategy]): ServiceBroker = {
+  def apply(rootActor: ActorRefFactory, httpClient: ConsulHttpClient, services: Map[String, ConnectionStrategy]): ServiceBroker = {
     implicit val ec = rootActor.dispatcher
     val serviceAvailabilityActorFactory = (factory: ActorRefFactory, service: String, listener: ActorRef) => factory.actorOf(ServiceAvailabilityActor.props(httpClient, service, listener))
     val actorRef = rootActor.actorOf(ServiceBrokerActor.props(services, serviceAvailabilityActorFactory), "ServiceBroker")

@@ -1,6 +1,6 @@
 package xebia.consul.client
 
-import java.net.{ URI, URL }
+import java.net.URL
 
 import akka.actor.ActorSystem
 import retry.Success
@@ -9,16 +9,30 @@ import spray.http.{ HttpRequest, HttpResponse }
 import spray.httpx.SprayJsonSupport._
 import spray.httpx.unmarshalling._
 import spray.httpx.{ PipelineException, UnsuccessfulResponseException }
-import spray.json.DefaultJsonProtocol
+import spray.json._
+import xebia.consul.client.dao._
 import xebia.consul.client.util.{ Logging, RetryPolicy }
 
 import scala.concurrent.Future
 import scala.util.Try
 
-class SprayCatalogHttpClient(host: URL)(implicit actorSystem: ActorSystem) extends CatalogHttpClient with DefaultJsonProtocol with RetryPolicy with Logging {
+class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extends ConsulHttpClient with DefaultJsonProtocol with RetryPolicy with Logging {
 
   implicit val executionContext = actorSystem.dispatcher
-  implicit val serviceFormat = jsonFormat(Service, "Node", "Address", "ServiceID", "ServiceName", "ServiceTags", "ServiceAddress", "ServicePort")
+  implicit val serviceFormat = jsonFormat(ServiceInstance, "Node", "Address", "ServiceID", "ServiceName", "ServiceTags", "ServiceAddress", "ServicePort")
+  implicit val httpCheckFormat = jsonFormat(HttpCheck, "HTTP", "Interval")
+  implicit val scriptCheckFormat = jsonFormat(ScriptCheck, "Script", "Interval")
+  implicit val ttlCheckFormat = jsonFormat(TTLCheck, "TTL")
+  implicit val checkWriter = lift {
+    new JsonWriter[Check] {
+      override def write(obj: Check): JsValue = obj match {
+        case obj: ScriptCheck => obj.toJson
+        case obj: HttpCheck => obj.toJson
+        case obj: TTLCheck => obj.toJson
+      }
+    }
+  }
+  implicit val serviceRegistrationFormat = jsonFormat(ServiceRegistration, "Name", "ID", "Tags", "Address", "Port", "Check")
 
   val pipeline: HttpRequest => Future[HttpResponse] = sendReceive
 
@@ -32,10 +46,10 @@ class SprayCatalogHttpClient(host: URL)(implicit actorSystem: ActorSystem) exten
     response ⇒
       if (response.status.isSuccess)
         extractIndex(response) { idx =>
-          response.as[Option[Set[Service]]] match {
+          response.as[Option[Set[ServiceInstance]]] match {
             case Right(value) ⇒ value.map { v =>
               IndexedServiceInstances(idx, v)
-            }.getOrElse(IndexedServiceInstances(idx, Set.empty[Service]))
+            }.getOrElse(IndexedServiceInstances(idx, Set.empty[ServiceInstance]))
             case Left(error: MalformedContent) ⇒
               throw new PipelineException(error.errorMessage, error.cause.orNull)
             case Left(error) ⇒ throw new PipelineException(error.toString)
@@ -55,5 +69,14 @@ class SprayCatalogHttpClient(host: URL)(implicit actorSystem: ActorSystem) exten
     retry { () =>
       myPipeline(request)
     }(success, executionContext)
+  }
+
+  override def registerService(registration: ServiceRegistration): Future[Unit] = {
+    val request = Put(s"$host/v1/agent/service/register", registration.toJson.asJsObject())
+    val myPipeline: HttpRequest => Future[HttpResponse] = pipeline
+    val success = Success[HttpResponse](r => r.status.isSuccess)
+    retry { () =>
+      myPipeline(request)
+    }(success, executionContext).map(r => Unit)
   }
 }

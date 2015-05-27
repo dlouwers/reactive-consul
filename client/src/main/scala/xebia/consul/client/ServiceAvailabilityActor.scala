@@ -2,10 +2,11 @@ package xebia.consul.client
 
 import akka.actor.{ Actor, ActorRef, Props }
 import xebia.consul.client.ServiceAvailabilityActor._
+import xebia.consul.client.dao.{ IndexedServiceInstances, ServiceInstance, ConsulHttpClient }
 
 import scala.concurrent.Future
 
-class ServiceAvailabilityActor(httpClient: CatalogHttpClient, serviceName: String, listener: ActorRef) extends Actor {
+class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceName: String, listener: ActorRef) extends Actor {
 
   implicit val ec = context.dispatcher
 
@@ -48,8 +49,8 @@ class ServiceAvailabilityActor(httpClient: CatalogHttpClient, serviceName: Strin
   }
 
   def createServiceAvailabilityUpdate(oldState: IndexedServiceInstances, newState: IndexedServiceInstances): ServiceAvailabilityUpdate = {
-    val deleted = oldState.instances.filterNot(sv => newState.instances.contains(sv))
-    val added = newState.instances.filterNot(s => oldState.instances.contains(s))
+    val deleted = oldState.resource.filterNot(sv => newState.resource.contains(sv))
+    val added = newState.resource.filterNot(s => oldState.resource.contains(s))
     ServiceAvailabilityUpdate(added, deleted)
   }
 
@@ -57,11 +58,11 @@ class ServiceAvailabilityActor(httpClient: CatalogHttpClient, serviceName: Strin
 
 object ServiceAvailabilityActor {
 
-  def props(httpClient: CatalogHttpClient, service: String, listener: ActorRef): Props = Props(new ServiceAvailabilityActor(httpClient, service, listener))
+  def props(httpClient: ConsulHttpClient, service: String, listener: ActorRef): Props = Props(new ServiceAvailabilityActor(httpClient, service, listener))
 
   // Messages
   private case class UpdateServiceAvailability(services: IndexedServiceInstances)
-  private[client] case class ServiceAvailabilityUpdate(added: Set[Service], removed: Set[Service])
+  private[client] case class ServiceAvailabilityUpdate(added: Set[ServiceInstance], removed: Set[ServiceInstance])
   private[client] object ServiceAvailabilityUpdate {
     def empty = ServiceAvailabilityUpdate(Set.empty, Set.empty)
   }

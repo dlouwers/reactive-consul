@@ -6,6 +6,7 @@ import akka.testkit.{ ImplicitSender, TestActorRef, TestKit }
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification
+import xebia.consul.client.dao.ConsulHttpClient
 import xebia.consul.client.helpers.ModelHelpers
 import xebia.consul.client.loadbalancers.LoadBalancerActor
 import xebia.consul.client.util.Logging
@@ -16,7 +17,7 @@ class ServiceBrokerActorSpec extends Specification with Mockito with Logging {
 
     override def after: Any = TestKit.shutdownActorSystem(system)
     implicit val ec = system.dispatcher
-    val httpClient = mock[CatalogHttpClient]
+    val httpClient = mock[ConsulHttpClient]
     val serviceAvailabilityActorFactory = mock[(ActorRefFactory, String, ActorRef) => ActorRef]
     val connectionProviderFactory = mock[ConnectionProviderFactory]
     val connectionProvider = mock[ConnectionProvider]
