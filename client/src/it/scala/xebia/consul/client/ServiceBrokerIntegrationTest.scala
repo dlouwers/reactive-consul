@@ -6,7 +6,7 @@ import akka.actor._
 import org.specs2.execute.ResultLike
 import org.specs2.mutable.Specification
 import retry.Success
-import xebia.consul.client.dao.{ ServiceRegistration, ConsulHttpClient }
+import xebia.consul.client.dao.{ SprayConsulHttpClient, ServiceRegistration, ConsulHttpClient }
 import xebia.consul.client.loadbalancers.LoadBalancerActor
 import xebia.consul.client.util._
 

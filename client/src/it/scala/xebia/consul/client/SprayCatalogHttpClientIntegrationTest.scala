@@ -5,7 +5,7 @@ import java.net.URL
 import org.specs2.execute.ResultLike
 import org.specs2.mutable.Specification
 import retry.Success
-import xebia.consul.client.dao.{ TTLCheck, ServiceRegistration, ConsulHttpClient }
+import xebia.consul.client.dao.{ SprayConsulHttpClient, TTLCheck, ServiceRegistration, ConsulHttpClient }
 import xebia.consul.client.util.{ RetryPolicy, TestActorSystem, ConsulDockerContainer, Logging }
 
 import scala.concurrent.duration.Duration

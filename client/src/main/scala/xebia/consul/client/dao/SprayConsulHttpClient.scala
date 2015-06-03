@@ -1,4 +1,4 @@
-package xebia.consul.client
+package xebia.consul.client.dao
 
 import java.net.URL
 
@@ -10,7 +10,6 @@ import spray.httpx.SprayJsonSupport._
 import spray.httpx.unmarshalling._
 import spray.httpx.{ PipelineException, UnsuccessfulResponseException }
 import spray.json._
-import xebia.consul.client.dao._
 import xebia.consul.client.util.{ Logging, RetryPolicy }
 
 import scala.concurrent.Future
