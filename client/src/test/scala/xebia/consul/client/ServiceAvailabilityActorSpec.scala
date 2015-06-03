@@ -6,7 +6,7 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification
 import xebia.consul.client.ServiceAvailabilityActor.Stop
-import xebia.consul.client.dao.{IndexedServiceInstances, ConsulHttpClient}
+import xebia.consul.client.dao.{ IndexedServiceInstances, ConsulHttpClient }
 import xebia.consul.client.helpers.ModelHelpers
 import xebia.consul.client.util.Logging
 

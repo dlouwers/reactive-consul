@@ -13,6 +13,7 @@ lazy val root = (project in file("."))
 
 lazy val client = (project in file("client"))
   .settings(
+    fork := true,
     resolvers ++= Dependencies.resolutionRepos,
     libraryDependencies ++= Seq(
       sprayClient,

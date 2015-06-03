@@ -6,6 +6,7 @@ import akka.testkit.{ ImplicitSender, TestKit }
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification
+import xebia.consul.client.dao.ConsulHttpClient
 import xebia.consul.client.loadbalancers.LoadBalancerActor
 import xebia.consul.client.util.Logging
 
@@ -18,6 +19,7 @@ class ServiceBrokerTest extends Specification with Mockito with Logging {
     override def after: Any = TestKit.shutdownActorSystem(system)
     implicit val ec = system.dispatcher
     val connectionHolder = mock[ConnectionHolder]
+    val httpClient = mock[ConsulHttpClient]
     val loadBalancer = self
   }
 
@@ -26,7 +28,7 @@ class ServiceBrokerTest extends Specification with Mockito with Logging {
     "return a service connection when requested" in new ActorScope {
       connectionHolder.connection[Boolean] returns Future.successful(true)
       connectionHolder.loadBalancer returns loadBalancer
-      val sut = new ServiceBroker(self)
+      val sut = new ServiceBroker(self, httpClient)
       val result = sut.withService("service1") { service: Boolean =>
         Future.successful(service)
       }
@@ -41,7 +43,7 @@ class ServiceBrokerTest extends Specification with Mockito with Logging {
     "return the connection when an error occurs" in new ActorScope {
       connectionHolder.connection[Boolean] returns Future.successful(true)
       connectionHolder.loadBalancer returns loadBalancer
-      val sut = new ServiceBroker(self)
+      val sut = new ServiceBroker(self, httpClient)
       val result = sut.withService[Boolean, Boolean]("service1") { service: Boolean =>
         throw new RuntimeException()
       }
@@ -54,7 +56,7 @@ class ServiceBrokerTest extends Specification with Mockito with Logging {
     }
 
     "throw an error when an excpetion is returned" in new ActorScope {
-      val sut = new ServiceBroker(self)
+      val sut = new ServiceBroker(self, httpClient)
       val result = sut.withService("service1") { service: Boolean =>
         Future.successful(service)
       }
