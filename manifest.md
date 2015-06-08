@@ -51,4 +51,4 @@ Just commiting a finished story to version control isn't enough nowadays. The wa
 what system plays a part in determining wether it will function correctly. Applications should come with automated and
 tested means to deploy on the production environment. 
 
-This can be achieved with all manner of tools, like ansible, pupper or chef.
+This can be achieved with all manner of tools, like ansible, puppet or chef.

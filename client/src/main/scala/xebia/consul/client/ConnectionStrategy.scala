@@ -1,6 +1,7 @@
 package xebia.consul.client
 
 import akka.actor.{ ActorRef, ActorRefFactory }
+import xebia.consul.client.loadbalancers.{ LoadBalancerActor, LoadBalancer }
 
 import scala.concurrent.Future
 
@@ -21,3 +22,7 @@ trait ConnectionHolder {
 }
 
 case class ConnectionStrategy(connectionProviderFactory: ConnectionProviderFactory, loadBalancerFactory: ActorRefFactory => ActorRef)
+object ConnectionStrategy {
+  def apply(serviceName: String, connectionProviderFactory: ConnectionProviderFactory, loadBalancer: LoadBalancer): ConnectionStrategy =
+    ConnectionStrategy(connectionProviderFactory, ctx => ctx.actorOf(LoadBalancerActor.props(loadBalancer, serviceName)))
+}

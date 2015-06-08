@@ -7,13 +7,13 @@ import org.specs2.execute.ResultLike
 import org.specs2.mutable.Specification
 import retry.Success
 import xebia.consul.client.dao.{ SprayConsulHttpClient, ServiceRegistration, ConsulHttpClient }
-import xebia.consul.client.loadbalancers.LoadBalancerActor
+import xebia.consul.client.loadbalancers.{ LoadBalancer, LoadBalancerActor }
 import xebia.consul.client.util._
 
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 
-class ServiceBrokerIntegrationTest extends Specification with ConsulRegistratorDockerContainer with RetryPolicy with TestActorSystem with Logging {
+class ServiceBrokerIntegrationTest extends Specification with ConsulDockerContainer with RetryPolicy with TestActorSystem with Logging {
 
   import java.util.concurrent.TimeUnit._
 
@@ -41,12 +41,11 @@ class ServiceBrokerIntegrationTest extends Specification with ConsulRegistratorD
             })
           }
         }
-        class NaiveLoadBalancer extends LoadBalancerActor {
-          override def serviceName = "consul"
+        class NaiveLoadBalancer extends LoadBalancer {
           // Connection provider gets registered under the serviceID which is the same as the service name when omitted
-          override def selectConnection: Option[Future[ConnectionHolder]] = connectionProviders.get("consul-http").map(_.getConnection(self))
+          override def selectConnection: Option[String] = Some("consul-http")
         }
-        val loadBalancerFactory = (f: ActorRefFactory) => f.actorOf(Props(new NaiveLoadBalancer))
+        val loadBalancerFactory = (f: ActorRefFactory) => f.actorOf(LoadBalancerActor.props(new NaiveLoadBalancer, "consul-http"))
         val connectionStrategy = ConnectionStrategy(connectionProviderFactory, loadBalancerFactory)
         val sut = ServiceBroker(actorSystem, sprayHttpClient, services = Map("consul-http" -> connectionStrategy))
         val success = Success[ResultLike](r => true)

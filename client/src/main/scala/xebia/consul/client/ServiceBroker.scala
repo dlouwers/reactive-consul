@@ -1,8 +1,10 @@
 package xebia.consul.client
 
-import akka.actor.{ ActorRefFactory, ActorRef }
+import java.net.URL
+
+import akka.actor.{ ActorSystem, ActorRefFactory, ActorRef }
 import akka.util.Timeout
-import xebia.consul.client.dao.{ ServiceRegistration, ConsulHttpClient }
+import xebia.consul.client.dao.{ SprayConsulHttpClient, ServiceRegistration, ConsulHttpClient }
 import xebia.consul.client.loadbalancers.LoadBalancerActor
 import xebia.consul.client.util.{ Logging, RetryPolicy }
 import scala.concurrent.duration._
@@ -31,8 +33,18 @@ class ServiceBroker(serviceBrokerActor: ActorRef, consulClient: ConsulHttpClient
 }
 
 object ServiceBroker {
+
   def apply(rootActor: ActorRefFactory, httpClient: ConsulHttpClient, services: Map[String, ConnectionStrategy]): ServiceBroker = {
     implicit val ec = rootActor.dispatcher
+    val serviceAvailabilityActorFactory = (factory: ActorRefFactory, service: String, listener: ActorRef) => factory.actorOf(ServiceAvailabilityActor.props(httpClient, service, listener))
+    val actorRef = rootActor.actorOf(ServiceBrokerActor.props(services, serviceAvailabilityActorFactory), "ServiceBroker")
+    new ServiceBroker(actorRef, httpClient)
+  }
+
+  def apply(services: Map[String, ConnectionStrategy], host: String, port: Int = 8500): ServiceBroker = {
+    implicit val ec = ExecutionContext.Implicits.global
+    implicit val rootActor = ActorSystem("reactive-consul")
+    val httpClient = new SprayConsulHttpClient(new URL(s"$host:$port"))
     val serviceAvailabilityActorFactory = (factory: ActorRefFactory, service: String, listener: ActorRef) => factory.actorOf(ServiceAvailabilityActor.props(httpClient, service, listener))
     val actorRef = rootActor.actorOf(ServiceBrokerActor.props(services, serviceAvailabilityActorFactory), "ServiceBroker")
     new ServiceBroker(actorRef, httpClient)
