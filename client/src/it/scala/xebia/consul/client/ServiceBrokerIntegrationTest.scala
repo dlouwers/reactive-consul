@@ -45,8 +45,7 @@ class ServiceBrokerIntegrationTest extends Specification with ConsulDockerContai
           // Connection provider gets registered under the serviceID which is the same as the service name when omitted
           override def selectConnection: Option[String] = Some("consul-http")
         }
-        val loadBalancerFactory = (f: ActorRefFactory) => f.actorOf(LoadBalancerActor.props(new NaiveLoadBalancer, "consul-http"))
-        val connectionStrategy = ConnectionStrategy(connectionProviderFactory, loadBalancerFactory)
+        val connectionStrategy = ConnectionStrategy("consul-http", connectionProviderFactory, new NaiveLoadBalancer)
         val sut = ServiceBroker(actorSystem, sprayHttpClient, services = Map("consul-http" -> connectionStrategy))
         val success = Success[ResultLike](r => true)
         retry { () =>
