@@ -15,8 +15,9 @@ class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceName: String
   var stopping = false
 
   override def preStart(): Unit = {
-    httpClient.findServiceChange(serviceName, None).map { change =>
+    httpClient.findServiceChange(serviceName, None).foreach { change =>
       self ! UpdateServiceAvailability(change)
+
     }
   }
 
@@ -28,7 +29,7 @@ class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceName: String
     case UpdateServiceAvailability(services: IndexedServiceInstances) =>
       val (update, serviceChange) = updateServiceAvailability(services)
       update.foreach(listener ! _)
-      serviceChange.map { change =>
+      serviceChange.foreach { change =>
         if (!stopping) {
           self ! UpdateServiceAvailability(change)
         }
@@ -45,12 +46,12 @@ class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceName: String
     } else {
       None
     }
-    (update, httpClient.findServiceChange(serviceName, Some(services.index)))
+    (update, httpClient.findServiceChange(serviceName, Some(services.index), Some("1s")))
   }
 
   def createServiceAvailabilityUpdate(oldState: IndexedServiceInstances, newState: IndexedServiceInstances): ServiceAvailabilityUpdate = {
-    val deleted = oldState.resource.filterNot(sv => newState.resource.contains(sv))
-    val added = newState.resource.filterNot(s => oldState.resource.contains(s))
+    val deleted = oldState.resource.diff(newState.resource)
+    val added = newState.resource.diff(oldState.resource)
     ServiceAvailabilityUpdate(added, deleted)
   }
 

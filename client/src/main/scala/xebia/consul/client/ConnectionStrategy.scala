@@ -25,4 +25,10 @@ case class ConnectionStrategy(connectionProviderFactory: ConnectionProviderFacto
 object ConnectionStrategy {
   def apply(serviceName: String, connectionProviderFactory: ConnectionProviderFactory, loadBalancer: LoadBalancer): ConnectionStrategy =
     ConnectionStrategy(connectionProviderFactory, ctx => ctx.actorOf(LoadBalancerActor.props(loadBalancer, serviceName)))
+  def apply(serviceName: String, connectionProviderFactory: (String, Int) => ConnectionProvider, loadBalancer: LoadBalancer): ConnectionStrategy = {
+    val cpf = new ConnectionProviderFactory {
+      override def create(host: String, port: Int): ConnectionProvider = connectionProviderFactory(host, port)
+    }
+    ConnectionStrategy(cpf, ctx => ctx.actorOf(LoadBalancerActor.props(loadBalancer, serviceName)))
+  }
 }

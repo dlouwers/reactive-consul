@@ -64,7 +64,7 @@ class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extend
     val parameters = Seq(dcParameter, waitParameter, indexParameter).flatten.mkString("&")
     val request = Get(s"$host/v1/catalog/service/$service?$parameters")
     val myPipeline: HttpRequest => Future[IndexedServiceInstances] = pipeline ~> unmarshalWithIndex
-    val success = Success[Any](r => true)
+    val success = Success[IndexedServiceInstances](r => true)
     retry { () =>
       myPipeline(request)
     }(success, executionContext)

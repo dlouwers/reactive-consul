@@ -60,7 +60,15 @@ lazy val dockerTestkit = (project in file("docker-testkit"))
 lazy val example = (project in file("example"))
   .aggregate(client)
   .dependsOn(client)
-  .settings(libraryDependencies ++= Seq(akkaActor, sprayClient, sprayRouting, sprayJson))
+  .settings(
+      libraryDependencies ++= Seq(
+        sprayClient,
+        sprayRouting,
+        sprayJson,
+        slf4j,
+        logback
+      )
+  )
   .settings(
     fork := true,
     libraryDependencies ++= Seq(akkaActor, sprayClient, sprayJson),

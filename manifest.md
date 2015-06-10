@@ -1,4 +1,4 @@
-# Solid testing manifest
+# Solid Scala testing manifest
 
 1. Most systems should contain three type of tests: unit tests, integration tests and end-to-end tests.
 2. Developers should strive to be able to run all three types of tests locally in full isolation.
@@ -20,7 +20,7 @@ interaction with an external system. For the purpose of this manifest I will mai
 ### End-To-End Tests
 
 End to end tests test the functioning of the system as a whole, including the interaction with external systems. These
-are genrally hardest to run in isolation. These tests can contain failover scenarios if they are part of the system 
+are generally hardest to run in isolation. These tests can contain failover scenarios if they are part of the system 
 requirements.
 
 ### Test devision

@@ -6,8 +6,6 @@ consulserver:
     - "8400:8400"
     - "8500:8500"
     - "53/udp:8600"
-  environment:
-    - SERVICE_8500_NAME=consul-http
   command: -server -bootstrap -ui-dir /ui -advertise 192.168.59.103
 registrator:
   image: "progrium/registrator"

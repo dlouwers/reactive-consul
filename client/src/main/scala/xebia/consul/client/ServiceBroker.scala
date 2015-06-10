@@ -44,7 +44,7 @@ object ServiceBroker {
   def apply(services: Map[String, ConnectionStrategy], host: String, port: Int = 8500): ServiceBroker = {
     implicit val ec = ExecutionContext.Implicits.global
     implicit val rootActor = ActorSystem("reactive-consul")
-    val httpClient = new SprayConsulHttpClient(new URL(s"$host:$port"))
+    val httpClient = new SprayConsulHttpClient(new URL(s"http://$host:$port"))
     val serviceAvailabilityActorFactory = (factory: ActorRefFactory, service: String, listener: ActorRef) => factory.actorOf(ServiceAvailabilityActor.props(httpClient, service, listener))
     val actorRef = rootActor.actorOf(ServiceBrokerActor.props(services, serviceAvailabilityActorFactory), "ServiceBroker")
     new ServiceBroker(actorRef, httpClient)

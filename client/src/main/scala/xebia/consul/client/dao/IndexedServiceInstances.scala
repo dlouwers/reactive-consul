@@ -11,7 +11,7 @@ package xebia.consul.client.dao
 //    "ServicePort": 8000
 //  }
 //]
-case class ServiceInstance(node: String, address: String, serviceId: String, serviceName: String, serviceTags: Seq[String], serviceAddress: String, servicePort: Int)
+case class ServiceInstance(node: String, address: String, serviceId: String, serviceName: String, serviceTags: Option[Seq[String]], serviceAddress: String, servicePort: Int)
 case class IndexedServiceInstances(index: Long, resource: Set[ServiceInstance]) extends Indexed[Set[ServiceInstance]]
 
 object IndexedServiceInstances {

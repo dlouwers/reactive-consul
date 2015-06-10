@@ -7,7 +7,7 @@ import org.specs2.execute.ResultLike
 import org.specs2.mutable.Specification
 import retry.Success
 import xebia.consul.client.dao.{ SprayConsulHttpClient, ServiceRegistration, ConsulHttpClient }
-import xebia.consul.client.loadbalancers.{ LoadBalancer, LoadBalancerActor }
+import xebia.consul.client.loadbalancers.{ RoundRobinLoadBalancer, LoadBalancer, LoadBalancerActor }
 import xebia.consul.client.util._
 
 import scala.concurrent.Future
@@ -25,11 +25,15 @@ class ServiceBrokerIntegrationTest extends Specification with ConsulDockerContai
       withActorSystem { implicit actorSystem =>
         val sprayHttpClient = new SprayConsulHttpClient(new URL(s"http://$host:$port"))
         // Register the HTTP interface
-        sprayHttpClient.registerService(ServiceRegistration("consul-http", address = Some(host), port = Some(port)))
+        sprayHttpClient.registerService(ServiceRegistration("consul-http", Some("consul-http-1"), address = Some(host), port = Some(port)))
+        sprayHttpClient.registerService(ServiceRegistration("consul-http", Some("consul-http-2"), address = Some(host), port = Some(port)))
         val connectionProviderFactory = new ConnectionProviderFactory {
           override def create(host: String, port: Int): ConnectionProvider = new ConnectionProvider {
+
             logger.info(s"Asked to create connection provider for $host:$port")
+
             val httpClient: ConsulHttpClient = new SprayConsulHttpClient(new URL(s"http://$host:$port"))
+
             override def destroy(): Unit = Unit
 
             override def returnConnection(connection: ConnectionHolder): Unit = Unit
@@ -41,11 +45,7 @@ class ServiceBrokerIntegrationTest extends Specification with ConsulDockerContai
             })
           }
         }
-        class NaiveLoadBalancer extends LoadBalancer {
-          // Connection provider gets registered under the serviceID which is the same as the service name when omitted
-          override def selectConnection: Option[String] = Some("consul-http")
-        }
-        val connectionStrategy = ConnectionStrategy("consul-http", connectionProviderFactory, new NaiveLoadBalancer)
+        val connectionStrategy = ConnectionStrategy("consul-http", connectionProviderFactory, new RoundRobinLoadBalancer)
         val sut = ServiceBroker(actorSystem, sprayHttpClient, services = Map("consul-http" -> connectionStrategy))
         val success = Success[ResultLike](r => true)
         retry { () =>
