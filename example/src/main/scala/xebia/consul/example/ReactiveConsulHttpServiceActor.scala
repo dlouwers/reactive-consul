@@ -23,7 +23,7 @@ trait ReactiveConsulHttpService extends HttpService {
     pathPrefix("api") {
       path("identify") {
         get {
-          complete(s"Hi, I'm a ${System.getenv("SERVICE_NAME")}")
+          complete(s"Hi, I'm a ${System.getenv("SERVICE_NAME")} called ${System.getenv("INSTANCE_NAME")}")
         }
       } ~
       path("talk") {

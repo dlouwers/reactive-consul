@@ -1,6 +1,7 @@
 package xebia.consul.client
 
 import akka.actor.Status.Failure
+import akka.actor.SupervisorStrategy.Stop
 import akka.actor._
 import akka.util.Timeout
 import xebia.consul.client.ServiceAvailabilityActor._
@@ -29,7 +30,7 @@ class ServiceBrokerActor(services: Map[String, ConnectionStrategy], serviceAvail
 
   override def postStop(): Unit = {
     log.info("Stopping all service availability Actors")
-    serviceAvailability.foreach(_ ! ServiceAvailabilityActor.Stop)
+    serviceAvailability.foreach(_ ! Stop)
   }
 
   def receive = {

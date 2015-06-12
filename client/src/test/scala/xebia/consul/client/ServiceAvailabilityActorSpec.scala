@@ -1,12 +1,13 @@
 package xebia.consul.client
 
-import akka.actor.{ Actor, ActorSystem }
-import akka.testkit.{ TestActorRef, ImplicitSender, TestKit }
+import akka.actor.ActorSystem
+import akka.actor.SupervisorStrategy.Stop
+import akka.testkit.{ ImplicitSender, TestActorRef, TestKit }
+import org.mockito.Matchers
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification
-import xebia.consul.client.ServiceAvailabilityActor.Stop
-import xebia.consul.client.dao.{ IndexedServiceInstances, ConsulHttpClient }
+import xebia.consul.client.dao.{ ConsulHttpClient, IndexedServiceInstances }
 import xebia.consul.client.helpers.ModelHelpers
 import xebia.consul.client.util.Logging
 
@@ -18,14 +19,14 @@ class ServiceAvailabilityActorSpec extends Specification with Mockito with Loggi
   abstract class ActorScope extends TestKit(ActorSystem("TestSystem")) with specification.After with ImplicitSender {
     implicit val ec = system.dispatcher
     override def after: Any = system.shutdown()
-    val httpClient = mock[ConsulHttpClient]
+    val httpClient: ConsulHttpClient = smartMock[ConsulHttpClient]
   }
 
   "The ServiceAvailabilityActor" should {
 
     "receive one service update when there are no changes" in new ActorScope {
-      httpClient.findServiceChange("bogus", None) returns Future.successful(IndexedServiceInstances(1, Set.empty))
-      httpClient.findServiceChange("bogus", Some(1)) returns Future {
+      httpClient.findServiceChange(Matchers.eq("bogus"), Matchers.eq(None), Matchers.any[Option[String]], Matchers.any[Option[String]]) returns Future.successful(IndexedServiceInstances(1, Set.empty))
+      httpClient.findServiceChange(Matchers.eq("bogus"), Matchers.eq(Some(1)), Matchers.eq(Some("1s")), Matchers.any[Option[String]]) returns Future {
         sut ! Stop
         IndexedServiceInstances(1, Set.empty)
       }
@@ -36,9 +37,9 @@ class ServiceAvailabilityActorSpec extends Specification with Mockito with Loggi
 
     "receive two service updates when there is a change" in new ActorScope {
       val service = ModelHelpers.createService("bogus")
-      httpClient.findServiceChange("bogus", None) returns Future.successful(IndexedServiceInstances(1, Set.empty))
-      httpClient.findServiceChange("bogus", Some(1)) returns Future.successful(IndexedServiceInstances(2, Set(service)))
-      httpClient.findServiceChange("bogus", Some(2)) returns Future {
+      httpClient.findServiceChange(Matchers.eq("bogus"), Matchers.eq(None), Matchers.any[Option[String]], Matchers.any[Option[String]]) returns Future.successful(IndexedServiceInstances(1, Set.empty))
+      httpClient.findServiceChange(Matchers.eq("bogus"), Matchers.eq(Some(1)), Matchers.eq(Some("1s")), Matchers.any[Option[String]]) returns Future.successful(IndexedServiceInstances(2, Set(service)))
+      httpClient.findServiceChange(Matchers.eq("bogus"), Matchers.eq(Some(2)), Matchers.eq(Some("1s")), Matchers.any[Option[String]]) returns Future {
         sut ! Stop
         IndexedServiceInstances(2, Set(service))
       }

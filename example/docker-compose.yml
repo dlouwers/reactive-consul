@@ -13,19 +13,39 @@ registrator:
     - "/var/run/docker.sock:/tmp/docker.sock"
   hostname: 192.168.59.103
   command: consul://192.168.59.103:8500
-example1:
+example1i1:
   image: "reactive-consul-example:0.1-SNAPSHOT"
   ports:
     - "8080"
   environment:
     - SERVICE_NAME=example-service-1
+    - INSTANCE_NAME=Alvin
   dns:
     - 172.17.42.1
-example2:
+example1i2:
+  image: "reactive-consul-example:0.1-SNAPSHOT"
+  ports:
+    - "8080"
+  environment:
+    - SERVICE_NAME=example-service-1
+    - INSTANCE_NAME=Simon
+  dns:
+    - 172.17.42.1
+example2i1:
   image: "reactive-consul-example:0.1-SNAPSHOT"
   ports:
     - "8080"
   environment:
     - SERVICE_NAME=example-service-2
+    - INSTANCE_NAME=Theodore
+  dns:
+    - 172.17.42.1
+example2i2:
+  image: "reactive-consul-example:0.1-SNAPSHOT"
+  ports:
+    - "8080"
+  environment:
+    - SERVICE_NAME=example-service-2
+    - INSTANCE_NAME=Chip
   dns:
     - 172.17.42.1

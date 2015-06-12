@@ -5,6 +5,7 @@ import xebia.consul.client.ServiceAvailabilityActor._
 import xebia.consul.client.dao.{ IndexedServiceInstances, ServiceInstance, ConsulHttpClient }
 
 import scala.concurrent.Future
+import scala.util.{ Failure, Success }
 
 class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceName: String, listener: ActorRef) extends Actor {
 
@@ -12,30 +13,26 @@ class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceName: String
 
   // Actor state
   var serviceAvailabilityState: IndexedServiceInstances = IndexedServiceInstances.empty
-  var stopping = false
 
   override def preStart(): Unit = {
-    httpClient.findServiceChange(serviceName, None).foreach { change =>
-      self ! UpdateServiceAvailability(change)
-
+    httpClient.findServiceChange(serviceName, None).onComplete {
+      case Success(change) => self ! UpdateServiceAvailability(change)
+      case Failure(e) => throw e
     }
   }
 
   override def postStop(): Unit = {
-    self ! Stop
+    println("I stopped")
   }
 
   def receive = {
     case UpdateServiceAvailability(services: IndexedServiceInstances) =>
       val (update, serviceChange) = updateServiceAvailability(services)
       update.foreach(listener ! _)
-      serviceChange.foreach { change =>
-        if (!stopping) {
-          self ! UpdateServiceAvailability(change)
-        }
+      serviceChange.onComplete {
+        case Success(change) => self ! UpdateServiceAvailability(change)
+        case Failure(e) => throw e
       }
-    case Stop =>
-      stopping = true
   }
 
   def updateServiceAvailability(services: IndexedServiceInstances): (Option[ServiceAvailabilityUpdate], Future[IndexedServiceInstances]) = {
@@ -67,5 +64,4 @@ object ServiceAvailabilityActor {
   private[client] object ServiceAvailabilityUpdate {
     def empty = ServiceAvailabilityUpdate(Set.empty, Set.empty)
   }
-  private[client] object Stop
 }

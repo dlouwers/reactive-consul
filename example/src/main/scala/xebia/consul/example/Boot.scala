@@ -42,7 +42,7 @@ object Boot extends App {
   )
   val serviceBroker = ServiceBroker(services, consulNode.getHost, consulNode.getPort)
   while (true) {
-    Thread.sleep(5000)
+    Thread.sleep(1)
     serviceBroker.withService("example-service-1") { client: SprayExampleServiceClient =>
       client.identify
     }.foreach(println)
