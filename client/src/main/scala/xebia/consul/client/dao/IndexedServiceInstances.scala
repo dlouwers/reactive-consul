@@ -16,7 +16,7 @@ case class ServiceInstance(
   address: String,
   serviceId: String,
   serviceName: String,
-  serviceTags: Option[Set[String]],
+  serviceTags: Set[String],
   serviceAddress: String,
   servicePort: Int)
 case class IndexedServiceInstances(index: Long, resource: Set[ServiceInstance]) extends Indexed[Set[ServiceInstance]]

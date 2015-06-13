@@ -15,24 +15,9 @@ import xebia.consul.client.util.{ Logging, RetryPolicy }
 import scala.concurrent.Future
 import scala.util.Try
 
-class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extends ConsulHttpClient with DefaultJsonProtocol with RetryPolicy with Logging {
+class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extends ConsulHttpClient with ConsulHttpProtocol with RetryPolicy with Logging {
 
   implicit val executionContext = actorSystem.dispatcher
-  implicit val serviceFormat = jsonFormat(ServiceInstance, "Node", "Address", "ServiceID", "ServiceName", "ServiceTags", "ServiceAddress", "ServicePort")
-  implicit val httpCheckFormat = jsonFormat(HttpCheck, "HTTP", "Interval")
-  implicit val scriptCheckFormat = jsonFormat(ScriptCheck, "Script", "Interval")
-  implicit val ttlCheckFormat = jsonFormat(TTLCheck, "TTL")
-  implicit val checkWriter = lift {
-    new JsonWriter[Check] {
-      override def write(obj: Check): JsValue = obj match {
-        case obj: ScriptCheck => obj.toJson
-        case obj: HttpCheck => obj.toJson
-        case obj: TTLCheck => obj.toJson
-      }
-    }
-  }
-  implicit val serviceRegistrationFormat = jsonFormat(ServiceRegistration, "Name", "ID", "Tags", "Address", "Port", "Check")
-
   val pipeline: HttpRequest => Future[HttpResponse] = sendReceive
 
   def extractIndex(response: HttpResponse)(block: Long => IndexedServiceInstances): IndexedServiceInstances = {

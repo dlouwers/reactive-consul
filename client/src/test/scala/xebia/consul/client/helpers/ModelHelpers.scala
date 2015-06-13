@@ -8,7 +8,7 @@ object ModelHelpers {
     address = s"${node}Address",
     serviceId = s"${name}Id",
     serviceName = name,
-    serviceTags = Some(tags),
+    serviceTags = tags,
     serviceAddress = s"${name}Address",
     servicePort = port
   )
