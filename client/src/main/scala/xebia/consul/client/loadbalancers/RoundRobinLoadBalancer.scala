@@ -1,10 +1,5 @@
 package xebia.consul.client.loadbalancers
 
-import xebia.consul.client.{ ConnectionProvider, ConnectionHolder }
-
-import scala.collection.{ AbstractIterator, Iterator, mutable }
-import scala.concurrent.Future
-
 class RoundRobinLoadBalancer extends LoadBalancer {
 
   val list = new CircularLinkedHashSet[String]
@@ -26,18 +21,3 @@ class RoundRobinLoadBalancer extends LoadBalancer {
   }
 }
 
-class CircularLinkedHashSet[A] extends mutable.LinkedHashSet[A] {
-  override def iterator: Iterator[A] = new AbstractIterator[A] {
-    private var cur = firstEntry
-    def hasNext = firstEntry ne null
-    def next() =
-      if (hasNext) {
-        val res = cur.key
-        if (cur.later == null)
-          cur = firstEntry
-        else
-          cur = cur.later
-        res
-      } else Iterator.empty.next()
-  }
-}
