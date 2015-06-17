@@ -20,10 +20,12 @@ lazy val client = (project in file("client"))
       sprayJson,
       akkaActor,
       retry,
+      spotifyDns,
       slf4j,
       akkaSlf4j,
-      specs2 % "test,it",
+      specs2 % "test",
       specs2mock,
+      scalaTest % "it",
       logback % "test,it",
       akkaTestKit
     ),
@@ -46,8 +48,7 @@ lazy val dockerTestkit = (project in file("docker-testkit"))
     resolvers ++= Dependencies.resolutionRepos,
     libraryDependencies ++= Seq(
       slf4j,
-      specs2,
-      specs2mock,
+      scalaTest,
       spotifyDocker
     ),
     scalaVersion := "2.11.5"

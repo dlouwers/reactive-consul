@@ -4,10 +4,12 @@ import java.net.URL
 
 import akka.actor.{ ActorSystem, ActorRefFactory, ActorRef }
 import akka.util.Timeout
+import com.spotify.dns.DnsSrvResolvers
 import xebia.consul.client.dao.{ SprayConsulHttpClient, ServiceRegistration, ConsulHttpClient }
 import xebia.consul.client.loadbalancers.LoadBalancerActor
 import xebia.consul.client.util.{ Logging, RetryPolicy }
 import scala.concurrent.duration._
+import collection.JavaConversions._
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -34,21 +36,25 @@ class ServiceBroker(serviceBrokerActor: ActorRef, consulClient: ConsulHttpClient
 
 object ServiceBroker {
 
-  def apply(rootActor: ActorRefFactory, httpClient: ConsulHttpClient, services: Map[String, ConnectionStrategy]): ServiceBroker = {
-    implicit val ec = rootActor.dispatcher
+  def findConsul(fqdn: String): URL = {
+    val resolver = DnsSrvResolvers.newBuilder().build()
+    val lookupResult = resolver.resolve(fqdn).headOption.getOrElse(throw new RuntimeException(s"No record found for $fqdn"))
+    new URL(s"http://${lookupResult.host()}:${lookupResult.port()}")
+  }
+
+  def apply(rootActor: ActorSystem, httpClient: ConsulHttpClient, services: Map[String, ConnectionStrategy]): ServiceBroker = {
+    implicit val ec = ExecutionContext.Implicits.global
     val serviceAvailabilityActorFactory = (factory: ActorRefFactory, service: String, listener: ActorRef) => factory.actorOf(ServiceAvailabilityActor.props(httpClient, service, listener))
     val actorRef = rootActor.actorOf(ServiceBrokerActor.props(services, serviceAvailabilityActorFactory), "ServiceBroker")
     new ServiceBroker(actorRef, httpClient)
   }
 
-  def apply(services: Map[String, ConnectionStrategy], host: String, port: Int = 8500): ServiceBroker = {
-    implicit val ec = ExecutionContext.Implicits.global
+  def apply(consulAddress: String, services: Map[String, ConnectionStrategy]): ServiceBroker = {
     implicit val rootActor = ActorSystem("reactive-consul")
-    val httpClient = new SprayConsulHttpClient(new URL(s"http://$host:$port"))
-    val serviceAvailabilityActorFactory = (factory: ActorRefFactory, service: String, listener: ActorRef) => factory.actorOf(ServiceAvailabilityActor.props(httpClient, service, listener))
-    val actorRef = rootActor.actorOf(ServiceBrokerActor.props(services, serviceAvailabilityActorFactory), "ServiceBroker")
-    new ServiceBroker(actorRef, httpClient)
+    val httpClient = new SprayConsulHttpClient(findConsul(consulAddress))
+    ServiceBroker(rootActor, httpClient, services)
   }
+
 }
 
 case class ServiceUnavailableException(service: String) extends RuntimeException(s"$service service unavailable")
