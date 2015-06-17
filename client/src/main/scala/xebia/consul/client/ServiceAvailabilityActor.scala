@@ -21,10 +21,6 @@ class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceName: String
     }
   }
 
-  override def postStop(): Unit = {
-    println("I stopped")
-  }
-
   def receive = {
     case UpdateServiceAvailability(services: IndexedServiceInstances) =>
       val (update, serviceChange) = updateServiceAvailability(services)
