@@ -23,4 +23,10 @@ could be easier to maintain the same philosophy for local builds and separate te
 generated. The only difference would be that in a buildserver setting the Consul instance is provided while in a local
 test environment it would have to be started and shared.
 
+## Example
+
+Run the examle by running `docker-compose up` in the example directory. Add more server instances by running:
+
+    docker run --rm -e SERVICE_NAME=<example-service-1|example-service-2> -p 8080 --dns 172.17.42.1 -e INSTANCE_NAME=<name> reactive-consul-example:0.1-SNAPSHOT
+
 

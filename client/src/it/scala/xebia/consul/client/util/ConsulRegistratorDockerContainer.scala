@@ -1,11 +1,12 @@
 package xebia.consul.client.util
 
 import com.spotify.docker.client.messages.ContainerConfig
+import org.scalatest.Suite
 import xebia.dockertestkit.{ DockerClientProvider, DockerContainers, DockerContainer }
 
 import scala.collection.JavaConversions._
 
-trait ConsulRegistratorDockerContainer extends DockerContainers {
+trait ConsulRegistratorDockerContainer extends DockerContainers { this: Suite =>
 
   def consulContainerConfig = {
     val image: String = "progrium/consul"

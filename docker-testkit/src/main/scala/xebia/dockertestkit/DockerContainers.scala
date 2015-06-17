@@ -1,10 +1,10 @@
 package xebia.dockertestkit
 
 import com.spotify.docker.client.messages.ContainerConfig
-import org.specs2.specification.BeforeAfterAll
+import org.scalatest.{ Suite, BeforeAndAfterAll }
 import xebia.dockertestkit.client.Container
 
-trait DockerContainers extends BeforeAfterAll {
+trait DockerContainers extends BeforeAndAfterAll { this: Suite =>
 
   def containerConfigs: Set[ContainerConfig]
   val containers = containerConfigs.map(new Container(_))
