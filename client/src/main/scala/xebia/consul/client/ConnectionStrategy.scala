@@ -21,17 +21,17 @@ trait ConnectionHolder {
   def connection[A]: Future[A]
 }
 
-case class ConnectionStrategy(connectionProviderFactory: ConnectionProviderFactory, loadBalancerFactory: ActorRefFactory => ActorRef)
+case class ConnectionStrategy(serviceName: String, connectionProviderFactory: ConnectionProviderFactory, loadBalancerFactory: ActorRefFactory => ActorRef)
 object ConnectionStrategy {
 
   def apply(serviceName: String, connectionProviderFactory: ConnectionProviderFactory, loadBalancer: LoadBalancer): ConnectionStrategy =
-    ConnectionStrategy(connectionProviderFactory, ctx => ctx.actorOf(LoadBalancerActor.props(loadBalancer, serviceName)))
+    ConnectionStrategy(serviceName, connectionProviderFactory, ctx => ctx.actorOf(LoadBalancerActor.props(loadBalancer, serviceName)))
 
   def apply(serviceName: String, connectionProviderFactory: (String, Int) => ConnectionProvider, loadBalancer: LoadBalancer = new RoundRobinLoadBalancer): ConnectionStrategy = {
     val cpf = new ConnectionProviderFactory {
       override def create(host: String, port: Int): ConnectionProvider = connectionProviderFactory(host, port)
     }
-    ConnectionStrategy(cpf, ctx => ctx.actorOf(LoadBalancerActor.props(loadBalancer, serviceName)))
+    ConnectionStrategy(serviceName, cpf, ctx => ctx.actorOf(LoadBalancerActor.props(loadBalancer, serviceName)))
   }
 
 }

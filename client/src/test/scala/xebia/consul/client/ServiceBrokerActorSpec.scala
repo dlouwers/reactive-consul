@@ -22,21 +22,22 @@ class ServiceBrokerActorSpec extends Specification with Mockito with Logging {
     val connectionProviderFactory = mock[ConnectionProviderFactory]
     val connectionProvider = mock[ConnectionProvider]
     val connectionHolder = mock[ConnectionHolder]
-    val connectionStrategy = ConnectionStrategy(connectionProviderFactory, ctx => self)
+    val connectionStrategyForService1 = ConnectionStrategy("service1", connectionProviderFactory, ctx => self)
+    val connectionStrategyForService2 = ConnectionStrategy("service2", connectionProviderFactory, ctx => self)
   }
 
   "The ServiceBrokerActor" should {
 
     "create a child actor per service" in new ActorScope {
       serviceAvailabilityActorFactory.apply(any[ActorRefFactory], be("service1"), any[ActorRef]) returns self
-      val sut = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(Map("service1" -> connectionStrategy), serviceAvailabilityActorFactory), "ServiceBroker")
+      val sut = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(Set(connectionStrategyForService1), serviceAvailabilityActorFactory), "ServiceBroker")
       there was one(serviceAvailabilityActorFactory).apply(sut.underlyingActor.context, "service1", sut)
       sut.underlyingActor.loadbalancers must haveKey("service1")
     }
 
     "create a load balancer for each new service" in new ActorScope {
       serviceAvailabilityActorFactory.apply(any[ActorRefFactory], be("service1"), any[ActorRef]) returns self
-      val sut = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(Map("service1" -> connectionStrategy), serviceAvailabilityActorFactory), "ServiceBroker")
+      val sut = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(Set(connectionStrategyForService1), serviceAvailabilityActorFactory), "ServiceBroker")
       there was one(serviceAvailabilityActorFactory).apply(sut.underlyingActor.context, "service1", sut)
       val service = ModelHelpers.createService("service1")
       connectionProviderFactory.create(service.serviceAddress, service.servicePort) returns connectionProvider
@@ -47,7 +48,7 @@ class ServiceBrokerActorSpec extends Specification with Mockito with Logging {
 
     "request a connection from a loadbalancer" in new ActorScope {
       serviceAvailabilityActorFactory.apply(any[ActorRefFactory], be("service1"), any[ActorRef]) returns self
-      val sut = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(Map("service1" -> connectionStrategy), serviceAvailabilityActorFactory), "ServiceBroker")
+      val sut = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(Set(connectionStrategyForService1), serviceAvailabilityActorFactory), "ServiceBroker")
       there was one(serviceAvailabilityActorFactory).apply(sut.underlyingActor.context, "service1", sut)
       val service = ModelHelpers.createService("service1")
       sut ! ServiceBrokerActor.GetServiceConnection(service.serviceName)
@@ -55,7 +56,7 @@ class ServiceBrokerActorSpec extends Specification with Mockito with Logging {
     }
 
     "return a failure if a service name cannot be found" in new ActorScope {
-      val sut = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(Map.empty, serviceAvailabilityActorFactory), "ServiceBroker")
+      val sut = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(Set.empty, serviceAvailabilityActorFactory), "ServiceBroker")
       val service = ModelHelpers.createService("service1")
       sut ! ServiceBrokerActor.GetServiceConnection(service.serviceName)
       expectMsg(Failure(ServiceUnavailableException(service.serviceName)))
@@ -63,7 +64,7 @@ class ServiceBrokerActorSpec extends Specification with Mockito with Logging {
 
     "forward a query for connection provider availability" in new ActorScope {
       serviceAvailabilityActorFactory.apply(any[ActorRefFactory], be("service1"), any[ActorRef]) returns self
-      val sut = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(Map("service1" -> connectionStrategy), serviceAvailabilityActorFactory), "ServiceBroker")
+      val sut = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(Set(connectionStrategyForService1), serviceAvailabilityActorFactory), "ServiceBroker")
       there was one(serviceAvailabilityActorFactory).apply(sut.underlyingActor.context, "service1", sut)
       sut ! ServiceBrokerActor.HasAvailableConnectionProviderFor("service1")
       expectMsg(LoadBalancerActor.HasAvailableConnectionProvider)
@@ -72,7 +73,7 @@ class ServiceBrokerActorSpec extends Specification with Mockito with Logging {
     "return false when every service doesn't have at least one connection provider avaiable" in new ActorScope {
       serviceAvailabilityActorFactory.apply(any[ActorRefFactory], be("service1"), any[ActorRef]) returns self
       serviceAvailabilityActorFactory.apply(any[ActorRefFactory], be("service2"), any[ActorRef]) returns self
-      val sut = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(Map("service1" -> connectionStrategy, "service2" -> connectionStrategy), serviceAvailabilityActorFactory), "ServiceBroker")
+      val sut = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(Set(connectionStrategyForService1, connectionStrategyForService2), serviceAvailabilityActorFactory), "ServiceBroker")
       there was one(serviceAvailabilityActorFactory).apply(sut.underlyingActor.context, "service1", sut)
       there was one(serviceAvailabilityActorFactory).apply(sut.underlyingActor.context, "service2", sut)
       sut ! ServiceBrokerActor.AllConnectionProvidersAvailable
@@ -88,7 +89,7 @@ class ServiceBrokerActorSpec extends Specification with Mockito with Logging {
     "return true when every service has at least one connection provider avaiable" in new ActorScope {
       serviceAvailabilityActorFactory.apply(any[ActorRefFactory], be("service1"), any[ActorRef]) returns self
       serviceAvailabilityActorFactory.apply(any[ActorRefFactory], be("service2"), any[ActorRef]) returns self
-      val sut = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(Map("service1" -> connectionStrategy, "service2" -> connectionStrategy), serviceAvailabilityActorFactory), "ServiceBroker")
+      val sut = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(Set(connectionStrategyForService1, connectionStrategyForService2), serviceAvailabilityActorFactory), "ServiceBroker")
       there was one(serviceAvailabilityActorFactory).apply(sut.underlyingActor.context, "service1", sut)
       there was one(serviceAvailabilityActorFactory).apply(sut.underlyingActor.context, "service2", sut)
       sut ! ServiceBrokerActor.AllConnectionProvidersAvailable
