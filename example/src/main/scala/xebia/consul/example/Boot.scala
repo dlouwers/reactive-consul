@@ -35,10 +35,7 @@ object Boot extends App {
   }
   val connectionStrategy1 = ConnectionStrategy("example-service-1", cpf("example-service-1"))
   val connectionStrategy2 = ConnectionStrategy("example-service-2", cpf("example-service-2"))
-  val services = Map(
-    "example-service-1" -> connectionStrategy1,
-    "example-service-2" -> connectionStrategy2
-  )
+  val services = Set(connectionStrategy1, connectionStrategy2)
   // Should be ServiceBroker([ConnectionStrategy, ...])
   val serviceBroker = ServiceBroker("consul-8500.service.consul", services)
   while (true) {

@@ -45,7 +45,7 @@ class ServiceBrokerIntegrationTest extends FlatSpec with Matchers with ScalaFutu
         }
       }
       val connectionStrategy = ConnectionStrategy("consul-http", connectionProviderFactory, new RoundRobinLoadBalancer)
-      val sut = ServiceBroker(actorSystem, sprayHttpClient, services = Map("consul-http" -> connectionStrategy))
+      val sut = ServiceBroker(actorSystem, sprayHttpClient, Set(connectionStrategy))
       val success = Success[Unit](r => true)
       val r = retry { () =>
         sut.withService("consul-http") { connection: ConsulHttpClient =>
