@@ -23,6 +23,11 @@ object Boot extends App {
 
   IO(Http) ? Http.Bind(service, interface = "0.0.0.0", port = 8080)
 
+  /**
+   * ConnectionHolder(connection: => Future[T])
+   *
+   */
+
   def cpf(k: String) = (host: String, port: Int) => new ConnectionProvider {
     val client = new SprayExampleServiceClient(new URL(s"http://$host:$port"))
     override def destroy(): Unit = ()

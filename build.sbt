@@ -66,8 +66,10 @@ lazy val example = (project in file("example"))
         sprayClient,
         sprayRouting,
         sprayJson,
+        jodaTime,
         slf4j,
-        logback
+        logback,
+        scalaTest % "test"
       )
   )
   .settings(

@@ -14,6 +14,7 @@ object Dependencies {
   val sprayClient   = "io.spray"                    %% "spray-client"     % sprayVersion
   val sprayRouting  = "io.spray"                    %% "spray-routing"    % sprayVersion
   val sprayJson     = "io.spray"                    %% "spray-json"       % "1.3.1"
+  val jodaTime      = "joda-time"                   %  "joda-time"        % "2.8.1"
   val akkaActor     = "com.typesafe.akka"           %% "akka-actor"       % akkaVersion
   val akkaSlf4j     = "com.typesafe.akka"           %% "akka-slf4j"       % akkaVersion
   val slf4j         = "org.slf4j"                   %  "slf4j-api"        % "1.7.5"
