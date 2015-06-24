@@ -27,20 +27,9 @@ class ServiceBrokerIntegrationTest extends FlatSpec with Matchers with ScalaFutu
       sprayHttpClient.registerService(ServiceRegistration("consul-http", Some("consul-http-2"), address = Some(host), port = Some(port)))
       val connectionProviderFactory = new ConnectionProviderFactory {
         override def create(host: String, port: Int): ConnectionProvider = new ConnectionProvider {
-
           logger.info(s"Asked to create connection provider for $host:$port")
-
           val httpClient: ConsulHttpClient = new SprayConsulHttpClient(new URL(s"http://$host:$port"))
-
-          override def destroy(): Unit = Unit
-
-          override def returnConnection(connection: ConnectionHolder): Unit = Unit
-
-          override def getConnection(lb: ActorRef): Future[ConnectionHolder] = Future.successful(new ConnectionHolder {
-            override def connection[A]: Future[A] = Future.successful(httpClient).map(_.asInstanceOf[A])
-            override val loadBalancer: ActorRef = lb
-            override val key: String = "consul"
-          })
+          override def getConnection: Future[Any] = Future.successful(httpClient)
         }
       }
       val connectionStrategy = ConnectionStrategy("consul-http", connectionProviderFactory, new RoundRobinLoadBalancer)

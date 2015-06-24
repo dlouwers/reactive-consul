@@ -25,13 +25,7 @@ object Boot extends App {
 
   def cpf(k: String) = (host: String, port: Int) => new ConnectionProvider {
     val client = new SprayExampleServiceClient(new URL(s"http://$host:$port"))
-    override def destroy(): Unit = ()
-    override def returnConnection(connection: ConnectionHolder): Unit = ()
-    override def getConnection(lb: ActorRef): Future[ConnectionHolder] = Future.successful(new ConnectionHolder {
-      override def connection[A]: Future[A] = Future.successful(client).map(_.asInstanceOf[A])
-      override val loadBalancer: ActorRef = lb
-      override val key: String = k
-    })
+    override def getConnection: Future[Any] = Future.successful(client)
   }
   val connectionStrategy1 = ConnectionStrategy("example-service-1", cpf("example-service-1"))
   val connectionStrategy2 = ConnectionStrategy("example-service-2", cpf("example-service-2"))

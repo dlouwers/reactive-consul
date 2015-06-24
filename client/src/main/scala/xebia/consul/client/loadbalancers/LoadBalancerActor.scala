@@ -4,10 +4,8 @@ import akka.actor.Status.Failure
 import akka.actor.{ Props, Actor, ActorLogging }
 import xebia.consul.client.loadbalancers.LoadBalancerActor._
 import xebia.consul.client.{ ServiceUnavailableException, ConnectionHolder, ConnectionProvider }
-
-import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.collection.mutable
 
 class LoadBalancerActor(loadBalancer: LoadBalancer, serviceName: String) extends Actor with ActorLogging {
 
@@ -25,7 +23,7 @@ class LoadBalancerActor(loadBalancer: LoadBalancer, serviceName: String) extends
 
     case GetConnection =>
       selectConnection match {
-        case Some(connectionProvider) => connectionProvider.getConnection(self) pipeTo sender
+        case Some((key, connectionProvider)) => connectionProvider.getConnectionHolder(key, self) pipeTo sender
         case None => sender ! Failure(new ServiceUnavailableException(serviceName))
       }
     case ReturnConnection(connection) => returnConnection(connection)
@@ -34,7 +32,8 @@ class LoadBalancerActor(loadBalancer: LoadBalancer, serviceName: String) extends
     case HasAvailableConnectionProvider => sender ! connectionProviders.nonEmpty
   }
 
-  def selectConnection: Option[ConnectionProvider] = loadBalancer.selectConnection.flatMap(connectionProviders.get)
+  def selectConnection: Option[(String, ConnectionProvider)] =
+    loadBalancer.selectConnection.flatMap(key => connectionProviders.get(key).map(key -> _))
 
   def returnConnection(connection: ConnectionHolder): Unit = {
     connectionProviders.get(connection.key).foreach(_.returnConnection(connection))

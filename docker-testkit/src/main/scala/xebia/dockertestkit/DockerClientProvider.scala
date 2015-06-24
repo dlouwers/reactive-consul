@@ -9,9 +9,9 @@ import scala.collection.JavaConversions._
 
 object DockerClientProvider {
 
-  val client: DockerClient = DefaultDockerClient.fromEnv().build()
+  lazy val client: DockerClient = DefaultDockerClient.fromEnv().build()
 
-  val hostname: String = {
+  lazy val hostname: String = {
     val uri = new URI(System.getenv("DOCKER_HOST"))
     uri.getScheme match {
       case "tcp" ⇒ uri.getHost
