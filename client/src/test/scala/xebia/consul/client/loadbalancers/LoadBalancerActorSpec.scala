@@ -25,12 +25,12 @@ class LoadBalancerActorSpec extends Specification with Mockito {
       val instanceKey = "instanceKey"
       loadBalancer.selectConnection returns Some(instanceKey)
       val sut = TestActorRef(new LoadBalancerActor(loadBalancer, "service1"))
-      connectionProvider.getConnection(sut) returns Future.successful(connectionHolder)
+      connectionProvider.getConnectionHolder(instanceKey, sut) returns Future.successful(connectionHolder)
       sut.underlyingActor.connectionProviders.put(instanceKey, connectionProvider)
       sut ! LoadBalancerActor.GetConnection
       expectMsg(connectionHolder)
       there was one(loadBalancer).selectConnection
-      there was one(connectionProvider).getConnection(sut)
+      there was one(connectionProvider).getConnectionHolder(instanceKey, sut)
     }
 
     "return an error when a connectionprovider fails to provide a connection" in new ActorScope {
@@ -38,12 +38,12 @@ class LoadBalancerActorSpec extends Specification with Mockito {
       val expectedException = new ServiceUnavailableException("service1")
       loadBalancer.selectConnection returns Some(instanceKey)
       val sut = TestActorRef(new LoadBalancerActor(loadBalancer, "service1"))
-      connectionProvider.getConnection(sut) returns Future.failed(expectedException)
+      connectionProvider.getConnectionHolder(instanceKey, sut) returns Future.failed(expectedException)
       sut.underlyingActor.connectionProviders.put(instanceKey, connectionProvider)
       sut ! LoadBalancerActor.GetConnection
       expectMsg(Failure(expectedException))
       there was one(loadBalancer).selectConnection
-      there was one(connectionProvider).getConnection(sut)
+      there was one(connectionProvider).getConnectionHolder(instanceKey, sut)
     }
 
     "return a connection holder when requested" in new ActorScope {

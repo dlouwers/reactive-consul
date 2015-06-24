@@ -1,7 +1,6 @@
 package xebia.consul.client
 
 import akka.actor.Status.Failure
-import akka.actor.SupervisorStrategy.Stop
 import akka.actor._
 import akka.util.Timeout
 import xebia.consul.client.ServiceAvailabilityActor._

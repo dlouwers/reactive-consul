@@ -24,7 +24,7 @@ class ServiceBroker(serviceBrokerActor: ActorRef, consulClient: ConsulHttpClient
     serviceBrokerActor.ask(ServiceBrokerActor.GetServiceConnection(name)).mapTo[ConnectionHolder].flatMap { connectionHolder =>
       logger.info(s"Received connectionholder $connectionHolder")
       try {
-        connectionHolder.connection[A].flatMap(f)
+        connectionHolder.connection.flatMap(c => f(c.asInstanceOf[A]))
       } finally {
         connectionHolder.loadBalancer ! LoadBalancerActor.ReturnConnection(connectionHolder)
       }

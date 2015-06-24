@@ -26,7 +26,7 @@ class ServiceBrokerTest extends Specification with Mockito with Logging {
   "The ServiceBroker" should {
 
     "return a service connection when requested" in new ActorScope {
-      connectionHolder.connection[Boolean] returns Future.successful(true)
+      connectionHolder.connection returns Future.successful(true)
       connectionHolder.loadBalancer returns loadBalancer
       val sut = new ServiceBroker(self, httpClient)
       val result = sut.withService("service1") { service: Boolean =>
@@ -41,7 +41,7 @@ class ServiceBrokerTest extends Specification with Mockito with Logging {
     }
 
     "return the connection when an error occurs" in new ActorScope {
-      connectionHolder.connection[Boolean] returns Future.successful(true)
+      connectionHolder.connection returns Future.successful(true)
       connectionHolder.loadBalancer returns loadBalancer
       val sut = new ServiceBroker(self, httpClient)
       val result = sut.withService[Boolean, Boolean]("service1") { service: Boolean =>
