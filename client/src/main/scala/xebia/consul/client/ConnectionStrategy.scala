@@ -4,21 +4,29 @@ import akka.actor.{ ActorRef, ActorRefFactory }
 import xebia.consul.client.loadbalancers.{ RoundRobinLoadBalancer, LoadBalancerActor, LoadBalancer }
 
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 trait ConnectionProviderFactory {
   def create(host: String, port: Int): ConnectionProvider
 }
 
 trait ConnectionProvider {
-  def getConnection(loadBalancer: ActorRef): Future[ConnectionHolder]
-  def returnConnection(connection: ConnectionHolder): Unit
-  def destroy(): Unit
+  def getConnection: Future[Any]
+  def returnConnection(connection: ConnectionHolder): Unit = ()
+  def destroy(): Unit = ()
+  def getConnectionHolder(k: String, lb: ActorRef): Future[ConnectionHolder] = getConnection.map { connection =>
+    new ConnectionHolder {
+      override def connection: Future[Any] = getConnection
+      override val loadBalancer: ActorRef = lb
+      override val key: String = k
+    }
+  }
 }
 
 trait ConnectionHolder {
   val key: String
   val loadBalancer: ActorRef
-  def connection[A]: Future[A]
+  def connection: Future[Any]
 }
 
 case class ConnectionStrategy(serviceName: String, connectionProviderFactory: ConnectionProviderFactory, loadBalancerFactory: ActorRefFactory => ActorRef)
