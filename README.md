@@ -2,14 +2,14 @@
 [![Coverage Status](https://coveralls.io/repos/dlouwers/reactive-consul/badge.svg)](https://coveralls.io/r/dlouwers/reactive-consul)
 
 # Reactive Consul
-This project is a Consul client for Scala. It uses non-blocking I/O to communicate with a Docker cluster. You can use
+This project is a Consul client for Scala. It uses non-blocking I/O to communicate with a Consul cluster. You can use
 the ServiceBroker to get out of the bock support for automatic-clustering, loadbalancing and failover or you can use
-the low-lever ConsulHttpClient.
+the low-level ConsulHttpClient.
 
 ## Installation
 Repo on Maven Central pending.
 
-## Using the ServiceBroker
+## Using the ServiceBrokerFixed 
 The ServiceBroker can be used as follows:
 
 ```scala
