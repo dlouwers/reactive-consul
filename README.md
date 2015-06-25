@@ -49,13 +49,20 @@ val serviceBroker = ServiceBroker("consul-http", Set(mongoConnectionStrategy))
 This example assumes that you have Consul available through DNS and that you have registered Consul's HTTP interface
 under the service name "consul-http" and your MongoDB instances as "mongodb".
 
-Instead of passing the full serviceBroker to your MongoDB DAO implementation you could then do the following:
+Instead of passing the full serviceBroker to your MongoDB DAO implementation you could declare your DAO implementations
+as a trait and then have them implement to following trait:
 ```scala
 trait MongoDbService {  
-  def withService[T] = serviceBroker.withService[MongoClient, T]("mongodb")
+  def withService[T]: (String => Future[T]) => Future[T] 
 }
 ```
-and mix it in with your DAO or, more traditionally:
+Then your MongoDB DAO implementations can be instantated as such:
+```scala
+val myMongoDAO = new MyMongoDAO {
+  def withService[T] = serviceBroker.withService[MongoClient, T]("mongodb")     
+}
+```
+Or, more traditionally:
 ```scala
 class MongoDbServiceProvider(serviceBroker: ServiceBroker) {
     def withService[T] = serviceBroker.withService[MongoClient, T]("mongodb")
