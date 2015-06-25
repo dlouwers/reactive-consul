@@ -1,33 +1,66 @@
-# Reactive Consul
-
 [![Build Status](https://travis-ci.org/dlouwers/reactive-consul.svg?branch=master)](https://travis-ci.org/dlouwers/reactive-consul)
 [![Coverage Status](https://coveralls.io/repos/dlouwers/reactive-consul/badge.svg)](https://coveralls.io/r/dlouwers/reactive-consul)
 
-* Investigate why not all arrow symbols are getting converted to ⇒ by Scalariform
-* Come up with a good interface for the actual client
-* What is best-practice to verify that a child actor has been created? Can Props be mocked?
-* Find out if Registrator can deal with mappings to any available port (-P)
-* Actors should be named to provide better logging
+# Reactive Consul
+This project is a Consul client for Scala. It uses non-blocking I/O to communicate with a Docker cluster. You can use
+the ServiceBroker to get out of the bock support for automatic-clustering, loadbalancing and failover or you can use
+the low-lever ConsulHttpClient.
 
-Create local docker images for example by running
-docker:publishLocal
+## Installation
+Repo on Maven Central pending.
 
-## Docker testkit
-* The docker-testkit depedency on Specs2 needs to be "provided" e.g. should not pull it in 
-* docker-testkit needs to be refactored in a way as to offer support for ScalaTest as well
-* If possible see about support or JUnit
+## Using the ServiceBroker
+The ServiceBroker can be used as follows:
 
-## Musings
+```scala
+import stormlantern.consul.client.ServiceBroker
 
-Since Marc and I already determined that in a build server environment there is need for a shared Consul instance, it
-could be easier to maintain the same philosophy for local builds and separate tests based on tags that could be randomly
-generated. The only difference would be that in a buildserver setting the Consul instance is provided while in a local
-test environment it would have to be started and shared.
+val serviceBroker = ServiceBroker("localhost", services)
 
-## Example
+val result = serviceBroker.withService("<service_name>") { myServiceConnection =>
+  myServiceConnection.getData()
+}
+```
 
-Run the examle by running `docker-compose up` in the example directory. Add more server instances by running:
+Services need to be specified through a ConnectionStrategy.
 
-    docker run --rm -e SERVICE_NAME=<example-service-1|example-service-2> -p 8080 --dns 172.17.42.1 -e INSTANCE_NAME=<name> reactive-consul-example:0.1-SNAPSHOT
+## Creating a ConnectionStrategy
+A connection strategy can optionally encapsulate connectionpooling and provides loadbalancing but it can be really 
+straightforward, especially if underlying services do most of the work for you. 
 
+### Example for MongoDB using Casbah
+The following example will create a 
+connection strategy for connecting to MongoDB. MongoDB manages replication and sharding for you and will automatically
+route your query to the right instance, but you will have to connect to a node first. Consul can help you keep track
+of these.
 
+```scala
+import stormlantern.consul.client.ConnectionProvider
+import stormlantern.consul.client.ConnectionStrategy
+import stormlantern.consul.client.ServiceBroker
+
+val mongoConnectionProvider = (host: String, port: Int) => new ConnectionProvider {
+  val client = new MongoClient(host, port)
+  override def getConnection: Future[Any] = Future.successful(client)
+}
+val mongoConnectionStrategy = ConnectionStrategy("mongodb", mongoConnectionProvider)
+val serviceBroker = ServiceBroker("consul-http", Set(mongoConnectionStrategy))
+```
+This example assumes that you have Consul available through DNS and that you have registered Consul's HTTP interface
+under the service name "consul-http" and your MongoDB instances as "mongodb".
+
+Instead of passing the full serviceBroker to your MongoDB DAO implementation you could then do the following:
+```scala
+trait MongoDbService {  
+  def withService[T] = serviceBroker.withService[MongoClient, T]("mongodb")
+}
+```
+and mix it in with your DAO or, more traditionally:
+```scala
+class MongoDbServiceProvider(serviceBroker: ServiceBroker) {
+    def withService[T] = serviceBroker.withService[MongoClient, T]("mongodb")
+}
+```
+and pass an instance of it to your MongoDB DAO implementation.
+
+More to follow.
