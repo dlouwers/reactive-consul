@@ -53,7 +53,7 @@ Instead of passing the full serviceBroker to your MongoDB DAO implementation you
 as a trait and then have them implement to following trait:
 ```scala
 trait MongoDbService {  
-  def withService[T]: (String => Future[T]) => Future[T] 
+  def withService[T]: (MongoClient => Future[T]) => Future[T] 
 }
 ```
 Then your MongoDB DAO implementations can be instantated as such:
