@@ -15,7 +15,7 @@ import scala.concurrent.Future
 class ServiceBrokerIntegrationTest extends FlatSpec with Matchers with ScalaFutures with ConsulDockerContainer with RetryPolicy with TestActorSystem with Logging {
 
   import scala.concurrent.ExecutionContext.Implicits.global
-  implicit val defaultPatience = PatienceConfig(timeout = Span(5, Seconds), interval = Span(500, Millis))
+  implicit val defaultPatience = PatienceConfig(timeout = Span(10, Seconds), interval = Span(500, Millis))
 
   "The ServiceBroker" should "provide a usable connection to consul" in withConsulHost { (host, port) =>
     withActorSystem { implicit actorSystem =>
