@@ -9,7 +9,7 @@ the low-level ConsulHttpClient.
 ## Installation
 Repo on Maven Central pending.
 
-## Using the ServiceBrokerFixed 
+## Using the ServiceBroker
 The ServiceBroker can be used as follows:
 
 ```scala
