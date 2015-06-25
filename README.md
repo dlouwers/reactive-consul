@@ -1,6 +1,7 @@
 # Reactive Consul
 
 [![Build Status](https://travis-ci.org/dlouwers/reactive-consul.svg?branch=master)](https://travis-ci.org/dlouwers/reactive-consul)
+[![Coverage Status](https://coveralls.io/repos/dlouwers/reactive-consul/badge.svg)](https://coveralls.io/r/dlouwers/reactive-consul)
 
 * Investigate why not all arrow symbols are getting converted to ⇒ by Scalariform
 * Come up with a good interface for the actual client
