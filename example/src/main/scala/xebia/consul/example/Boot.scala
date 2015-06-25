@@ -1,7 +1,6 @@
 package xebia.consul.example
 
 import java.net.URL
-import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorSystem
 import akka.io.IO
@@ -31,7 +30,8 @@ object Boot extends App {
   val connectionStrategy2 = ConnectionStrategy("example-service-2", connectionProviderFactory)
   val services = Set(connectionStrategy1, connectionStrategy2)
   val serviceBroker = ServiceBroker("consul-8500.service.consul", services)
-  system.scheduler.schedule(Duration(5, TimeUnit.SECONDS), Duration(5, TimeUnit.SECONDS)) {
+
+  system.scheduler.schedule(5.seconds, 5.seconds) {
     serviceBroker.withService("example-service-1") { client: SprayExampleServiceClient =>
       client.identify
     }.foreach(println)
