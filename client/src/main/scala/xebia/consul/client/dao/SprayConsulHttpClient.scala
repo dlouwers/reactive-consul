@@ -55,12 +55,21 @@ class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extend
     }(success, executionContext)
   }
 
-  override def registerService(registration: ServiceRegistration): Future[Unit] = {
+  override def registerService(registration: ServiceRegistration): Future[String] = {
     val request = Put(s"$host/v1/agent/service/register", registration.toJson.asJsObject())
     val myPipeline: HttpRequest => Future[HttpResponse] = pipeline
     val success = Success[HttpResponse](r => r.status.isSuccess)
     retry { () =>
       myPipeline(request)
-    }(success, executionContext).map(r => Unit)
+    }(success, executionContext).map(r => registration.id.getOrElse(registration.name))
+  }
+
+  override def deregisterService(serviceId: String): Future[Unit] = {
+    val request = Delete(s"$host/v1/agent/service/deregister/$serviceId")
+    val myPipeline: HttpRequest => Future[HttpResponse] = pipeline
+    val success = Success[HttpResponse](r => r.status.isSuccess)
+    retry { () =>
+      myPipeline(request)
+    }(success, executionContext).map(r => ())
   }
 }

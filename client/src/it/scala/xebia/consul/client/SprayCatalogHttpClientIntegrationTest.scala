@@ -51,18 +51,23 @@ class SprayCatalogHttpClientIntegrationTest extends FlatSpec with Matchers with 
     }
   }
 
-  it should "register a new service with Consul" in withConsulHost { (host, port) =>
+  it should "register and deregister a new service with Consul" in withConsulHost { (host, port) =>
     withActorSystem { implicit actorSystem =>
       val subject: ConsulHttpClient = new SprayConsulHttpClient(new URL(s"http://$host:$port"))
-      subject.registerService(ServiceRegistration("newservice", Some("newservice-1"))).map { result =>
-        ()
-      }.futureValue(Timeout(Span(10, Seconds)), Interval(Span(0, Seconds)))
-      subject.registerService(ServiceRegistration("newservice", Some("newservice-2"), check = Some(TTLCheck("2s")))).map { result =>
-        ()
-      }.futureValue(Timeout(Span(10, Seconds)), Interval(Span(0, Seconds)))
+      subject.registerService(ServiceRegistration("newservice", Some("newservice-1")))
+        .futureValue should equal("newservice-1")
+      subject.registerService(ServiceRegistration("newservice", Some("newservice-2"), check = Some(TTLCheck("2s"))))
+        .futureValue should equal("newservice-2")
       retry { () =>
         subject.findServiceChange("newservice").map { result =>
           result.resource should have size 2
+          result.resource.head.serviceName shouldEqual "newservice"
+        }
+      }(Success[Unit](r => true), actorSystem.dispatcher).futureValue
+      subject.deregisterService("newservice-1").futureValue should equal(())
+      retry { () =>
+        subject.findServiceChange("newservice").map { result =>
+          result.resource should have size 1
           result.resource.head.serviceName shouldEqual "newservice"
         }
       }(Success[Unit](r => true), actorSystem.dispatcher).futureValue
