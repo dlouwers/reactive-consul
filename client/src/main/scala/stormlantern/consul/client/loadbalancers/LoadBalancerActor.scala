@@ -3,8 +3,7 @@ package stormlantern.consul.client.loadbalancers
 import akka.actor.Status.Failure
 import akka.actor.{ Props, Actor, ActorLogging }
 import LoadBalancerActor._
-import stormlantern.consul.client.{ServiceUnavailableException, ConnectionHolder, ConnectionProvider}
-import xebia.consul.client.ServiceUnavailableException
+import stormlantern.consul.client.{ ServiceUnavailableException, ConnectionHolder, ConnectionProvider }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.mutable
 

@@ -3,14 +3,11 @@ package stormlantern.consul.client
 import java.net.URL
 
 import org.scalatest._
-import org.scalatest.concurrent.PatienceConfiguration.{ Interval, Timeout }
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{ Millis, Seconds, Span }
 import retry.Success
-import stormlantern.consul.client.dao.{TTLCheck, ServiceRegistration, SprayConsulHttpClient, ConsulHttpClient}
-import stormlantern.consul.client.util.{Logging, RetryPolicy, TestActorSystem, ConsulDockerContainer}
-import xebia.consul.client.dao.TTLCheck
-import xebia.consul.client.util.TestActorSystem
+import stormlantern.consul.client.dao.{ ConsulHttpClient, ServiceRegistration, SprayConsulHttpClient, TTLCheck }
+import stormlantern.consul.client.util.{ ConsulDockerContainer, Logging, RetryPolicy, TestActorSystem }
 
 class SprayCatalogHttpClientIntegrationTest extends FlatSpec with Matchers with ScalaFutures with ConsulDockerContainer with TestActorSystem with RetryPolicy with Logging {
 

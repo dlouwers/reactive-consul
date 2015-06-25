@@ -2,17 +2,13 @@ package stormlantern.consul.client
 
 import java.net.URL
 
-import akka.actor._
 import org.scalatest._
-import org.scalatest.concurrent.PatienceConfiguration.{ Interval, Timeout }
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time._
 import retry.Success
-import stormlantern.consul.client.dao.{ServiceRegistration, SprayConsulHttpClient, ConsulHttpClient}
+import stormlantern.consul.client.dao.{ ConsulHttpClient, ServiceRegistration, SprayConsulHttpClient }
 import stormlantern.consul.client.loadbalancers.RoundRobinLoadBalancer
-import stormlantern.consul.client.util.{RetryPolicy, ConsulDockerContainer, Logging, TestActorSystem}
-import xebia.consul.client.dao.ServiceRegistration
-import xebia.consul.client.util._
+import stormlantern.consul.client.util.{ ConsulDockerContainer, Logging, RetryPolicy, TestActorSystem }
 
 import scala.concurrent.Future
 

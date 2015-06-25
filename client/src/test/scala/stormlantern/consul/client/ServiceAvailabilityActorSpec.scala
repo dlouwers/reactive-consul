@@ -7,10 +7,9 @@ import org.mockito.Matchers
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification
-import stormlantern.consul.client.dao.{IndexedServiceInstances, ConsulHttpClient}
+import stormlantern.consul.client.dao.{ ConsulHttpClient, IndexedServiceInstances }
 import stormlantern.consul.client.helpers.ModelHelpers
 import stormlantern.consul.client.util.Logging
-import xebia.consul.client.dao.ConsulHttpClient
 
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration

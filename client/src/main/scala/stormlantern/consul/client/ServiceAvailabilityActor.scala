@@ -2,8 +2,7 @@ package stormlantern.consul.client
 
 import akka.actor.{ Actor, ActorRef, Props }
 import ServiceAvailabilityActor._
-import stormlantern.consul.client.dao.{ConsulHttpClient, IndexedServiceInstances, ServiceInstance}
-import xebia.consul.client.dao.ConsulHttpClient
+import stormlantern.consul.client.dao.{ ConsulHttpClient, IndexedServiceInstances, ServiceInstance }
 
 import scala.concurrent.Future
 import scala.util.{ Failure, Success }

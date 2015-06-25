@@ -5,7 +5,7 @@ import akka.actor._
 import akka.util.Timeout
 import stormlantern.consul.client.dao.ServiceInstance
 import stormlantern.consul.client.loadbalancers.LoadBalancerActor
-import stormlantern.consul.client.loadbalancers.LoadBalancerActor.{HasAvailableConnectionProvider, GetConnection}
+import stormlantern.consul.client.loadbalancers.LoadBalancerActor.{ HasAvailableConnectionProvider, GetConnection }
 import ServiceAvailabilityActor._
 import ServiceBrokerActor.{ AllConnectionProvidersAvailable, HasAvailableConnectionProviderFor, GetServiceConnection }
 

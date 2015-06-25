@@ -2,8 +2,7 @@ package stormlantern.consul.client.util
 
 import com.spotify.docker.client.messages.ContainerConfig
 import org.scalatest.Suite
-import stormlantern.dockertestkit.{DockerClientProvider, DockerContainers}
-import xebia.dockertestkit.DockerClientProvider
+import stormlantern.dockertestkit.{ DockerClientProvider, DockerContainers }
 
 import scala.collection.JavaConversions._
 

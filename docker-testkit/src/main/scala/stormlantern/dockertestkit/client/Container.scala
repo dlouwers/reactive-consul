@@ -2,7 +2,6 @@ package stormlantern.dockertestkit.client
 
 import com.spotify.docker.client.messages._
 import stormlantern.dockertestkit.DockerClientProvider
-import DockerClientProvider
 
 import scala.collection.JavaConversions._
 

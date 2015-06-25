@@ -2,12 +2,11 @@ package stormlantern.consul.client.loadbalancers
 
 import akka.actor.ActorSystem
 import akka.actor.Status.Failure
-import akka.testkit.{ TestActorRef, ImplicitSender, TestKit }
+import akka.testkit.{ ImplicitSender, TestActorRef, TestKit }
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification
-import stormlantern.consul.client.{ServiceUnavailableException, ConnectionHolder, ConnectionProvider}
-import xebia.consul.client.ServiceUnavailableException
+import stormlantern.consul.client.{ ConnectionHolder, ConnectionProvider, ServiceUnavailableException }
 
 import scala.concurrent.Future
 

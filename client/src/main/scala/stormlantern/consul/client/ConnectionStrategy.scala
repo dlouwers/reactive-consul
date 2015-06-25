@@ -1,8 +1,7 @@
 package stormlantern.consul.client
 
 import akka.actor.{ ActorRef, ActorRefFactory }
-import stormlantern.consul.client.loadbalancers.{LoadBalancer, RoundRobinLoadBalancer, LoadBalancerActor}
-import xebia.consul.client.loadbalancers.LoadBalancerActor
+import stormlantern.consul.client.loadbalancers.{ LoadBalancer, RoundRobinLoadBalancer, LoadBalancerActor }
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global

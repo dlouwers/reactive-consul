@@ -5,11 +5,9 @@ import java.net.URL
 import akka.actor.{ ActorSystem, ActorRefFactory, ActorRef }
 import akka.util.Timeout
 import com.spotify.dns.DnsSrvResolvers
-import stormlantern.consul.client.dao.{ServiceRegistration, ConsulHttpClient, SprayConsulHttpClient}
+import stormlantern.consul.client.dao.{ ServiceRegistration, ConsulHttpClient, SprayConsulHttpClient }
 import stormlantern.consul.client.loadbalancers.LoadBalancerActor
-import stormlantern.consul.client.util.{Logging, RetryPolicy}
-import xebia.consul.client.dao.ServiceRegistration
-import xebia.consul.client.util.Logging
+import stormlantern.consul.client.util.{ Logging, RetryPolicy }
 import scala.concurrent.duration._
 import collection.JavaConversions._
 

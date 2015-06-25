@@ -10,8 +10,7 @@ import spray.httpx.SprayJsonSupport._
 import spray.httpx.unmarshalling._
 import spray.httpx.{ PipelineException, UnsuccessfulResponseException }
 import spray.json._
-import stormlantern.consul.client.util.{RetryPolicy, Logging}
-import xebia.consul.client.util.Logging
+import stormlantern.consul.client.util.{ RetryPolicy, Logging }
 
 import scala.concurrent.Future
 import scala.util.Try
