@@ -31,10 +31,6 @@ object Boot extends App {
   val services = Set(connectionStrategy1, connectionStrategy2)
   val serviceBroker = ServiceBroker("consul-8500.service.consul", services)
 
-  def withService[T]: (String => Future[T]) => Future[T] = serviceBroker.withService[String, T]("mongodb")
-  withService { s =>
-    Future.successful(s + s)
-  }
   system.scheduler.schedule(5.seconds, 5.seconds) {
     serviceBroker.withService("example-service-1") { client: SprayExampleServiceClient =>
       client.identify
