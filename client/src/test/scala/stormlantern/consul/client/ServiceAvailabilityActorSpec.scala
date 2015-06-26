@@ -26,11 +26,12 @@ class ServiceAvailabilityActorSpec extends Specification with Mockito with Loggi
 
     "receive one service update when there are no changes" in new ActorScope {
       httpClient.findServiceChange(Matchers.eq("bogus"), Matchers.eq(None), Matchers.any[Option[String]], Matchers.any[Option[String]]) returns Future.successful(IndexedServiceInstances(1, Set.empty))
-      httpClient.findServiceChange(Matchers.eq("bogus"), Matchers.eq(Some(1)), Matchers.eq(Some("1s")), Matchers.any[Option[String]]) returns Future {
-        sut ! Stop
-        IndexedServiceInstances(1, Set.empty)
-      }
-      val sut = TestActorRef(ServiceAvailabilityActor.props(httpClient, "bogus", self))
+      httpClient.findServiceChange(Matchers.eq("bogus"), Matchers.eq(Some(1)), Matchers.eq(Some("1s")), Matchers.any[Option[String]]) returns
+        Future {
+          sut ! Stop
+          IndexedServiceInstances(1, Set.empty)
+        }
+      lazy val sut = TestActorRef(ServiceAvailabilityActor.props(httpClient, "bogus", self))
       expectMsg(Duration(1, "s"), ServiceAvailabilityActor.ServiceAvailabilityUpdate.empty)
       expectNoMsg(Duration(1, "s"))
     }
@@ -43,8 +44,7 @@ class ServiceAvailabilityActorSpec extends Specification with Mockito with Loggi
         sut ! Stop
         IndexedServiceInstances(2, Set(service))
       }
-
-      val sut = TestActorRef(ServiceAvailabilityActor.props(httpClient, "bogus", self))
+      lazy val sut = TestActorRef(ServiceAvailabilityActor.props(httpClient, "bogus", self))
       expectMsg(Duration(1, "s"), ServiceAvailabilityActor.ServiceAvailabilityUpdate.empty)
       expectMsg(Duration(1, "s"), ServiceAvailabilityActor.ServiceAvailabilityUpdate(Set(service), Set.empty))
       expectNoMsg(Duration(1, "s"))
