@@ -15,29 +15,30 @@ The ServiceBroker can be used as follows:
 ```scala
 import stormlantern.consul.client.ServiceBroker
 
-val serviceBroker = ServiceBroker("localhost", services)
+val serviceBroker = ServiceBroker("localhost", connectionStrategies)
 
 val result = serviceBroker.withService("<service_name>") { myServiceConnection =>
   myServiceConnection.getData()
 }
 ```
 
-Services need to be specified through a ConnectionStrategy.
+_connectionStrategies_ are discussed in the next section.
 
 ## Creating a ConnectionStrategy
 A connection strategy can optionally encapsulate connectionpooling and provides loadbalancing but it can be really 
 straightforward, especially if underlying services do most of the work for you. 
 
 ### Example for MongoDB using Casbah
-The following example will create a 
-connection strategy for connecting to MongoDB. MongoDB manages replication and sharding for you and will automatically
-route your query to the right instance, but you will have to connect to a node first. Consul can help you keep track
-of these.
+The following example will create a connection strategy for connecting to MongoDB. MongoDB manages replication and 
+sharding for you and will automatically route your query to the right instance, but you will have to connect to a node 
+first. Consul can help you keep track of these.
 
 ```scala
 import stormlantern.consul.client.ConnectionProvider
 import stormlantern.consul.client.ConnectionStrategy
 import stormlantern.consul.client.ServiceBroker
+
+import com.mongodb.casbah.Imports._
 
 val mongoConnectionProvider = (host: String, port: Int) => new ConnectionProvider {
   val client = new MongoClient(host, port)
@@ -46,28 +47,67 @@ val mongoConnectionProvider = (host: String, port: Int) => new ConnectionProvide
 val mongoConnectionStrategy = ConnectionStrategy("mongodb", mongoConnectionProvider)
 val serviceBroker = ServiceBroker("consul-http", Set(mongoConnectionStrategy))
 ```
+
 This example assumes that you have Consul available through DNS and that you have registered Consul's HTTP interface
 under the service name "consul-http" and your MongoDB instances as "mongodb".
 
 Instead of passing the full serviceBroker to your MongoDB DAO implementation you could declare your DAO implementations
 as a trait and then have them implement to following trait:
+
 ```scala
 trait MongoDbService {  
   def withService[T]: (MongoClient => Future[T]) => Future[T] 
 }
 ```
+
 Then your MongoDB DAO implementations can be instantated as such:
+
 ```scala
 val myMongoDAO = new MyMongoDAO {
   def withService[T] = serviceBroker.withService[MongoClient, T]("mongodb")     
 }
 ```
+
 Or, more traditionally:
+
 ```scala
 class MongoDbServiceProvider(serviceBroker: ServiceBroker) {
     def withService[T] = serviceBroker.withService[MongoClient, T]("mongodb")
 }
 ```
+
 and pass an instance of it to your MongoDB DAO implementation.
 
-More to follow.
+### Example for Postgres using c3p0 connection pooling
+The following example will create a connection strategy for connecting to Postgres. This example assumes a setup with
+one master and two replication servers. Consul can help you keep track of these.
+
+```scala
+import stormlantern.consul.client.ConnectionProvider
+import stormlantern.consul.client.ConnectionStrategy
+import stormlantern.consul.client.ServiceBroker
+
+import com.mchange.v2.c3p0._
+
+val c3p0ConnectionProvider = (host: String, port: Int) => new ConnectionProvider {
+  val pool = {
+    val cpds = new ComboPooledDataSource()
+    cpds.setDriverClass("org.postgresql.Driver")            
+    cpds.setJdbcUrl(s"jdbc:postgresql://$host:$port/mydb")
+    cpds.setUser("dbuser")                                  
+    cpds.setPassword("dbpassword")
+    cpds
+  }
+  override def getConnection: Future[Any] = Future.successful(pool.getConnection())
+  override def returnConnection(connection: ConnectionHolder): Unit = connection.getConnection.asInstanceOf[Connection].close()
+  override def destroy(): Unit = pool.close()
+
+}
+val postgresConnectionStrategy = ConnectionStrategy("postgres", c3p0ConnectionProvider)
+val postgresWriteConnectionStrategy = ConnectionStrategy("postgres-master", c3p0ConnectionProvider)
+val serviceBroker = ServiceBroker("consul-http", Set(postgresConnectionStrategy, postgresWriteConnectionStrategy))
+```
+
+This example assumes that you have Consul available through DNS and that you have registered Consul's HTTP interface
+under the service name "consul-http", your Postgres instances as "postgres" and your Postgres master as "postgres-master".
+Consul's tag support is an even better way to deal with master/slave instances. Support pending.
