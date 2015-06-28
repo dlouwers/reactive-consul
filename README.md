@@ -87,7 +87,9 @@ import stormlantern.consul.client.ConnectionProvider
 import stormlantern.consul.client.ConnectionStrategy
 import stormlantern.consul.client.ServiceBroker
 
+import javax.sql.DataSource
 import com.mchange.v2.c3p0._
+
 
 val c3p0ConnectionProvider = (host: String, port: Int) => new ConnectionProvider {
   val pool = {
