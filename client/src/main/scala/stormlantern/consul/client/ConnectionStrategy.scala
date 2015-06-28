@@ -12,7 +12,7 @@ trait ConnectionProviderFactory {
 
 trait ConnectionProvider {
   def getConnection: Future[Any]
-  def returnConnection(connection: ConnectionHolder): Unit = ()
+  def returnConnection(connectionHolder: ConnectionHolder): Unit = ()
   def destroy(): Unit = ()
   def getConnectionHolder(k: String, lb: ActorRef): Future[ConnectionHolder] = getConnection.map { connection =>
     new ConnectionHolder {

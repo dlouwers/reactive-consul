@@ -87,7 +87,8 @@ import stormlantern.consul.client.ConnectionProvider
 import stormlantern.consul.client.ConnectionStrategy
 import stormlantern.consul.client.ServiceBroker
 
-import javax.sql.DataSource
+import scala.concurrent.Future
+import java.sql.Connection
 import com.mchange.v2.c3p0._
 
 
@@ -101,7 +102,8 @@ val c3p0ConnectionProvider = (host: String, port: Int) => new ConnectionProvider
     cpds
   }
   override def getConnection: Future[Any] = Future.successful(pool.getConnection())
-  override def returnConnection(connection: ConnectionHolder): Unit = connection.getConnection.asInstanceOf[Connection].close()
+  override def returnConnection(connectionHolder: ConnectionHolder): Unit = 
+    connectionHolder.connection.foreach(_.asInstanceOf[Connection].close())
   override def destroy(): Unit = pool.close()
 
 }
@@ -113,3 +115,24 @@ val serviceBroker = ServiceBroker("consul-http", Set(postgresConnectionStrategy,
 This example assumes that you have Consul available through DNS and that you have registered Consul's HTTP interface
 under the service name "consul-http", your Postgres instances as "postgres" and your Postgres master as "postgres-master".
 Consul's tag support is an even better way to deal with master/slave instances. Support pending.
+
+Now you can connect to your database using:
+
+```scala
+class PostgresServiceProvider(serviceBroker: ServiceBroker) {
+    def withReadingConnection[T] = serviceBroker.withService[Connection, T]("postgres")
+    def withWritingConnection[T] = serviceBroker.withService[Connection, T]("postgres-master")
+}
+
+class MyDao(connectionProvider: PostgresServiceProvider) {
+  def findStuff(name: String): Future[Option[Stuff]]] = {
+    connectionProvider.withReadingConnection { c  =>
+      Future.successful {
+        c.doSqlStuff()
+      }
+    }
+  }
+}
+
+val myDao = new MyDao(new PostgresService(serviceBroker))
+```
