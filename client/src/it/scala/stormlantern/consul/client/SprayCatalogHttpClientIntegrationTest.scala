@@ -42,7 +42,7 @@ class SprayCatalogHttpClientIntegrationTest extends FlatSpec with Matchers with 
       subject.findServiceChange("consul").flatMap { result =>
         result.resource should have size 1
         result.resource.head.serviceName shouldEqual "consul"
-        subject.findServiceChange("consul", Some(result.index), Some("500ms")).map { secondResult =>
+        subject.findServiceChange("consul", Set.empty, Some(result.index), Some("500ms")).map { secondResult =>
           secondResult.resource should have size 1
           secondResult.index shouldEqual result.index
         }
