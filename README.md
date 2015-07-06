@@ -3,7 +3,7 @@
 
 # Reactive Consul
 This project is a Consul client for Scala. It uses non-blocking I/O to communicate with a Consul cluster. You can use
-the ServiceBroker to get out of the bock support for automatic-clustering, loadbalancing and failover or you can use
+the ServiceBroker to get out of the box support for automatic-clustering, loadbalancing and failover or you can use
 the low-level ConsulHttpClient.
 
 ## Installation
