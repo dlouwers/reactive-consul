@@ -105,8 +105,8 @@ val c3p0ConnectionProvider = (host: String, port: Int) => new ConnectionProvider
   override def returnConnection(connectionHolder: ConnectionHolder): Unit = 
     connectionHolder.connection.foreach(_.asInstanceOf[Connection].close())
   override def destroy(): Unit = pool.close()
-
 }
+
 val postgresConnectionStrategy = ConnectionStrategy("postgres", c3p0ConnectionProvider)
 val postgresWriteConnectionStrategy = ConnectionStrategy("postgres-master", c3p0ConnectionProvider)
 val serviceBroker = ServiceBroker("consul-http", Set(postgresConnectionStrategy, postgresWriteConnectionStrategy))

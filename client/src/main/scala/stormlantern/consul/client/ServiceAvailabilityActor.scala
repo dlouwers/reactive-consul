@@ -7,7 +7,7 @@ import stormlantern.consul.client.dao.{ ConsulHttpClient, IndexedServiceInstance
 import scala.concurrent.Future
 import scala.util.{ Failure, Success }
 
-class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceName: String, listener: ActorRef) extends Actor {
+class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceDefinition: ServiceDefinition, listener: ActorRef) extends Actor {
 
   implicit val ec = context.dispatcher
 
@@ -15,7 +15,7 @@ class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceName: String
   var serviceAvailabilityState: IndexedServiceInstances = IndexedServiceInstances.empty
 
   override def preStart(): Unit = {
-    httpClient.findServiceChange(serviceName, None).onComplete {
+    httpClient.findServiceChange(serviceDefinition.serviceName, serviceDefinition.serviceTags, None).onComplete {
       case Success(change) => self ! UpdateServiceAvailability(change)
       case Failure(e) => throw e
     }
@@ -39,7 +39,7 @@ class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceName: String
     } else {
       None
     }
-    (update, httpClient.findServiceChange(serviceName, Some(services.index), Some("1s")))
+    (update, httpClient.findServiceChange(serviceDefinition.serviceName, serviceDefinition.serviceTags, Some(services.index), Some("1s")))
   }
 
   def createServiceAvailabilityUpdate(oldState: IndexedServiceInstances, newState: IndexedServiceInstances): ServiceAvailabilityUpdate = {
@@ -52,7 +52,7 @@ class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceName: String
 
 object ServiceAvailabilityActor {
 
-  def props(httpClient: ConsulHttpClient, service: String, listener: ActorRef): Props = Props(new ServiceAvailabilityActor(httpClient, service, listener))
+  def props(httpClient: ConsulHttpClient, serviceDefinition: ServiceDefinition, listener: ActorRef): Props = Props(new ServiceAvailabilityActor(httpClient, serviceDefinition, listener))
 
   // Messages
   private case class UpdateServiceAvailability(services: IndexedServiceInstances)

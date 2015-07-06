@@ -13,10 +13,10 @@ import scala.collection.mutable
 import scala.concurrent.{ Future, ExecutionContext }
 import scala.concurrent.duration._
 
-class ServiceBrokerActor(services: Set[ConnectionStrategy], serviceAvailabilityActorFactory: (ActorRefFactory, String, ActorRef) => ActorRef)(implicit ec: ExecutionContext) extends Actor with ActorLogging {
+class ServiceBrokerActor(services: Set[ConnectionStrategy], serviceAvailabilityActorFactory: (ActorRefFactory, ServiceDefinition, ActorRef) => ActorRef)(implicit ec: ExecutionContext) extends Actor with ActorLogging {
 
   // Actor state
-  val indexedServices = services.map(s => (s.serviceName, s)).toMap
+  val indexedServices = services.map(s => (s.serviceDefinition.serviceId, s)).toMap
   val loadbalancers: mutable.Map[String, ActorRef] = mutable.Map.empty
   val serviceAvailability: mutable.Set[ActorRef] = mutable.Set.empty
 
@@ -25,7 +25,7 @@ class ServiceBrokerActor(services: Set[ConnectionStrategy], serviceAvailabilityA
       case (name, strategy) =>
         loadbalancers.put(name, strategy.loadBalancerFactory(context))
         log.info(s"Starting service availability Actor for $name")
-        serviceAvailability += serviceAvailabilityActorFactory(context, name, self)
+        serviceAvailability += serviceAvailabilityActorFactory(context, strategy.serviceDefinition, self)
     }
   }
 
@@ -77,7 +77,7 @@ class ServiceBrokerActor(services: Set[ConnectionStrategy], serviceAvailabilityA
 }
 
 object ServiceBrokerActor {
-  def props(services: Set[ConnectionStrategy], serviceAvailabilityActorFactory: (ActorRefFactory, String, ActorRef) => ActorRef)(implicit ec: ExecutionContext): Props = Props(new ServiceBrokerActor(services, serviceAvailabilityActorFactory))
+  def props(services: Set[ConnectionStrategy], serviceAvailabilityActorFactory: (ActorRefFactory, ServiceDefinition, ActorRef) => ActorRef)(implicit ec: ExecutionContext): Props = Props(new ServiceBrokerActor(services, serviceAvailabilityActorFactory))
   case class GetServiceConnection(name: String)
   case object Stop
   case class HasAvailableConnectionProviderFor(name: String)
