@@ -20,10 +20,6 @@ case class ConnectionStrategy(
 
 object ConnectionStrategy {
 
-  def apply(serviceDefinition: String, connectionProviderFactory: ConnectionProviderFactory, loadBalancer: LoadBalancer): ConnectionStrategy = {
-    ConnectionStrategy(serviceDefinition, connectionProviderFactory, loadBalancer)
-  }
-
   def apply(serviceDefinition: ServiceDefinition, connectionProviderFactory: ConnectionProviderFactory, loadBalancer: LoadBalancer): ConnectionStrategy =
     ConnectionStrategy(serviceDefinition, connectionProviderFactory, ctx => ctx.actorOf(LoadBalancerActor.props(loadBalancer, serviceDefinition.serviceId)))
 
