@@ -107,14 +107,22 @@ val c3p0ConnectionProvider = (host: String, port: Int) => new ConnectionProvider
   override def destroy(): Unit = pool.close()
 }
 
-val postgresConnectionStrategy = ConnectionStrategy("postgres", c3p0ConnectionProvider)
-val postgresWriteConnectionStrategy = ConnectionStrategy("postgres-master", c3p0ConnectionProvider)
-val serviceBroker = ServiceBroker("consul-http", Set(postgresConnectionStrategy, postgresWriteConnectionStrategy))
+val postgresReadConnectionStrategy = ConnectionStrategy(
+  ServiceDefinition("postgres-read", "postgres")), 
+  c3p0ConnectionProvider,
+  new RoundRobinLoadBalancer
+)
+val postgresWriteConnectionStrategy = ConnectionStrategy(
+  ServiceDefinition("postgres-write", "postgres", Set("master"), 
+  c3p0ConnectionProvider
+  new RoundRobinLoadBalancer  
+)
+val serviceBroker = ServiceBroker("consul-http", Set(postgresReadConnectionStrategy, postgresWriteConnectionStrategy))
 ```
 
 This example assumes that you have Consul available through DNS and that you have registered Consul's HTTP interface
-under the service name "consul-http", your Postgres instances as "postgres" and your Postgres master as "postgres-master".
-Consul's tag support is an even better way to deal with master/slave instances. Support pending.
+under the service name "consul-http", your Postgres instances as "postgres" and your Postgres master is tagged as "master".
+Consul's tag support is used to identify the postgres master, all reads are sent to it. Reads can go to any postgres instance.
 
 Now you can connect to your database using:
 
