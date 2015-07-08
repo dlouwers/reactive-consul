@@ -122,7 +122,7 @@ val serviceBroker = ServiceBroker("consul-http", Set(postgresReadConnectionStrat
 
 This example assumes that you have Consul available through DNS and that you have registered Consul's HTTP interface
 under the service name "consul-http", your Postgres instances as "postgres" and your Postgres master is tagged as "master".
-Consul's tag support is used to identify the postgres master, all reads are sent to it. Reads can go to any postgres instance.
+Consul's tag support is used to identify the postgres master, all writes are sent to it. Reads can go to any postgres instance.
 
 Now you can connect to your database using:
 
