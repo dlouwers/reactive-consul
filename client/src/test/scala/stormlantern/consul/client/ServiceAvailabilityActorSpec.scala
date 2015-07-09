@@ -25,8 +25,8 @@ class ServiceAvailabilityActorSpec extends Specification with Mockito with Loggi
   "The ServiceAvailabilityActor" should {
 
     "receive one service update when there are no changes" in new ActorScope {
-      httpClient.findServiceChange(Matchers.eq("bogus"), Matchers.eq(Set.empty), Matchers.eq(None), Matchers.any[Option[String]], Matchers.any[Option[String]]) returns Future.successful(IndexedServiceInstances(1, Set.empty))
-      httpClient.findServiceChange(Matchers.eq("bogus"), Matchers.eq(Set.empty), Matchers.eq(Some(1)), Matchers.eq(Some("1s")), Matchers.any[Option[String]]) returns
+      httpClient.findServiceChange(Matchers.eq("bogus"), Matchers.eq(None), Matchers.eq(None), Matchers.any[Option[String]], Matchers.any[Option[String]]) returns Future.successful(IndexedServiceInstances(1, Set.empty))
+      httpClient.findServiceChange(Matchers.eq("bogus"), Matchers.eq(None), Matchers.eq(Some(1)), Matchers.eq(Some("1s")), Matchers.any[Option[String]]) returns
         Future {
           sut ! Stop
           IndexedServiceInstances(1, Set.empty)
@@ -38,9 +38,9 @@ class ServiceAvailabilityActorSpec extends Specification with Mockito with Loggi
 
     "receive two service updates when there is a change" in new ActorScope {
       val service = ModelHelpers.createService("bogus")
-      httpClient.findServiceChange(Matchers.eq("bogus"), Matchers.eq(Set.empty), Matchers.eq(None), Matchers.any[Option[String]], Matchers.any[Option[String]]) returns Future.successful(IndexedServiceInstances(1, Set.empty))
-      httpClient.findServiceChange(Matchers.eq("bogus"), Matchers.eq(Set.empty), Matchers.eq(Some(1)), Matchers.eq(Some("1s")), Matchers.any[Option[String]]) returns Future.successful(IndexedServiceInstances(2, Set(service)))
-      httpClient.findServiceChange(Matchers.eq("bogus"), Matchers.eq(Set.empty), Matchers.eq(Some(2)), Matchers.eq(Some("1s")), Matchers.any[Option[String]]) returns Future {
+      httpClient.findServiceChange(Matchers.eq("bogus"), Matchers.eq(None), Matchers.eq(None), Matchers.any[Option[String]], Matchers.any[Option[String]]) returns Future.successful(IndexedServiceInstances(1, Set.empty))
+      httpClient.findServiceChange(Matchers.eq("bogus"), Matchers.eq(None), Matchers.eq(Some(1)), Matchers.eq(Some("1s")), Matchers.any[Option[String]]) returns Future.successful(IndexedServiceInstances(2, Set(service)))
+      httpClient.findServiceChange(Matchers.eq("bogus"), Matchers.eq(None), Matchers.eq(Some(2)), Matchers.eq(Some("1s")), Matchers.any[Option[String]]) returns Future {
         sut ! Stop
         IndexedServiceInstances(2, Set(service))
       }

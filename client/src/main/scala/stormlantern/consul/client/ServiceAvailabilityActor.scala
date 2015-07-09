@@ -15,7 +15,7 @@ class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceDefinition: 
   var serviceAvailabilityState: IndexedServiceInstances = IndexedServiceInstances.empty
 
   override def preStart(): Unit = {
-    httpClient.findServiceChange(serviceDefinition.serviceName, serviceDefinition.serviceTags, None).onComplete {
+    httpClient.findServiceChange(serviceDefinition.serviceName, serviceDefinition.serviceTags.headOption, None).onComplete {
       case Success(change) => self ! UpdateServiceAvailability(change)
       case Failure(e) => throw e
     }
@@ -39,7 +39,7 @@ class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceDefinition: 
     } else {
       None
     }
-    (update, httpClient.findServiceChange(serviceDefinition.serviceName, serviceDefinition.serviceTags, Some(services.index), Some("1s")))
+    (update, httpClient.findServiceChange(serviceDefinition.serviceName, serviceDefinition.serviceTags.headOption, Some(services.index), Some("1s")))
   }
 
   def createServiceAvailabilityUpdate(oldState: IndexedServiceInstances, newState: IndexedServiceInstances): ServiceAvailabilityUpdate = {

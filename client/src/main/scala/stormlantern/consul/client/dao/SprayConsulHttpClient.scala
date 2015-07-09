@@ -41,12 +41,12 @@ class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extend
         }
       else throw new UnsuccessfulResponseException(response)
 
-  def findServiceChange(service: String, tags: Set[String], index: Option[Long], wait: Option[String], dataCenter: Option[String]): Future[IndexedServiceInstances] = {
+  def findServiceChange(service: String, tag: Option[String], index: Option[Long], wait: Option[String], dataCenter: Option[String]): Future[IndexedServiceInstances] = {
     val dcParameter = dataCenter.map(dc => s"dc=$dc")
     val waitParameter = wait.map(w => s"wait=$w")
     val indexParameter = index.map(i => s"index=$i")
-    val tagsParameter = if (tags.nonEmpty) Some(s"tags=${tags.mkString(",")}") else None
-    val parameters = Seq(dcParameter, tagsParameter, waitParameter, indexParameter).flatten.mkString("&")
+    val tagParameter = tag.map(t => s"tag=$t")
+    val parameters = Seq(dcParameter, tagParameter, waitParameter, indexParameter).flatten.mkString("&")
     val request = Get(s"$host/v1/catalog/service/$service?$parameters")
     val myPipeline: HttpRequest => Future[IndexedServiceInstances] = pipeline ~> unmarshalWithIndex
     val success = Success[IndexedServiceInstances](r => true)

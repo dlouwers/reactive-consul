@@ -19,7 +19,7 @@ package stormlantern.consul.client.dao
 case class ServiceRegistration(
   name: String,
   id: Option[String] = None,
-  tags: Seq[String] = Seq.empty,
+  tags: Set[String] = Set.empty,
   address: Option[String] = None,
   port: Option[Long] = None,
   check: Option[Check] = None)

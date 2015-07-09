@@ -13,9 +13,8 @@ class SprayCatalogHttpClientIntegrationTest extends FlatSpec with Matchers with 
 
   import scala.concurrent.ExecutionContext.Implicits.global
   implicit val defaultPatience =
-    PatienceConfig(timeout = Span(5, Seconds), interval = Span(500, Millis))
+    PatienceConfig(timeout = Span(10, Seconds), interval = Span(500, Millis))
 
-  // TODO: Remove the dead letter messages caused by the testing procedure
   "The SprayCatalogHttpClient" should "retrieve a single Consul service from a freshly started Consul instance" in withConsulHost { (host, port) =>
     withActorSystem { implicit actorSystem =>
       val subject: ConsulHttpClient = new SprayConsulHttpClient(new URL(s"http://$host:$port"))
@@ -42,7 +41,7 @@ class SprayCatalogHttpClientIntegrationTest extends FlatSpec with Matchers with 
       subject.findServiceChange("consul").flatMap { result =>
         result.resource should have size 1
         result.resource.head.serviceName shouldEqual "consul"
-        subject.findServiceChange("consul", Set.empty, Some(result.index), Some("500ms")).map { secondResult =>
+        subject.findServiceChange("consul", None, Some(result.index), Some("500ms")).map { secondResult =>
           secondResult.resource should have size 1
           secondResult.index shouldEqual result.index
         }
@@ -68,6 +67,35 @@ class SprayCatalogHttpClientIntegrationTest extends FlatSpec with Matchers with 
         subject.findServiceChange("newservice").map { result =>
           result.resource should have size 1
           result.resource.head.serviceName shouldEqual "newservice"
+        }
+      }(Success[Unit](r => true), actorSystem.dispatcher).futureValue
+    }
+  }
+
+  it should "retrieve a service matching tags and leave out others" in withConsulHost { (host, port) =>
+    withActorSystem { implicit actorSystem =>
+      val subject: ConsulHttpClient = new SprayConsulHttpClient(new URL(s"http://$host:$port"))
+      subject.registerService(ServiceRegistration("newservice", Some("newservice-1"), Set("tag1", "tag2")))
+        .futureValue should equal("newservice-1")
+      subject.registerService(ServiceRegistration("newservice", Some("newservice-2"), Set("tag2", "tag3")))
+        .futureValue should equal("newservice-2")
+      retry { () =>
+        subject.findServiceChange("newservice").map { result =>
+          result.resource should have size 2
+          result.resource.head.serviceName shouldEqual "newservice"
+        }
+      }(Success[Unit](r => true), actorSystem.dispatcher).futureValue
+      retry { () =>
+        subject.findServiceChange("newservice", Some("tag2")).map { result =>
+          result.resource should have size 2
+          result.resource.head.serviceName shouldEqual "newservice"
+        }
+      }(Success[Unit](r => true), actorSystem.dispatcher).futureValue
+      retry { () =>
+        subject.findServiceChange("newservice", Some("tag3")).map { result =>
+          result.resource should have size 1
+          result.resource.head.serviceName shouldEqual "newservice"
+          result.resource.head.serviceId shouldEqual "newservice-2"
         }
       }(Success[Unit](r => true), actorSystem.dispatcher).futureValue
     }
