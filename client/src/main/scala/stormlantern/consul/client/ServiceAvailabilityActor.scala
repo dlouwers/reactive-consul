@@ -34,7 +34,7 @@ class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceDefinition: 
   def updateServiceAvailability(services: IndexedServiceInstances): (Option[ServiceAvailabilityUpdate], Future[IndexedServiceInstances]) = {
     val update = if (serviceAvailabilityState.index != services.index) {
       val oldServices = serviceAvailabilityState
-      serviceAvailabilityState = services
+      serviceAvailabilityState = services.filterForTags(serviceDefinition.serviceTags)
       Some(createServiceAvailabilityUpdate(oldServices, services))
     } else {
       None

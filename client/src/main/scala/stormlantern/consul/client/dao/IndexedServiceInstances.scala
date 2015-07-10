@@ -19,7 +19,13 @@ case class ServiceInstance(
   serviceTags: Set[String],
   serviceAddress: String,
   servicePort: Int)
-case class IndexedServiceInstances(index: Long, resource: Set[ServiceInstance]) extends Indexed[Set[ServiceInstance]]
+case class IndexedServiceInstances(index: Long, resource: Set[ServiceInstance]) extends Indexed[Set[ServiceInstance]] {
+  def filterForTags(tags: Set[String]): IndexedServiceInstances = {
+    this.copy(resource = resource.filter { s =>
+      tags.forall(s.serviceTags.contains)
+    })
+  }
+}
 
 object IndexedServiceInstances {
   def empty = IndexedServiceInstances(0, Set.empty)
