@@ -1,15 +1,16 @@
 package stormlantern.consul.client
 
 import java.net.URL
+import java.util.UUID
 
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{ Millis, Seconds, Span }
 import retry.Success
-import stormlantern.consul.client.dao.{ ConsulHttpClient, ServiceRegistration, SprayConsulHttpClient, TTLCheck }
+import stormlantern.consul.client.dao._
 import stormlantern.consul.client.util.{ ConsulDockerContainer, Logging, RetryPolicy, TestActorSystem }
 
-class SprayCatalogHttpClientIntegrationTest extends FlatSpec with Matchers with ScalaFutures with ConsulDockerContainer with TestActorSystem with RetryPolicy with Logging {
+class SprayConsulHttpClientIntegrationTest extends FlatSpec with Matchers with ScalaFutures with ConsulDockerContainer with TestActorSystem with RetryPolicy with Logging {
 
   import scala.concurrent.ExecutionContext.Implicits.global
   implicit val defaultPatience =
@@ -98,6 +99,13 @@ class SprayCatalogHttpClientIntegrationTest extends FlatSpec with Matchers with 
           result.resource.head.serviceId shouldEqual "newservice-2"
         }
       }(Success[Unit](r => true), actorSystem.dispatcher).futureValue
+    }
+  }
+
+  it should "register a session and get it's ID" in withConsulHost { (host, port) =>
+    withActorSystem { implicit actorSystem =>
+      val subject: ConsulHttpClient = new SprayConsulHttpClient(new URL(s"http://$host:$port"))
+      val id: UUID = subject.createSession(Some(SessionCreation(name = Some("MySession")))).futureValue
     }
   }
 }

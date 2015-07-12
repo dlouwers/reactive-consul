@@ -20,4 +20,5 @@ trait ConsulHttpProtocol extends DefaultJsonProtocol {
     }
   }
   implicit val serviceRegistrationFormat = jsonFormat(ServiceRegistration, "Name", "ID", "Tags", "Address", "Port", "Check")
+  implicit val sessionCreationFormat = jsonFormat(SessionCreation, "LockDelay", "Name", "Node", "Checks", "Behavior", "TTL")
 }

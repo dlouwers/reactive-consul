@@ -1,6 +1,7 @@
 package stormlantern.consul.client.dao
 
 import java.net.URL
+import java.util.UUID
 
 import akka.actor.ActorSystem
 import retry.Success
@@ -71,5 +72,15 @@ class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extend
     retry { () =>
       myPipeline(request)
     }(success, executionContext).map(r => ())
+  }
+
+  override def createSession(sessionCreation: Option[SessionCreation] = None, dataCenter: Option[String] = None): Future[UUID] = {
+    val dcParameter = dataCenter.map(dc => s"dc=$dc")
+    val request = Put(s"$host/v1/session/create", sessionCreation.map(_.toJson.asJsObject))
+    val myPipeline: HttpRequest => Future[HttpResponse] = pipeline
+    val success = Success[HttpResponse](r => r.status.isSuccess)
+    retry { () =>
+      myPipeline(request)
+    }(success, executionContext).map(r => UUID.fromString(r.entity.asString.parseJson.asJsObject.fields("ID").convertTo[String]))
   }
 }
