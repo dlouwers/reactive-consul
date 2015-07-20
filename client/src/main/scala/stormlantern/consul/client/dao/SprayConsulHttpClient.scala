@@ -81,6 +81,6 @@ class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extend
     val success = Success[HttpResponse](r => r.status.isSuccess)
     retry { () =>
       myPipeline(request)
-    }(success, executionContext).map(r => UUID.fromString(r.entity.asString.parseJson.asJsObject.fields("ID").convertTo[String]))
+    }(success, executionContext).map(r => r.entity.asString.parseJson.asJsObject.fields("ID").convertTo[UUID])
   }
 }
