@@ -1,6 +1,7 @@
 package stormlantern.consul.client
 
 import java.net.URL
+import java.nio.charset.Charset
 import java.util.UUID
 
 import org.scalatest._
@@ -105,5 +106,22 @@ class SprayConsulHttpClientIntegrationTest extends FlatSpec with Matchers with S
     val payload = """ { "name" : "test" } """.getBytes("UTF-8")
     subject.putKeyValuePair("my/key", payload, Some(AcquireSession(id))).futureValue should be(true)
     subject.putKeyValuePair("my/key", payload, Some(AcquireSession(id))).futureValue should be(false)
+    subject.putKeyValuePair("my/key", payload, Some(ReleaseSession(id))).futureValue should be(true)
+  }
+
+  it should "get a session lock on a key/value pair and get a second lock after release" in withConsulHttpClient { subject =>
+    val id: UUID = subject.createSession(Some(SessionCreation(name = Some("MySession")))).futureValue
+    val payload = """ { "name" : "test" } """.getBytes("UTF-8")
+    subject.putKeyValuePair("my/key", payload, Some(AcquireSession(id))).futureValue should be(true)
+    subject.putKeyValuePair("my/key", payload, Some(ReleaseSession(id))).futureValue should be(true)
+    subject.putKeyValuePair("my/key", payload, Some(AcquireSession(id))).futureValue should be(true)
+    subject.putKeyValuePair("my/key", payload, Some(ReleaseSession(id))).futureValue should be(true)
+  }
+
+  it should "write a key/value pair and read it back" in withConsulHttpClient { subject =>
+    val payload = """ { "name" : "test" } """.getBytes("UTF-8")
+    subject.putKeyValuePair("my/key", payload).futureValue should be(true)
+    val keyDataSeq = subject.readKeyValue("my/key").futureValue
+    keyDataSeq.head.value should equal(BinaryData(payload))
   }
 }

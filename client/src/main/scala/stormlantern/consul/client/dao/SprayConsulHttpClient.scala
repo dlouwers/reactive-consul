@@ -6,7 +6,7 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import retry.Success
 import spray.client.pipelining._
-import spray.http.{ HttpRequest, HttpResponse }
+import spray.http.{ HttpEntity, HttpRequest, HttpResponse }
 import spray.httpx.SprayJsonSupport._
 import spray.httpx.unmarshalling._
 import spray.httpx.{ PipelineException, UnsuccessfulResponseException }
@@ -96,11 +96,30 @@ class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extend
       case ReleaseSession(id) => s"release=$id"
     }
     val parameters = Seq(opParameter).flatten.mkString("&")
-    val request = Put(s"$host/v1/kv/$key?$parameters", value)
+    val request = Put(s"$host/v1/kv/$key?$parameters", HttpEntity(value))
     val myPipeline: HttpRequest => Future[HttpResponse] = pipeline
     implicit val success = Success[HttpResponse](r => r.status.isSuccess)
     retry { () =>
       myPipeline(request)
     }.map(r => r.entity.asString.toBoolean)
+  }
+
+  override def readKeyValue(
+    key: String,
+    index: Option[Long] = None,
+    wait: Option[String] = None,
+    recurse: Boolean = false,
+    keysOnly: Boolean = false): Future[Seq[KeyData]] = {
+    val waitParameter = wait.map(p => s"wait=$p")
+    val indexParameter = index.map(p => s"index=$p")
+    val recurseParameter = if (recurse) Some("recurse") else None
+    val keysOnlyParameter = if (keysOnly) Some("keys") else None
+    val parameters = Seq(indexParameter, waitParameter, recurseParameter, keysOnlyParameter).flatten.mkString("&")
+    val request = Get(s"$host/v1/kv/$key?$parameters")
+    val myPipeline: HttpRequest => Future[Seq[KeyData]] = pipeline ~> unmarshal[Seq[KeyData]]
+    implicit val success = Success[Seq[KeyData]](r => true)
+    retry { () =>
+      myPipeline(request)
+    }
   }
 }
