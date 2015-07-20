@@ -106,6 +106,7 @@ class SprayConsulHttpClientIntegrationTest extends FlatSpec with Matchers with S
     withActorSystem { implicit actorSystem =>
       val subject: ConsulHttpClient = new SprayConsulHttpClient(new URL(s"http://$host:$port"))
       val id: UUID = subject.createSession(Some(SessionCreation(name = Some("MySession")))).futureValue
+
     }
   }
 }

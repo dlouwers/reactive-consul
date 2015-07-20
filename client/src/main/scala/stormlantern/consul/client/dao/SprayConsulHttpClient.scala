@@ -16,7 +16,8 @@ import stormlantern.consul.client.util.{ RetryPolicy, Logging }
 import scala.concurrent.Future
 import scala.util.Try
 
-class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extends ConsulHttpClient with ConsulHttpProtocol with RetryPolicy with Logging {
+class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extends ConsulHttpClient
+    with ConsulHttpProtocol with RetryPolicy with Logging {
 
   implicit val executionContext = actorSystem.dispatcher
   val pipeline: HttpRequest => Future[HttpResponse] = sendReceive
@@ -42,7 +43,12 @@ class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extend
         }
       else throw new UnsuccessfulResponseException(response)
 
-  def findServiceChange(service: String, tag: Option[String], index: Option[Long], wait: Option[String], dataCenter: Option[String]): Future[IndexedServiceInstances] = {
+  def findServiceChange(
+    service: String,
+    tag: Option[String] = None,
+    index: Option[Long] = None,
+    wait: Option[String] = None,
+    dataCenter: Option[String] = None): Future[IndexedServiceInstances] = {
     val dcParameter = dataCenter.map(dc => s"dc=$dc")
     val waitParameter = wait.map(w => s"wait=$w")
     val indexParameter = index.map(i => s"index=$i")
@@ -50,37 +56,51 @@ class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extend
     val parameters = Seq(dcParameter, tagParameter, waitParameter, indexParameter).flatten.mkString("&")
     val request = Get(s"$host/v1/catalog/service/$service?$parameters")
     val myPipeline: HttpRequest => Future[IndexedServiceInstances] = pipeline ~> unmarshalWithIndex
-    val success = Success[IndexedServiceInstances](r => true)
+    implicit val success = Success[IndexedServiceInstances](r => true)
     retry { () =>
       myPipeline(request)
-    }(success, executionContext)
+    }
   }
 
   override def registerService(registration: ServiceRegistration): Future[String] = {
     val request = Put(s"$host/v1/agent/service/register", registration.toJson.asJsObject())
     val myPipeline: HttpRequest => Future[HttpResponse] = pipeline
-    val success = Success[HttpResponse](r => r.status.isSuccess)
+    implicit val success = Success[HttpResponse](r => r.status.isSuccess)
     retry { () =>
       myPipeline(request)
-    }(success, executionContext).map(r => registration.id.getOrElse(registration.name))
+    }.map(r => registration.id.getOrElse(registration.name))
   }
 
   override def deregisterService(serviceId: String): Future[Unit] = {
     val request = Delete(s"$host/v1/agent/service/deregister/$serviceId")
     val myPipeline: HttpRequest => Future[HttpResponse] = pipeline
-    val success = Success[HttpResponse](r => r.status.isSuccess)
+    implicit val success = Success[HttpResponse](r => r.status.isSuccess)
     retry { () =>
       myPipeline(request)
-    }(success, executionContext).map(r => ())
+    }.map(r => ())
   }
 
   override def createSession(sessionCreation: Option[SessionCreation] = None, dataCenter: Option[String] = None): Future[UUID] = {
     val dcParameter = dataCenter.map(dc => s"dc=$dc")
     val request = Put(s"$host/v1/session/create", sessionCreation.map(_.toJson.asJsObject))
     val myPipeline: HttpRequest => Future[HttpResponse] = pipeline
-    val success = Success[HttpResponse](r => r.status.isSuccess)
+    implicit val success = Success[HttpResponse](r => r.status.isSuccess)
     retry { () =>
       myPipeline(request)
-    }(success, executionContext).map(r => r.entity.asString.parseJson.asJsObject.fields("ID").convertTo[UUID])
+    }.map(r => r.entity.asString.parseJson.asJsObject.fields("ID").convertTo[UUID])
+  }
+
+  override def putKeyValuePair(key: String, value: Array[Byte], sessionOp: Option[SessionOp] = None): Future[Boolean] = {
+    val opParameter = sessionOp.map {
+      case AquireSession(id) => s"acquire=$id"
+      case ReleaseSession(id) => s"release=$id"
+    }
+    val parameters = Seq(opParameter).flatten.mkString("&")
+    val request = Put(s"$host/v1/kv/$key?$parameters", value)
+    val myPipeline: HttpRequest => Future[HttpResponse] = pipeline
+    implicit val success = Success[HttpResponse](r => r.status.isSuccess)
+    retry { () =>
+      myPipeline(request)
+    }.map(r => r.entity.asString.toBoolean)
   }
 }
