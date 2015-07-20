@@ -92,7 +92,7 @@ class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extend
 
   override def putKeyValuePair(key: String, value: Array[Byte], sessionOp: Option[SessionOp] = None): Future[Boolean] = {
     val opParameter = sessionOp.map {
-      case AquireSession(id) => s"acquire=$id"
+      case AcquireSession(id) => s"acquire=$id"
       case ReleaseSession(id) => s"release=$id"
     }
     val parameters = Seq(opParameter).flatten.mkString("&")
