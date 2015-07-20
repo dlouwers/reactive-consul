@@ -109,4 +109,14 @@ class SprayConsulHttpClientIntegrationTest extends FlatSpec with Matchers with S
 
     }
   }
+
+  it should "get a session lock on a key/value pair and fail to get a second lock" in withConsulHost { (host, port) =>
+    withActorSystem { implicit actorSystem =>
+      val subject: ConsulHttpClient = new SprayConsulHttpClient(new URL(s"http://$host:$port"))
+      val id: UUID = subject.createSession(Some(SessionCreation(name = Some("MySession")))).futureValue
+      val payload = """ { "name" : "test" } """.getBytes("UTF-8")
+      subject.putKeyValuePair("my/key", payload, Some(AcquireSession(id))).futureValue should be(true)
+      subject.putKeyValuePair("my/key", payload, Some(AcquireSession(id))).futureValue should be(false)
+    }
+  }
 }
