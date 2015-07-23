@@ -34,8 +34,8 @@ sharding for you and will automatically route your query to the right instance, 
 first. Consul can help you keep track of these.
 
 ```scala
-import stormlantern.consul.client.ConnectionProvider
-import stormlantern.consul.client.ConnectionStrategy
+import stormlantern.consul.client.discovery.ConnectionProvider
+import stormlantern.consul.client.discovery.ConnectionStrategy
 import stormlantern.consul.client.ServiceBroker
 
 import com.mongodb.casbah.Imports._
@@ -83,8 +83,8 @@ The following example will create a connection strategy for connecting to Postgr
 one master and two replication servers. Consul can help you keep track of these.
 
 ```scala
-import stormlantern.consul.client.ConnectionProvider
-import stormlantern.consul.client.ConnectionStrategy
+import stormlantern.consul.client.discovery.ConnectionProvider
+import stormlantern.consul.client.discovery.ConnectionStrategy
 import stormlantern.consul.client.ServiceBroker
 
 import scala.concurrent.Future

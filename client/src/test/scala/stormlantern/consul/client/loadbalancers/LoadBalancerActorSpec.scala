@@ -6,7 +6,8 @@ import akka.testkit.{ ImplicitSender, TestActorRef, TestKit }
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification
-import stormlantern.consul.client.{ ConnectionHolder, ConnectionProvider, ServiceUnavailableException }
+import stormlantern.consul.client.discovery.{ConnectionProvider, ConnectionHolder}
+import stormlantern.consul.client.ServiceUnavailableException
 
 import scala.concurrent.Future
 

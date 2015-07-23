@@ -1,4 +1,4 @@
-package stormlantern.consul.client
+package stormlantern.consul.client.discovery
 
 import akka.actor.ActorRef
 
@@ -16,8 +16,4 @@ trait ConnectionProvider {
       override val key: String = k
     }
   }
-}
-
-trait ConnectionProviderFactory {
-  def create(host: String, port: Int): ConnectionProvider
 }

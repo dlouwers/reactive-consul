@@ -1,10 +1,7 @@
-package stormlantern.consul.client
+package stormlantern.consul.client.discovery
 
 import akka.actor.{ ActorRef, ActorRefFactory }
-import stormlantern.consul.client.loadbalancers.{ LoadBalancer, RoundRobinLoadBalancer, LoadBalancerActor }
-
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
+import stormlantern.consul.client.loadbalancers.{ LoadBalancer, LoadBalancerActor, RoundRobinLoadBalancer }
 
 case class ServiceDefinition(serviceId: String, serviceName: String, serviceTags: Set[String] = Set.empty, dataCenter: Option[String] = None)
 object ServiceDefinition {

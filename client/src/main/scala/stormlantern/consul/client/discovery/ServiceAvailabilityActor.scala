@@ -1,8 +1,8 @@
-package stormlantern.consul.client
+package stormlantern.consul.client.discovery
 
 import akka.actor.{ Actor, ActorRef, Props }
-import ServiceAvailabilityActor._
 import stormlantern.consul.client.dao.{ ConsulHttpClient, IndexedServiceInstances, ServiceInstance }
+import stormlantern.consul.client.discovery.ServiceAvailabilityActor._
 
 import scala.concurrent.Future
 import scala.util.{ Failure, Success }

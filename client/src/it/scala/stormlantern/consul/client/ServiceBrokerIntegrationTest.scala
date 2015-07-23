@@ -7,6 +7,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time._
 import retry.Success
 import stormlantern.consul.client.dao.{ ConsulHttpClient, ServiceRegistration, SprayConsulHttpClient }
+import stormlantern.consul.client.discovery.{ ConnectionStrategy, ServiceDefinition, ConnectionProviderFactory, ConnectionProvider }
 import stormlantern.consul.client.loadbalancers.RoundRobinLoadBalancer
 import stormlantern.consul.client.util.{ ConsulDockerContainer, Logging, RetryPolicy, TestActorSystem }
 

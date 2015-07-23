@@ -7,6 +7,7 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification
 import stormlantern.consul.client.dao.ConsulHttpClient
+import stormlantern.consul.client.discovery.ConnectionHolder
 import stormlantern.consul.client.loadbalancers.LoadBalancerActor
 import stormlantern.consul.client.util.Logging
 

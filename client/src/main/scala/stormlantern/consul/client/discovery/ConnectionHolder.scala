@@ -1,4 +1,4 @@
-package stormlantern.consul.client
+package stormlantern.consul.client.discovery
 
 import akka.actor.ActorRef
 
