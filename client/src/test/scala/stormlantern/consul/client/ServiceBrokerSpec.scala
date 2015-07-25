@@ -20,7 +20,7 @@ class ServiceBrokerSpec(_system: ActorSystem) extends TestKit(_system) with Impl
     with Matchers with ScalaFutures with BeforeAndAfterAll with MockFactory with Logging {
 
   implicit val ec = system.dispatcher
-  def this() = this(ActorSystem("ServiceBrokerActorSpec"))
+  def this() = this(ActorSystem("ServiceBrokerSpec"))
 
   override def afterAll() {
     TestKit.shutdownActorSystem(system)
