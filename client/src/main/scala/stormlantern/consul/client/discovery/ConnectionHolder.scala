@@ -6,6 +6,6 @@ import scala.concurrent.Future
 
 trait ConnectionHolder {
   val key: String
-  val loadBalancer: ActorRef
+  def loadBalancer: ActorRef
   def connection: Future[Any]
 }

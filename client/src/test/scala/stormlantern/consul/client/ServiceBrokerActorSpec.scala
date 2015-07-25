@@ -4,10 +4,7 @@ import akka.actor.Status.Failure
 import akka.actor._
 import akka.testkit.{ ImplicitSender, TestActorRef, TestKit }
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{ BeforeAndAfterAll, Matchers, FlatSpecLike }
-import org.specs2.mock.Mockito
-import org.specs2.mutable.Specification
-import org.specs2.specification
+import org.scalatest.{ BeforeAndAfterAll, FlatSpecLike, Matchers }
 import stormlantern.consul.client.dao.ConsulHttpClient
 import stormlantern.consul.client.discovery.ServiceAvailabilityActor.Start
 import stormlantern.consul.client.discovery._
