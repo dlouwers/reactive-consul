@@ -11,18 +11,19 @@ object Dependencies {
   val akkaVersion   = "2.3.7"
   val specsVersion  = "3.3.1"
 
-  val sprayClient   = "io.spray"                    %% "spray-client"     % sprayVersion
-  val sprayRouting  = "io.spray"                    %% "spray-routing"    % sprayVersion
-  val sprayJson     = "io.spray"                    %% "spray-json"       % "1.3.1"
-  val akkaActor     = "com.typesafe.akka"           %% "akka-actor"       % akkaVersion
-  val akkaSlf4j     = "com.typesafe.akka"           %% "akka-slf4j"       % akkaVersion
-  val slf4j         = "org.slf4j"                   %  "slf4j-api"        % "1.7.5"
-  val logback       = "ch.qos.logback"              %  "logback-classic"  % "1.0.9"
-  val retry         = "me.lessis"                   %% "retry"            % "0.2.0"
-  val spotifyDocker = "com.spotify"                 %  "docker-client"    % "2.7.14"
-  val spotifyDns    = "com.spotify"                 %  "dns"              % "3.0.1"
-  val specs2        = "org.specs2"                  %% "specs2-core"      % specsVersion
-  val scalaTest     = "org.scalatest"               %  "scalatest_2.11"   % "2.2.4"
-  val akkaTestKit   = "com.typesafe.akka"           %% "akka-testkit"     % akkaVersion   % "test,it"
-  val specs2mock    = "org.specs2"                  %% "specs2-mock"      % specsVersion  % "test,it"
+  val sprayClient   = "io.spray"                    %% "spray-client"                 % sprayVersion
+  val sprayRouting  = "io.spray"                    %% "spray-routing"                % sprayVersion
+  val sprayJson     = "io.spray"                    %% "spray-json"                   % "1.3.1"
+  val akkaActor     = "com.typesafe.akka"           %% "akka-actor"                   % akkaVersion
+  val akkaSlf4j     = "com.typesafe.akka"           %% "akka-slf4j"                   % akkaVersion
+  val slf4j         = "org.slf4j"                   %  "slf4j-api"                    % "1.7.5"
+  val logback       = "ch.qos.logback"              %  "logback-classic"              % "1.0.9"
+  val retry         = "me.lessis"                   %% "retry"                        % "0.2.0"
+  val spotifyDocker = "com.spotify"                 %  "docker-client"                % "2.7.14"
+  val spotifyDns    = "com.spotify"                 %  "dns"                          % "3.0.1"
+  val specs2        = "org.specs2"                  %% "specs2-core"                  % specsVersion
+  val scalaTest     = "org.scalatest"               %  "scalatest_2.11"               % "2.2.4"
+  val scalaMock     = "org.scalamock"               %% "scalamock-scalatest-support"  % "3.2.2"       % "test"
+  val akkaTestKit   = "com.typesafe.akka"           %% "akka-testkit"                 % akkaVersion   % "test,it"
+  val specs2mock    = "org.specs2"                  %% "specs2-mock"                  % specsVersion  % "test,it"
 }

@@ -2,7 +2,7 @@ package stormlantern.consul.client.election
 
 import java.util.UUID
 
-import akka.actor.Actor
+import akka.actor.{ Props, Actor }
 import stormlantern.consul.client.dao.{ BinaryData, KeyData, AcquireSession, ConsulHttpClient }
 import stormlantern.consul.client.election.LeaderFollowerActor._
 import spray.json._
@@ -54,6 +54,11 @@ class LeaderFollowerActor(httpClient: ConsulHttpClient, sessionId: UUID, key: St
 
 object LeaderFollowerActor {
 
+  //Props
+  def props(httpClient: ConsulHttpClient, sessionId: UUID, key: String, host: String, port: Int): Props =
+    Props(new LeaderFollowerActor(httpClient, sessionId, key, host, port))
+
+  // Election state
   sealed trait ElectionState
   case object Leader extends ElectionState
   case class Follower(host: String, port: Int) extends ElectionState

@@ -26,7 +26,9 @@ class ServiceBrokerActor(services: Set[ConnectionStrategy], serviceAvailabilityA
       case (name, strategy) =>
         loadbalancers.put(name, strategy.loadBalancerFactory(context))
         log.info(s"Starting service availability Actor for $name")
-        serviceAvailability += serviceAvailabilityActorFactory(context, strategy.serviceDefinition, self)
+        val serviceAvailabilityActorRef = serviceAvailabilityActorFactory(context, strategy.serviceDefinition, self)
+        serviceAvailabilityActorRef ! Start
+        serviceAvailability += serviceAvailabilityActorRef
     }
   }
 

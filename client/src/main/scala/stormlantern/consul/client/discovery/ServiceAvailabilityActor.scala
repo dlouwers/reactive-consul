@@ -14,14 +14,8 @@ class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceDefinition: 
   // Actor state
   var serviceAvailabilityState: IndexedServiceInstances = IndexedServiceInstances.empty
 
-  override def preStart(): Unit = {
-    httpClient.findServiceChange(serviceDefinition.serviceName, serviceDefinition.serviceTags.headOption, None).onComplete {
-      case Success(change) => self ! UpdateServiceAvailability(change)
-      case Failure(e) => throw e
-    }
-  }
-
   def receive = {
+    case Start => self ! UpdateServiceAvailability(IndexedServiceInstances.empty)
     case UpdateServiceAvailability(services: IndexedServiceInstances) =>
       val (update, serviceChange) = updateServiceAvailability(services)
       update.foreach(listener ! _)
@@ -55,6 +49,7 @@ object ServiceAvailabilityActor {
   def props(httpClient: ConsulHttpClient, serviceDefinition: ServiceDefinition, listener: ActorRef): Props = Props(new ServiceAvailabilityActor(httpClient, serviceDefinition, listener))
 
   // Messages
+  case object Start
   private case class UpdateServiceAvailability(services: IndexedServiceInstances)
   private[client] case class ServiceAvailabilityUpdate(added: Set[ServiceInstance], removed: Set[ServiceInstance])
   private[client] object ServiceAvailabilityUpdate {

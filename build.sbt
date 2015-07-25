@@ -26,6 +26,7 @@ lazy val client = (project in file("client"))
       specs2 % "test",
       specs2mock,
       scalaTest % "it",
+      scalaMock,
       logback % "test,it",
       akkaTestKit
     ),
