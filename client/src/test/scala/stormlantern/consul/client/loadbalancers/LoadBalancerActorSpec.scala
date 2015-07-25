@@ -4,13 +4,9 @@ import akka.actor.ActorSystem
 import akka.actor.Status.Failure
 import akka.testkit.{ ImplicitSender, TestActorRef, TestKit }
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ BeforeAndAfterAll, Matchers, FlatSpecLike }
-import org.specs2.mock.Mockito
-import org.specs2.mutable.Specification
-import org.specs2.specification
-import stormlantern.consul.client.discovery.{ ConnectionProvider, ConnectionHolder }
+import org.scalatest.{ BeforeAndAfterAll, FlatSpecLike, Matchers }
 import stormlantern.consul.client.ServiceUnavailableException
+import stormlantern.consul.client.discovery.{ ConnectionHolder, ConnectionProvider }
 import stormlantern.consul.client.util.Logging
 
 import scala.concurrent.Future

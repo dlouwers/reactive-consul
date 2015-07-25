@@ -23,9 +23,7 @@ lazy val client = (project in file("client"))
       spotifyDns,
       slf4j,
       akkaSlf4j,
-      specs2 % "test",
-      specs2mock,
-      scalaTest % "it",
+      scalaTest % "test, it",
       scalaMock,
       logback % "test,it",
       akkaTestKit
@@ -35,9 +33,9 @@ lazy val client = (project in file("client"))
       .setPreference(DoubleIndentClassDeclaration, true)
       .setPreference(PreserveDanglingCloseParenthesis, true)
       .setPreference(RewriteArrowSymbols, true),
-    scalaVersion := "2.11.5",
-    scalacOptions in Test ++= Seq("-Yrangepos"),
-    scalacOptions in IntegrationTest ++= Seq("-Yrangepos")
+    scalaVersion := "2.11.5"
+//    scalacOptions in Test ++= Seq("-Yrangepos"),
+//    scalacOptions in IntegrationTest ++= Seq("-Yrangepos")
   )
   .configs( IntegrationTest )
   .settings( Defaults.itSettings : _* )
