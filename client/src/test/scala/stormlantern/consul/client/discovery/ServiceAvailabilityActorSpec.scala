@@ -1,13 +1,11 @@
-package stormlantern.consul.client
+package stormlantern.consul.client.discovery
 
-import akka.actor.{ PoisonPill, ActorSystem }
-import akka.actor.SupervisorStrategy.Stop
+import akka.actor.ActorSystem
 import akka.testkit.{ ImplicitSender, TestActorRef, TestKit }
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{ BeforeAndAfterAll, FlatSpecLike, Matchers }
 import stormlantern.consul.client.dao.{ ConsulHttpClient, IndexedServiceInstances }
 import stormlantern.consul.client.discovery.ServiceAvailabilityActor.Start
-import stormlantern.consul.client.discovery.{ ServiceAvailabilityActor, ServiceDefinition }
 import stormlantern.consul.client.helpers.ModelHelpers
 import stormlantern.consul.client.util.Logging
 

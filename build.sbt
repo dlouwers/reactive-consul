@@ -34,8 +34,6 @@ lazy val client = (project in file("client"))
       .setPreference(PreserveDanglingCloseParenthesis, true)
       .setPreference(RewriteArrowSymbols, true),
     scalaVersion := "2.11.5"
-//    scalacOptions in Test ++= Seq("-Yrangepos"),
-//    scalacOptions in IntegrationTest ++= Seq("-Yrangepos")
   )
   .configs( IntegrationTest )
   .settings( Defaults.itSettings : _* )

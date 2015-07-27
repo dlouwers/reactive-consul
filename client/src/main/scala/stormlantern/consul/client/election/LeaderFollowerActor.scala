@@ -18,9 +18,6 @@ class LeaderFollowerActor(httpClient: ConsulHttpClient, sessionId: UUID, key: St
   // Actor state
   var electionState: Option[ElectionState] = None
 
-  override def preStart(): Unit = {
-  }
-
   // Behavior
   def receive = {
     case Participate =>
@@ -40,6 +37,9 @@ class LeaderFollowerActor(httpClient: ConsulHttpClient, sessionId: UUID, key: St
             if (session.isEmpty) {
               self ! SetElectionState(None)
               self ! Participate
+            } else if (session.get == sessionId) {
+              self ! SetElectionState(Some(Leader))
+              self ! MonitorLock(newIndex)
             } else {
               val leaderInfo = new String(data, "UTF-8").parseJson.convertTo[LeaderInfo](leaderInfoFormat)
               self ! SetElectionState(Some(Follower(leaderInfo.host, leaderInfo.port)))
