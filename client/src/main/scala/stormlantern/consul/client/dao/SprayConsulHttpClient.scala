@@ -6,7 +6,7 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import retry.Success
 import spray.client.pipelining._
-import spray.http.{ HttpEntity, HttpRequest, HttpResponse }
+import spray.http._
 import spray.httpx.SprayJsonSupport._
 import spray.httpx.unmarshalling._
 import spray.httpx.{ PipelineException, UnsuccessfulResponseException }
@@ -98,10 +98,18 @@ class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extend
     val parameters = Seq(opParameter).flatten.mkString("&")
     val request = Put(s"$host/v1/kv/$key?$parameters", HttpEntity(value))
     val myPipeline: HttpRequest => Future[HttpResponse] = pipeline
-    implicit val success = Success[HttpResponse](r => r.status.isSuccess)
+    implicit val success = Success[HttpResponse] { r => true }
     retry { () =>
       myPipeline(request)
-    }.map(r => r.entity.asString.toBoolean)
+    }.map { r =>
+      if (r.status.isSuccess) {
+        r.entity.asString.toBoolean
+      } else if (r.status == StatusCodes.InternalServerError && r.entity.asString == "Invalid session") {
+        false
+      } else {
+        throw new IllegalArgumentException(r.entity.asString)
+      }
+    }
   }
 
   override def readKeyValue(

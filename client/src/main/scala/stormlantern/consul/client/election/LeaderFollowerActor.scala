@@ -2,16 +2,15 @@ package stormlantern.consul.client.election
 
 import java.util.UUID
 
-import akka.actor.{ Props, Actor }
-import stormlantern.consul.client.dao.{ BinaryData, KeyData, AcquireSession, ConsulHttpClient }
-import stormlantern.consul.client.election.LeaderFollowerActor._
+import akka.actor.{ Actor, Props }
 import spray.json._
+import stormlantern.consul.client.dao.{ AcquireSession, BinaryData, ConsulHttpClient, KeyData }
+import stormlantern.consul.client.election.LeaderFollowerActor._
 
 class LeaderFollowerActor(httpClient: ConsulHttpClient, sessionId: UUID, key: String, host: String, port: Int) extends Actor with DefaultJsonProtocol {
 
   implicit val ec = context.dispatcher
 
-  case class LeaderInfo(host: String, port: Int)
   implicit val leaderInfoFormat = jsonFormat2(LeaderInfo)
   val leaderInfoBytes = LeaderInfo(host, port).toJson.compactPrint.getBytes("UTF-8")
 

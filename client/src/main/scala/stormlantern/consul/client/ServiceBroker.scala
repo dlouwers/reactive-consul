@@ -7,6 +7,7 @@ import akka.util.Timeout
 import com.spotify.dns.DnsSrvResolvers
 import stormlantern.consul.client.dao.{ ServiceRegistration, ConsulHttpClient, SprayConsulHttpClient }
 import stormlantern.consul.client.discovery.{ ServiceAvailabilityActor, ServiceDefinition, ConnectionStrategy, ConnectionHolder }
+import stormlantern.consul.client.election.LeaderInfo
 import stormlantern.consul.client.loadbalancers.LoadBalancerActor
 import stormlantern.consul.client.util.{ Logging, RetryPolicy }
 import scala.concurrent.duration._
@@ -40,6 +41,14 @@ class ServiceBroker(serviceBrokerActor: ActorRef, consulClient: ConsulHttpClient
       }
       Runtime.getRuntime.addShutdownHook(new Thread(deregisterService))
     }
+  }
+
+  def withLeader[A](key: String)(f: Option[LeaderInfo] => Future[A]): Future[A] = {
+    ???
+  }
+
+  def joinElection(key: String): Future[Unit] = {
+    ???
   }
 }
 

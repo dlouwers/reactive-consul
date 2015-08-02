@@ -1,5 +1,7 @@
 package stormlantern.consul.client
 
+import java.util.UUID
+
 import akka.actor.Status.Failure
 import akka.actor._
 import akka.util.Timeout
@@ -8,7 +10,7 @@ import stormlantern.consul.client.discovery.{ ServiceAvailabilityActor, ServiceD
 import stormlantern.consul.client.loadbalancers.LoadBalancerActor
 import stormlantern.consul.client.loadbalancers.LoadBalancerActor.{ HasAvailableConnectionProvider, GetConnection }
 import ServiceAvailabilityActor._
-import ServiceBrokerActor.{ AllConnectionProvidersAvailable, HasAvailableConnectionProviderFor, GetServiceConnection }
+import stormlantern.consul.client.ServiceBrokerActor.{ JoinElection, AllConnectionProvidersAvailable, HasAvailableConnectionProviderFor, GetServiceConnection }
 
 import scala.collection.mutable
 import scala.concurrent.{ Future, ExecutionContext }
@@ -20,6 +22,7 @@ class ServiceBrokerActor(services: Set[ConnectionStrategy], serviceAvailabilityA
   val indexedServices = services.map(s => (s.serviceDefinition.serviceId, s)).toMap
   val loadbalancers: mutable.Map[String, ActorRef] = mutable.Map.empty
   val serviceAvailability: mutable.Set[ActorRef] = mutable.Set.empty
+  val sessionId: Option[UUID] = None
 
   override def preStart(): Unit = {
     indexedServices.foreach {
@@ -56,8 +59,11 @@ class ServiceBrokerActor(services: Set[ConnectionStrategy], serviceAvailabilityA
     case AllConnectionProvidersAvailable =>
       import akka.pattern.pipe
       queryConnectionProviderAvailability pipeTo sender
+    case JoinElection(key) =>
+
   }
 
+  // Internal methods
   def addConnectionProviders(added: Set[ServiceInstance]): Unit = {
     added.foreach { s =>
       val host = if (s.serviceAddress.isEmpty) s.address else s.serviceAddress
@@ -80,9 +86,12 @@ class ServiceBrokerActor(services: Set[ConnectionStrategy], serviceAvailabilityA
 }
 
 object ServiceBrokerActor {
+  // Constructors
   def props(services: Set[ConnectionStrategy], serviceAvailabilityActorFactory: (ActorRefFactory, ServiceDefinition, ActorRef) => ActorRef)(implicit ec: ExecutionContext): Props = Props(new ServiceBrokerActor(services, serviceAvailabilityActorFactory))
+  // Public messages
   case class GetServiceConnection(name: String)
   case object Stop
   case class HasAvailableConnectionProviderFor(name: String)
   case object AllConnectionProvidersAvailable
+  case class JoinElection(key: String)
 }

@@ -11,11 +11,11 @@ import retry.Success
 import stormlantern.consul.client.dao._
 import stormlantern.consul.client.util.{ ConsulDockerContainer, Logging, RetryPolicy, TestActorSystem }
 
+import scala.util.Failure
+
 class SprayConsulHttpClientIntegrationTest extends FlatSpec with Matchers with ScalaFutures with Eventually with IntegrationPatience with ConsulDockerContainer with TestActorSystem with RetryPolicy with Logging {
 
   import scala.concurrent.ExecutionContext.Implicits.global
-  //  implicit val defaultPatience =
-  //    PatienceConfig(timeout = Span(10, Seconds), interval = Span(500, Millis))
 
   def withConsulHttpClient[T](f: ConsulHttpClient => T): T = withConsulHost { (host, port) =>
     withActorSystem { implicit actorSystem =>
@@ -123,5 +123,11 @@ class SprayConsulHttpClientIntegrationTest extends FlatSpec with Matchers with S
     subject.putKeyValuePair("my/key", payload).futureValue should be(true)
     val keyDataSeq = subject.readKeyValue("my/key").futureValue
     keyDataSeq.head.value should equal(BinaryData(payload))
+  }
+
+  it should "fail when aquiring a lock on a key with a non-existent session" in withConsulHttpClient { subject =>
+    val payload = """ { "name" : "test" } """.getBytes("UTF-8")
+    val nonExistentSessionId = UUID.fromString("9A3BB9C-E2E7-43DF-BFD5-845417146552")
+    val result = subject.putKeyValuePair("my/key", payload, Some(AcquireSession(nonExistentSessionId))).futureValue should be(false)
   }
 }

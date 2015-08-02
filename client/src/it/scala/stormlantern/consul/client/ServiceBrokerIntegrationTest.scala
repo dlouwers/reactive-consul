@@ -3,7 +3,7 @@ package stormlantern.consul.client
 import java.net.URL
 
 import org.scalatest._
-import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.concurrent.{ Eventually, IntegrationPatience, ScalaFutures }
 import org.scalatest.time._
 import retry.Success
 import stormlantern.consul.client.dao.{ ConsulHttpClient, ServiceRegistration, SprayConsulHttpClient }
@@ -13,10 +13,9 @@ import stormlantern.consul.client.util.{ ConsulDockerContainer, Logging, RetryPo
 
 import scala.concurrent.Future
 
-class ServiceBrokerIntegrationTest extends FlatSpec with Matchers with ScalaFutures with ConsulDockerContainer with RetryPolicy with TestActorSystem with Logging {
+class ServiceBrokerIntegrationTest extends FlatSpec with Matchers with ScalaFutures with Eventually with IntegrationPatience with ConsulDockerContainer with TestActorSystem with Logging {
 
   import scala.concurrent.ExecutionContext.Implicits.global
-  implicit val defaultPatience = PatienceConfig(timeout = Span(10, Seconds), interval = Span(500, Millis))
 
   "The ServiceBroker" should "provide a usable connection to consul" in withConsulHost { (host, port) =>
     withActorSystem { implicit actorSystem =>
@@ -33,12 +32,11 @@ class ServiceBrokerIntegrationTest extends FlatSpec with Matchers with ScalaFutu
       }
       val connectionStrategy = ConnectionStrategy(ServiceDefinition("consul-http"), connectionProviderFactory, new RoundRobinLoadBalancer)
       val sut = ServiceBroker(actorSystem, sprayHttpClient, Set(connectionStrategy))
-      val success = Success[Unit](r => true)
-      val r = retry { () =>
+      eventually {
         sut.withService("consul-http") { connection: ConsulHttpClient =>
           connection.findServiceChange("bogus").map(_.resource should have size 0)
         }
-      }(success, actorSystem.dispatcher).futureValue
+      }
     }
   }
 }
