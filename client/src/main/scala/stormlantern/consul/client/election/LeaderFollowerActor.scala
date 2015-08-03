@@ -30,7 +30,7 @@ class LeaderFollowerActor(httpClient: ConsulHttpClient, sessionId: UUID, key: St
     case SetElectionState(state) =>
       electionState = state
     case MonitorLock(index) =>
-      httpClient.readKeyValue(key, index = Some(index), wait = Some("1s")).map {
+      httpClient.getKeyValuePair(key, index = Some(index), wait = Some("1s")).map {
         case Seq(KeyData(_, _, newIndex, _, _, BinaryData(data), session)) =>
           if (newIndex > index) {
             if (session.isEmpty) {

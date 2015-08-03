@@ -34,10 +34,10 @@ class ServiceBroker(serviceBrokerActor: ActorRef, consulClient: ConsulHttpClient
   }
 
   def registerService(registration: ServiceRegistration): Future[Unit] = {
-    consulClient.registerService(registration).map { serviceId =>
+    consulClient.putService(registration).map { serviceId =>
       // Add shutdown hook
       val deregisterService = new Runnable {
-        override def run(): Unit = consulClient.deregisterService(serviceId)
+        override def run(): Unit = consulClient.deleteService(serviceId)
       }
       Runtime.getRuntime.addShutdownHook(new Thread(deregisterService))
     }

@@ -33,7 +33,7 @@ class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceDefinition: 
     } else {
       None
     }
-    (update, httpClient.findServiceChange(serviceDefinition.serviceName, serviceDefinition.serviceTags.headOption, Some(services.index), Some("1s")))
+    (update, httpClient.getService(serviceDefinition.serviceName, serviceDefinition.serviceTags.headOption, Some(services.index), Some("1s")))
   }
 
   def createServiceAvailabilityUpdate(oldState: IndexedServiceInstances, newState: IndexedServiceInstances): ServiceAvailabilityUpdate = {

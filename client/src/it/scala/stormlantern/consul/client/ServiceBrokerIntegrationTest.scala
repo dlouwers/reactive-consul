@@ -21,8 +21,8 @@ class ServiceBrokerIntegrationTest extends FlatSpec with Matchers with ScalaFutu
     withActorSystem { implicit actorSystem =>
       val sprayHttpClient = new SprayConsulHttpClient(new URL(s"http://$host:$port"))
       // Register the HTTP interface
-      sprayHttpClient.registerService(ServiceRegistration("consul-http", Some("consul-http-1"), address = Some(host), port = Some(port)))
-      sprayHttpClient.registerService(ServiceRegistration("consul-http", Some("consul-http-2"), address = Some(host), port = Some(port)))
+      sprayHttpClient.putService(ServiceRegistration("consul-http", Some("consul-http-1"), address = Some(host), port = Some(port)))
+      sprayHttpClient.putService(ServiceRegistration("consul-http", Some("consul-http-2"), address = Some(host), port = Some(port)))
       val connectionProviderFactory = new ConnectionProviderFactory {
         override def create(host: String, port: Int): ConnectionProvider = new ConnectionProvider {
           logger.info(s"Asked to create connection provider for $host:$port")
@@ -34,7 +34,7 @@ class ServiceBrokerIntegrationTest extends FlatSpec with Matchers with ScalaFutu
       val sut = ServiceBroker(actorSystem, sprayHttpClient, Set(connectionStrategy))
       eventually {
         sut.withService("consul-http") { connection: ConsulHttpClient =>
-          connection.findServiceChange("bogus").map(_.resource should have size 0)
+          connection.getService("bogus").map(_.resource should have size 0)
         }
       }
     }

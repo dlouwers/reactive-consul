@@ -22,9 +22,4 @@ case class ServiceRegistration(
   tags: Set[String] = Set.empty,
   address: Option[String] = None,
   port: Option[Long] = None,
-  check: Option[Check] = None)
-
-sealed trait Check
-case class ScriptCheck(script: String, interval: String) extends Check
-case class HttpCheck(http: String, interval: String) extends Check
-case class TTLCheck(ttl: String) extends Check
+  check: Option[HealthCheck] = None)

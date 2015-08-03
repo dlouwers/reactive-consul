@@ -43,7 +43,7 @@ class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extend
         }
       else throw new UnsuccessfulResponseException(response)
 
-  def findServiceChange(
+  def getService(
     service: String,
     tag: Option[String] = None,
     index: Option[Long] = None,
@@ -62,7 +62,7 @@ class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extend
     }
   }
 
-  override def registerService(registration: ServiceRegistration): Future[String] = {
+  override def putService(registration: ServiceRegistration): Future[String] = {
     val request = Put(s"$host/v1/agent/service/register", registration.toJson.asJsObject())
     val myPipeline: HttpRequest => Future[HttpResponse] = pipeline
     implicit val success = Success[HttpResponse](r => r.status.isSuccess)
@@ -71,7 +71,7 @@ class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extend
     }.map(r => registration.id.getOrElse(registration.name))
   }
 
-  override def deregisterService(serviceId: String): Future[Unit] = {
+  override def deleteService(serviceId: String): Future[Unit] = {
     val request = Delete(s"$host/v1/agent/service/deregister/$serviceId")
     val myPipeline: HttpRequest => Future[HttpResponse] = pipeline
     implicit val success = Success[HttpResponse](r => r.status.isSuccess)
@@ -80,14 +80,27 @@ class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extend
     }.map(r => ())
   }
 
-  override def createSession(sessionCreation: Option[SessionCreation] = None, dataCenter: Option[String] = None): Future[UUID] = {
+  override def putSession(sessionCreation: Option[SessionCreation] = None, dataCenter: Option[String] = None): Future[UUID] = {
     val dcParameter = dataCenter.map(dc => s"dc=$dc")
-    val request = Put(s"$host/v1/session/create", sessionCreation.map(_.toJson.asJsObject))
+    val parameters = Seq(dcParameter).flatten.mkString("&")
+    val request = Put(s"$host/v1/session/create?$parameters", sessionCreation.map(_.toJson.asJsObject))
     val myPipeline: HttpRequest => Future[HttpResponse] = pipeline
     implicit val success = Success[HttpResponse](r => r.status.isSuccess)
     retry { () =>
       myPipeline(request)
     }.map(r => r.entity.asString.parseJson.asJsObject.fields("ID").convertTo[UUID])
+  }
+
+  override def getSessionInfo(sessionId: UUID, index: Option[Long], dataCenter: Option[String] = None): Future[Option[SessionInfo]] = {
+    val dcParameter = dataCenter.map(dc => s"dc=$dc")
+    val indexParameter = index.map(i => s"index=$i")
+    val parameters = Seq(dcParameter, indexParameter).flatten.mkString("&")
+    val request = Get(s"$host/v1/session/info/$sessionId?$parameters")
+    val myPipeline: HttpRequest => Future[HttpResponse] = pipeline
+    implicit val success = Success[HttpResponse](r => r.status.isSuccess)
+    retry { () =>
+      myPipeline(request)
+    }.map(r => r.entity.asString.parseJson.convertTo[Option[Set[SessionInfo]]].getOrElse(Set.empty).headOption)
   }
 
   override def putKeyValuePair(key: String, value: Array[Byte], sessionOp: Option[SessionOp] = None): Future[Boolean] = {
@@ -112,7 +125,7 @@ class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extend
     }
   }
 
-  override def readKeyValue(
+  override def getKeyValuePair(
     key: String,
     index: Option[Long] = None,
     wait: Option[String] = None,
