@@ -30,8 +30,7 @@ object Boot extends App {
   }
   val connectionStrategy1 = ConnectionStrategy("example-service-1", connectionProviderFactory)
   val connectionStrategy2 = ConnectionStrategy("example-service-2", connectionProviderFactory)
-  val definition = ServiceDefinition("postgres-master", "postgres", Set("master"))
-  val connectionStrategyTest = ConnectionStrategy(ServiceDefinition("postgres-master"), connectionProviderFactory, new RoundRobinLoadBalancer)
+
   val services = Set(connectionStrategy1, connectionStrategy2)
   val serviceBroker = ServiceBroker("consul-8500.service.consul", services)
 
