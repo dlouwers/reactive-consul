@@ -1,47 +1,53 @@
 package stormlantern.consul.client.dao
 
+import java.io.IOException
 import java.net.URL
 import java.util.UUID
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.client.RequestBuilding
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import akka.http.scaladsl.model.{HttpEntity, HttpRequest, HttpResponse, StatusCodes}
+import akka.http.scaladsl.unmarshalling.Unmarshal
+import akka.stream.scaladsl.{Flow, Sink, Source}
+import akka.stream.{ActorMaterializer, Materializer}
 import retry.Success
-import spray.client.pipelining._
-import spray.http._
-import spray.httpx.SprayJsonSupport._
-import spray.httpx.unmarshalling._
-import spray.httpx.{ PipelineException, UnsuccessfulResponseException }
 import spray.json._
-import stormlantern.consul.client.util.{ RetryPolicy, Logging }
+import stormlantern.consul.client.util.{Logging, RetryPolicy}
 
 import scala.concurrent.Future
 import scala.util.Try
 
 class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extends ConsulHttpClient
-    with ConsulHttpProtocol with RetryPolicy with Logging {
+    with ConsulHttpProtocol with RetryPolicy with Logging with SprayJsonSupport {
+
+  type ConnectionFlow = Flow[HttpRequest, HttpResponse, Future[Http.OutgoingConnection]]
 
   implicit val executionContext = actorSystem.dispatcher
-  val pipeline: HttpRequest => Future[HttpResponse] = sendReceive
+  implicit val materializer: Materializer = ActorMaterializer()
 
-  def extractIndex(response: HttpResponse)(block: Long => IndexedServiceInstances): IndexedServiceInstances = {
-    response.headers.find(h => h.name == "X-Consul-Index").map { idx =>
-      block(Try(idx.value.toLong).getOrElse(throw new PipelineException("X-Consul-Index header needs to be numerical")))
-    }.getOrElse(throw new PipelineException("X-Consul-Index header not found"))
+  implicit val format = new RootJsonReader[Option[Set[ServiceInstance]]] {
+    override def read(json: JsValue): Option[Set[ServiceInstance]] = json.convertTo[Option[Set[ServiceInstance]]]
   }
 
-  def unmarshalWithIndex: HttpResponse ⇒ IndexedServiceInstances =
-    response ⇒
-      if (response.status.isSuccess)
-        extractIndex(response) { idx =>
-          response.as[Option[Set[ServiceInstance]]] match {
-            case Right(value) ⇒ value.map { v =>
-              IndexedServiceInstances(idx, v)
-            }.getOrElse(IndexedServiceInstances(idx, Set.empty[ServiceInstance]))
-            case Left(error: MalformedContent) ⇒
-              throw new PipelineException(error.errorMessage, error.cause.orNull)
-            case Left(error) ⇒ throw new PipelineException(error.toString)
-          }
-        }
-      else throw new UnsuccessfulResponseException(response)
+  def createConnection(): Flow[HttpRequest, HttpResponse, Future[Http.OutgoingConnection]] = {
+    Http().outgoingConnection(host.getHost, host.getPort)
+  }
+
+  def sendRequest(request: HttpRequest)(implicit flow: ConnectionFlow): Future[HttpResponse] = {
+    Source.single(request)
+      .via(flow)
+      .runWith(Sink.head)
+  }
+
+  def extractIndex[T](response: HttpResponse)(f: Long => T): T = {
+    response.headers.find(h => h.name == "X-Consul-Index").map { idx =>
+      f(Try(idx.value().toLong).getOrElse(throw new RuntimeException("X-Consul-Index header needs to be numerical")))
+    }.getOrElse(throw new RuntimeException("X-Consul-Index header not found"))
+  }
+
+  def unmarshall[T: RootJsonReader](response: HttpResponse): Future[T] = Unmarshal(response.entity).to[T]
 
   def getService(
     service: String,
@@ -49,78 +55,90 @@ class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extend
     index: Option[Long] = None,
     wait: Option[String] = None,
     dataCenter: Option[String] = None): Future[IndexedServiceInstances] = {
+    implicit val connectionFlow = createConnection()
     val dcParameter = dataCenter.map(dc => s"dc=$dc")
     val waitParameter = wait.map(w => s"wait=$w")
     val indexParameter = index.map(i => s"index=$i")
     val tagParameter = tag.map(t => s"tag=$t")
     val parameters = Seq(dcParameter, tagParameter, waitParameter, indexParameter).flatten.mkString("&")
-    val request = Get(s"$host/v1/catalog/service/$service?$parameters")
-    val myPipeline: HttpRequest => Future[IndexedServiceInstances] = pipeline ~> unmarshalWithIndex
     implicit val success = Success[IndexedServiceInstances](r => true)
-    retry { () =>
-      myPipeline(request)
+    retry {
+      sendRequest(RequestBuilding.Get(s"$host/v1/catalog/service/$service?$parameters")).flatMap { response =>
+        response.status match {
+          case StatusCodes.OK => extractIndex(response) { idx =>
+            unmarshall[Option[Set[ServiceInstance]]](response).map {
+              _.map { v =>
+                IndexedServiceInstances(idx, v)
+              }.getOrElse(IndexedServiceInstances(idx, Set.empty[ServiceInstance]))
+            }
+          }
+          case _ => Unmarshal(response.entity).to[String].flatMap(s => Future.failed(new IOException(s)))
+        }
+      }
     }
   }
 
   override def putService(registration: ServiceRegistration): Future[String] = {
-    val request = Put(s"$host/v1/agent/service/register", registration.toJson.asJsObject())
-    val myPipeline: HttpRequest => Future[HttpResponse] = pipeline
-    implicit val success = Success[HttpResponse](r => r.status.isSuccess)
-    retry { () =>
-      myPipeline(request)
+    val request = RequestBuilding.Put(s"$host/v1/agent/service/register", registration.toJson.asJsObject())
+    implicit val connectionFlow = createConnection()
+    implicit val success = Success[HttpResponse](r => r.status.isSuccess())
+    retry {
+      sendRequest(request)
     }.map(r => registration.id.getOrElse(registration.name))
   }
 
   override def deleteService(serviceId: String): Future[Unit] = {
-    val request = Delete(s"$host/v1/agent/service/deregister/$serviceId")
-    val myPipeline: HttpRequest => Future[HttpResponse] = pipeline
-    implicit val success = Success[HttpResponse](r => r.status.isSuccess)
-    retry { () =>
-      myPipeline(request)
+    implicit val connectionFlow = createConnection()
+    val request = RequestBuilding.Delete(s"$host/v1/agent/service/deregister/$serviceId")
+    implicit val success = Success[HttpResponse](r => r.status.isSuccess())
+    retry {
+      sendRequest(request)
     }.map(r => ())
   }
 
   override def putSession(sessionCreation: Option[SessionCreation] = None, dataCenter: Option[String] = None): Future[UUID] = {
+    implicit val connectionFlow = createConnection()
     val dcParameter = dataCenter.map(dc => s"dc=$dc")
     val parameters = Seq(dcParameter).flatten.mkString("&")
-    val request = Put(s"$host/v1/session/create?$parameters", sessionCreation.map(_.toJson.asJsObject))
-    val myPipeline: HttpRequest => Future[HttpResponse] = pipeline
-    implicit val success = Success[HttpResponse](r => r.status.isSuccess)
-    retry { () =>
-      myPipeline(request)
-    }.map(r => r.entity.asString.parseJson.asJsObject.fields("ID").convertTo[UUID])
+    val request = RequestBuilding.Put(s"$host/v1/session/create?$parameters", sessionCreation.map(_.toJson.asJsObject))
+    implicit val success = Success[HttpResponse](r => r.status.isSuccess())
+    retry {
+      sendRequest(request)
+    }.flatMap(r => Unmarshal(r.entity).to[String].map(_.parseJson.asJsObject.fields("ID").convertTo[UUID]))
   }
 
   override def getSessionInfo(sessionId: UUID, index: Option[Long], dataCenter: Option[String] = None): Future[Option[SessionInfo]] = {
+    implicit val connectionFlow = createConnection()
     val dcParameter = dataCenter.map(dc => s"dc=$dc")
     val indexParameter = index.map(i => s"index=$i")
     val parameters = Seq(dcParameter, indexParameter).flatten.mkString("&")
-    val request = Get(s"$host/v1/session/info/$sessionId?$parameters")
-    val myPipeline: HttpRequest => Future[HttpResponse] = pipeline
-    implicit val success = Success[HttpResponse](r => r.status.isSuccess)
-    retry { () =>
-      myPipeline(request)
-    }.map(r => r.entity.asString.parseJson.convertTo[Option[Set[SessionInfo]]].getOrElse(Set.empty).headOption)
+    val request = RequestBuilding.Get(s"$host/v1/session/info/$sessionId?$parameters")
+    implicit val success = Success[HttpResponse](r => r.status.isSuccess())
+    retry {
+      sendRequest(request)
+    }.flatMap(r => Unmarshal(r.entity).to[String].map(_.parseJson.convertTo[Option[Set[SessionInfo]]].getOrElse(Set.empty).headOption))
   }
 
   override def putKeyValuePair(key: String, value: Array[Byte], sessionOp: Option[SessionOp] = None): Future[Boolean] = {
+    implicit val connectionFlow = createConnection()
     val opParameter = sessionOp.map {
       case AcquireSession(id) => s"acquire=$id"
       case ReleaseSession(id) => s"release=$id"
     }
     val parameters = Seq(opParameter).flatten.mkString("&")
-    val request = Put(s"$host/v1/kv/$key?$parameters", HttpEntity(value))
-    val myPipeline: HttpRequest => Future[HttpResponse] = pipeline
+    val request = RequestBuilding.Put(s"$host/v1/kv/$key?$parameters", HttpEntity(value))
     implicit val success = Success[HttpResponse] { r => true }
-    retry { () =>
-      myPipeline(request)
-    }.map { r =>
-      if (r.status.isSuccess) {
-        r.entity.asString.toBoolean
-      } else if (r.status == StatusCodes.InternalServerError && r.entity.asString == "Invalid session") {
-        false
-      } else {
-        throw new IllegalArgumentException(r.entity.asString)
+    retry {
+      sendRequest(request)
+    }.flatMap { r =>
+      Unmarshal(r.entity).to[String].map { s =>
+        if (r.status.isSuccess()) {
+          s.toBoolean
+        } else if (r.status == StatusCodes.InternalServerError && s == "Invalid session") {
+          false
+        } else {
+          throw new IllegalArgumentException(s)
+        }
       }
     }
   }
@@ -131,16 +149,16 @@ class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extend
     wait: Option[String] = None,
     recurse: Boolean = false,
     keysOnly: Boolean = false): Future[Seq[KeyData]] = {
+    implicit val connectionFlow = createConnection()
     val waitParameter = wait.map(p => s"wait=$p")
     val indexParameter = index.map(p => s"index=$p")
     val recurseParameter = if (recurse) Some("recurse") else None
     val keysOnlyParameter = if (keysOnly) Some("keys") else None
     val parameters = Seq(indexParameter, waitParameter, recurseParameter, keysOnlyParameter).flatten.mkString("&")
-    val request = Get(s"$host/v1/kv/$key?$parameters")
-    val myPipeline: HttpRequest => Future[Seq[KeyData]] = pipeline ~> unmarshal[Seq[KeyData]]
+    val request = RequestBuilding.Get(s"$host/v1/kv/$key?$parameters")
     implicit val success = Success[Seq[KeyData]](r => true)
-    retry { () =>
-      myPipeline(request)
+    retry {
+      sendRequest(request).flatMap(unmarshall[Seq[KeyData]])
     }
   }
 }

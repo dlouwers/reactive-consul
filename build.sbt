@@ -23,10 +23,14 @@ lazy val client = (project in file("client"))
       spotifyDns,
       slf4j,
       akkaSlf4j,
-      scalaTest % "test, it",
+      scalaTest % "test,it",
       scalaMock,
       logback % "test,it",
-      akkaTestKit
+      akkaTestKit,
+      akkaStreams,
+      akkaCore,
+      akkaHttp,
+      akkaSprayJson
     ),
     ScalariformKeys.preferences := ScalariformKeys.preferences.value
       .setPreference(AlignSingleLineCaseStatements, true)
