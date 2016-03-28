@@ -2,17 +2,25 @@ import Dependencies._
 
 import scalariform.formatter.preferences._
 
+val groupName = "com.stormlantern"
+val artifactBasename = "reactive-consul"
+val artifactVersion = "0.1.0-SNAPSHOT"
+
 lazy val root = (project in file("."))
   .settings(
-    name := "reactive-consul",
-    organization := "com.xebia",
-    version := "0.1.0",
+    name := artifactBasename,
+    organization := groupName,
+    version := artifactVersion,
+    publishArtifact := false,
     scalaVersion := "2.11.5"
   )
   .aggregate(client, dockerTestkit, example)
 
 lazy val client = (project in file("client"))
   .settings(
+    name := artifactBasename + "-client",
+    organization := groupName,
+    version := artifactVersion,
     fork := true,
     resolvers ++= Dependencies.resolutionRepos,
     libraryDependencies ++= Seq(
@@ -28,6 +36,29 @@ lazy val client = (project in file("client"))
       logback % "test,it",
       akkaTestKit
     ),
+    publishMavenStyle := true,
+    publishTo := {
+      val nexus = "https://oss.sonatype.org/"
+      if (isSnapshot.value)
+        Some("snapshots" at nexus + "content/repositories/snapshots")
+      else
+        Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+    },
+    publishArtifact in Test := false,
+    pomIncludeRepository := { _ => false },
+    pomExtra := (
+      <url>https://github.com/dlouwers/reactive-consul</url>
+        <licenses>
+          <license>
+            <name>MIT</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+          </license>
+        </licenses>
+        <scm>
+          <url>git@github.com:dlouwers/reactive-consul.git</url>
+          <connection>scm:git:git@github.com:dlouwers/reactive-consul.git</connection>
+        </scm>),
     ScalariformKeys.preferences := ScalariformKeys.preferences.value
       .setPreference(AlignSingleLineCaseStatements, true)
       .setPreference(DoubleIndentClassDeclaration, true)
@@ -42,13 +73,17 @@ lazy val client = (project in file("client"))
 
 lazy val dockerTestkit = (project in file("docker-testkit"))
   .settings(
+    name := artifactBasename + "-docker-testkit",
+    organization := groupName,
+    version := artifactVersion,
     resolvers ++= Dependencies.resolutionRepos,
     libraryDependencies ++= Seq(
       slf4j,
       scalaTest,
       spotifyDocker
     ),
-    scalaVersion := "2.11.5"
+    scalaVersion := "2.11.5",
+    publishArtifact := false
   )
   .configs( IntegrationTest )
   .settings( Defaults.itSettings : _* )
@@ -71,11 +106,14 @@ lazy val example = (project in file("example"))
     fork := true,
     libraryDependencies ++= Seq(akkaActor, sprayClient, sprayJson),
     scalaVersion := "2.11.5",
+    publishArtifact := false,
     scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
   )
   .enablePlugins(JavaAppPackaging)
   .settings(
-    packageName in Docker := "reactive-consul-example",
+    name := artifactBasename + "-example",
+    organization := groupName,
+    version := artifactVersion,
     maintainer in Docker := "Dirk Louwers <dlouwers@xebia.com> & Marc Rooding <mrooding@xebia.com>",
     dockerExposedPorts in Docker := Seq(8080),
     dockerExposedVolumes in Docker := Seq("/opt/docker/logs")
