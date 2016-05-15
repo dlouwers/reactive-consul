@@ -1,12 +1,16 @@
 package stormlantern.dockertestkit
 
-import com.spotify.docker.client.messages.ContainerConfig
-import org.scalatest.{ Suite, BeforeAndAfterAll }
+import com.spotify.docker.client.messages.{ ContainerConfig, HostConfig }
+import org.scalatest.{ BeforeAndAfterAll, Suite }
 import stormlantern.dockertestkit.client.Container
 
 trait DockerContainers extends BeforeAndAfterAll { this: Suite =>
 
   def containerConfigs: Set[ContainerConfig]
+  val hostConfig = HostConfig.builder()
+    .publishAllPorts(true)
+    .networkMode("bridge")
+    .build()
   val containers = containerConfigs.map(new Container(_))
 
   def withDockerHosts[T](ports: Set[String])(f: Map[String, (String, Int)] => T): T = {

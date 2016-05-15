@@ -18,7 +18,7 @@ object Dependencies {
   val slf4j         = "org.slf4j"                   %  "slf4j-api"                    % "1.7.5"
   val logback       = "ch.qos.logback"              %  "logback-classic"              % "1.0.9"
   val retry         = "me.lessis"                   %% "retry"                        % "0.2.0"
-  val spotifyDocker = "com.spotify"                 %  "docker-client"                % "2.7.14"
+  val spotifyDocker = "com.spotify"                 %  "docker-client"                % "3.5.12"
   val spotifyDns    = "com.spotify"                 %  "dns"                          % "3.0.1"
   val scalaTest     = "org.scalatest"               %  "scalatest_2.11"               % "2.2.4"
   val scalaMock     = "org.scalamock"               %% "scalamock-scalatest-support"  % "3.2.2"       % "test"

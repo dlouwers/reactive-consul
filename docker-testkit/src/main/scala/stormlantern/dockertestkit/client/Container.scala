@@ -1,5 +1,7 @@
 package stormlantern.dockertestkit.client
 
+import java.util
+
 import com.spotify.docker.client.messages._
 import stormlantern.dockertestkit.DockerClientProvider
 
@@ -12,15 +14,7 @@ class Container(config: ContainerConfig) {
   private def id: String = container.id()
 
   def start(): Unit = {
-    val hostConfig = HostConfig.builder()
-      .publishAllPorts(true)
-      .networkMode("bridge")
-      .build()
-    start(hostConfig)
-  }
-
-  def start(config: HostConfig): Unit = {
-    docker.startContainer(id, config)
+    docker.startContainer(id)
     val info: ContainerInfo = docker.inspectContainer(id)
     if (!info.state().running()) {
       throw new IllegalStateException("Could not start Docker container")
@@ -37,7 +31,9 @@ class Container(config: ContainerConfig) {
   }
 
   def mappedPort(port: String): Seq[PortBinding] = {
-    Option(docker.inspectContainer(id).networkSettings().ports()).flatMap(pts => Option(pts.get(port))).map(_.toSeq).getOrElse(Seq.empty)
+    val ports: util.Map[String, util.List[PortBinding]] = Option(docker.inspectContainer(id).networkSettings().ports())
+      .getOrElse(throw new IllegalStateException(s"No ports found for on container with id $id"))
+    Option(ports.get(port)).getOrElse(throw new IllegalStateException(s"Port $port not found on caintainer with id $id"))
   }
 }
 
