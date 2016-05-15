@@ -7,7 +7,7 @@ lazy val root = (project in file("."))
     name := "reactive-consul",
     organization := "com.xebia",
     version := "0.1.0",
-    scalaVersion := "2.11.5"
+    scalaVersion := "2.11.8"
   )
   .aggregate(client, dockerTestkit, example)
 
@@ -24,7 +24,7 @@ lazy val client = (project in file("client"))
       slf4j,
       akkaSlf4j,
       scalaTest % "test, it",
-      scalaMock,
+      scalaMock % "test",
       logback % "test,it",
       akkaTestKit
     ),
