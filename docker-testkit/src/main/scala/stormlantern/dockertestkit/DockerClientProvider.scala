@@ -12,7 +12,7 @@ object DockerClientProvider {
   lazy val client: DockerClient = DefaultDockerClient.fromEnv().build()
 
   lazy val hostname: String = {
-    val uri = new URI(System.getenv("DOCKER_HOST"))
+    val uri = new URI(sys.env.getOrElse("DOCKER_HOST", "unix:///var/run/docker.sock"))
     uri.getScheme match {
       case "tcp" ⇒ uri.getHost
       case "unix" ⇒ "localhost"

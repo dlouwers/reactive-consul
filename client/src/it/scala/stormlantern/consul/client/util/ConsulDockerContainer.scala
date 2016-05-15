@@ -10,7 +10,7 @@ trait ConsulDockerContainer extends DockerContainer { this: Suite =>
 
   def image: String = "progrium/consul"
   def command: Seq[String] = Seq("-server", "-bootstrap", "-advertise", DockerClientProvider.hostname)
-  override def containerConfig = ContainerConfig.builder().image(image).cmd(command).build()
+  override def containerConfig = ContainerConfig.builder().image(image).hostConfig(hostConfig).cmd(command).build()
 
   def withConsulHost[T](f: (String, Int) => T): T = super.withDockerHost("8500/tcp")(f)
 }

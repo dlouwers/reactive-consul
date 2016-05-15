@@ -12,15 +12,7 @@ class Container(config: ContainerConfig) {
   private def id: String = container.id()
 
   def start(): Unit = {
-    val hostConfig = HostConfig.builder()
-      .publishAllPorts(true)
-      .networkMode("bridge")
-      .build()
-    start(hostConfig)
-  }
-
-  def start(config: HostConfig): Unit = {
-    docker.startContainer(id, config)
+    docker.startContainer(id)
     val info: ContainerInfo = docker.inspectContainer(id)
     if (!info.state().running()) {
       throw new IllegalStateException("Could not start Docker container")
