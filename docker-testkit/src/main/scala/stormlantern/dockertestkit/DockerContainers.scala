@@ -7,11 +7,11 @@ import stormlantern.dockertestkit.client.Container
 trait DockerContainers extends BeforeAndAfterAll { this: Suite =>
 
   def containerConfigs: Set[ContainerConfig]
-  val containers = containerConfigs.map(new Container(_))
   val hostConfig = HostConfig.builder()
     .publishAllPorts(true)
     .networkMode("bridge")
     .build()
+  val containers = containerConfigs.map(new Container(_))
 
   def withDockerHosts[T](ports: Set[String])(f: Map[String, (String, Int)] => T): T = {
     // Find the mapped available ports in the network settings

@@ -18,6 +18,7 @@ class ServiceBrokerIntegrationTest extends FlatSpec with Matchers with ScalaFutu
   import scala.concurrent.ExecutionContext.Implicits.global
 
   "The ServiceBroker" should "provide a usable connection to consul" in withConsulHost { (host, port) =>
+    println(s"Connecting to $host:$port")
     withActorSystem { implicit actorSystem =>
       val sprayHttpClient = new SprayConsulHttpClient(new URL(s"http://$host:$port"))
       // Register the HTTP interface
