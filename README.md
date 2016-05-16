@@ -6,6 +6,10 @@ This project is a Consul client for Scala. It uses non-blocking I/O to communica
 the ServiceBroker to get out of the box support for automatic-clustering, loadbalancing and failover or you can use
 the low-level ConsulHttpClient.
 
+## Requirements
+
+Java 8
+
 ## Installation
 Repo on Maven Central pending.
 
