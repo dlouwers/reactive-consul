@@ -1,4 +1,5 @@
 import Dependencies._
+import sbt.Keys._
 
 import scalariform.formatter.preferences._
 
@@ -13,6 +14,7 @@ lazy val root = (project in file("."))
 
 lazy val client = (project in file("client"))
   .settings(
+    scalacOptions += "-target:jvm-1.8",
     fork := true,
     resolvers ++= Dependencies.resolutionRepos,
     libraryDependencies ++= Seq(
@@ -48,7 +50,7 @@ lazy val dockerTestkit = (project in file("docker-testkit"))
       scalaTest,
       spotifyDocker
     ),
-    scalaVersion := "2.11.5"
+    scalaVersion := "2.11.8"
   )
   .configs( IntegrationTest )
   .settings( Defaults.itSettings : _* )
@@ -70,7 +72,7 @@ lazy val example = (project in file("example"))
   .settings(
     fork := true,
     libraryDependencies ++= Seq(akkaActor, sprayClient, sprayJson),
-    scalaVersion := "2.11.5",
+    scalaVersion := "2.11.8",
     scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
   )
   .enablePlugins(JavaAppPackaging)
