@@ -14,7 +14,6 @@ lazy val root = (project in file("."))
 
 lazy val client = (project in file("client"))
   .settings(
-    scalacOptions += "-target:jvm-1.6",
     fork := true,
     resolvers ++= Dependencies.resolutionRepos,
     libraryDependencies ++= Seq(
