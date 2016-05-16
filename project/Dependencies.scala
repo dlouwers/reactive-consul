@@ -7,8 +7,8 @@ object Dependencies {
     "softprops-maven" at "http://dl.bintray.com/content/softprops/maven"
   )
 
-  val sprayVersion  = "1.3.2"
-  val akkaVersion   = "2.3.7"
+  val sprayVersion  = "1.3.3"
+  val akkaVersion   = "2.4.4"
 
   val sprayClient   = "io.spray"                    %% "spray-client"                 % sprayVersion
   val sprayRouting  = "io.spray"                    %% "spray-routing"                % sprayVersion
@@ -21,6 +21,6 @@ object Dependencies {
   val spotifyDocker = "com.spotify"                 %  "docker-client"                % "3.5.12"
   val spotifyDns    = "com.spotify"                 %  "dns"                          % "3.0.1"
   val scalaTest     = "org.scalatest"               %  "scalatest_2.11"               % "2.2.4"
-  val scalaMock     = "org.scalamock"               %% "scalamock-scalatest-support"  % "3.2.2"       % "test"
+  val scalaMock     = "org.scalamock"               %% "scalamock-scalatest-support"  % "3.2.2"
   val akkaTestKit   = "com.typesafe.akka"           %% "akka-testkit"                 % akkaVersion   % "test,it"
 }
