@@ -1,5 +1,5 @@
-import Dependencies._
 import sbt.Keys._
+import Dependencies._
 
 import scalariform.formatter.preferences._
 
@@ -16,17 +16,19 @@ lazy val client = (project in file("client"))
   .settings(
     fork := true,
     resolvers ++= Dependencies.resolutionRepos,
-    libraryDependencies ++= Seq(
+    libraryDependencies ++= Dependencies.compile(
       sprayClient,
       sprayJson,
       akkaActor,
       retry,
       spotifyDns,
       slf4j,
-      akkaSlf4j,
-      scalaTest % "test, it",
-      scalaMock % "test",
-      logback % "test,it",
+      akkaSlf4j
+    ) ++
+    Dependencies.test(
+      scalaTest,
+      scalaMock,
+      logback,
       akkaTestKit
     ),
     ScalariformKeys.preferences := ScalariformKeys.preferences.value
@@ -44,7 +46,7 @@ lazy val client = (project in file("client"))
 lazy val dockerTestkit = (project in file("docker-testkit"))
   .settings(
     resolvers ++= Dependencies.resolutionRepos,
-    libraryDependencies ++= Seq(
+    libraryDependencies ++= Dependencies.compile(
       slf4j,
       scalaTest,
       spotifyDocker
@@ -60,13 +62,13 @@ lazy val example = (project in file("example"))
   .aggregate(client)
   .dependsOn(client)
   .settings(
-      libraryDependencies ++= Seq(
-        sprayClient,
-        sprayRouting,
-        sprayJson,
-        slf4j,
-        logback
-      )
+    libraryDependencies ++= Dependencies.compile(
+      sprayClient,
+      sprayRouting,
+      sprayJson,
+      slf4j,
+      logback
+    )
   )
   .settings(
     fork := true,

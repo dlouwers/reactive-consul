@@ -1,4 +1,5 @@
 import sbt._
+import sbt.Keys._
 
 object Dependencies {
   val resolutionRepos = Seq(
@@ -22,5 +23,9 @@ object Dependencies {
   val spotifyDns    = "com.spotify"                 %  "dns"                          % "3.0.1"
   val scalaTest     = "org.scalatest"               %  "scalatest_2.11"               % "2.2.4"
   val scalaMock     = "org.scalamock"               %% "scalamock-scalatest-support"  % "3.2.2"
-  val akkaTestKit   = "com.typesafe.akka"           %% "akka-testkit"                 % akkaVersion   % "test,it"
+  val akkaTestKit   = "com.typesafe.akka"           %% "akka-testkit"                 % akkaVersion
+
+  def compile     (deps: ModuleID*): Seq[ModuleID] = deps map (_ % "compile")
+  def test        (deps: ModuleID*): Seq[ModuleID] = deps map (_ % "test")
+  def integration (deps: ModuleID*): Seq[ModuleID] = deps map (_ % "it")
 }
