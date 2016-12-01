@@ -2,6 +2,7 @@ import Dependencies._
 import sbt.Keys._
 import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
+import org.scoverage.coveralls.Imports.CoverallsKeys._
 
 import scalariform.formatter.preferences._
 
