@@ -2,12 +2,13 @@ import Dependencies._
 import sbt.Keys._
 import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
+
 import scalariform.formatter.preferences._
 
 lazy val root = (project in file("."))
   .settings(
     name := "reactive-consul",
-    organization := "stormlantern",
+    organization := "nl.stormlantern",
     version := "0.1.0",
     scalaVersion := "2.11.8"
   )
@@ -82,5 +83,39 @@ lazy val example = (project in file("example"))
     dockerExposedPorts in Docker := Seq(8080),
     dockerExposedVolumes in Docker := Seq("/opt/docker/logs")
   )
+
+lazy val publishSettings = Seq(
+  publishMavenStyle := true,
+  publishArtifact in Test := false,
+  pomIncludeRepository := { _ => false },
+  publishTo := {
+    val nexus = "https://oss.sonatype.org/"
+    if (isSnapshot.value)
+      Some("snapshots" at nexus + "content/repositories/snapshots")
+    else
+      Some("releases" at nexus + "service/local/staging/deploy/maven2")
+  },
+  pomExtra := (
+    <url>http://github.com/dlouwers/reactive-consul</url>
+      <licenses>
+        <license>
+          <name>MIT</name>
+          <url>https://opensource.org/licenses/MIT</url>
+          <distribution>repo</distribution>
+        </license>
+      </licenses>
+      <scm>
+        <url>git@github.com:dlouwers/reactive-consul.git</url>
+        <connection>scm:git@github.com:dlouwers/reactive-consul.git</connection>
+      </scm>
+      <developers>
+        <developer>
+          <id>dlouwers</id>
+          <name>Dirk Louwers</name>
+          <url>http://github.com/dlouwers</url>
+        </developer>
+      </developers>
+    )
+)
 
 Revolver.settings.settings
