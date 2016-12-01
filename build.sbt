@@ -11,7 +11,8 @@ lazy val root = (project in file("."))
     name := "reactive-consul",
     organization := "nl.stormlantern",
     version := "0.1.0",
-    scalaVersion := "2.11.8"
+    scalaVersion := "2.11.8",
+    coverageEnabled := false
   )
   .aggregate(client, dockerTestkit, example)
 
@@ -42,6 +43,7 @@ lazy val client = (project in file("client"))
   .configs( IntegrationTest )
   .settings( Defaults.itSettings : _* )
   .settings( SbtScalariform.scalariformSettingsWithIt : _* )
+  .settings( coverageEnabled := true )
   .dependsOn(dockerTestkit % "test,it")
 
 lazy val dockerTestkit = (project in file("docker-testkit"))
