@@ -4,7 +4,7 @@ import java.net.URL
 
 import akka.actor.ActorSystem
 import spray.client.pipelining._
-import spray.http.{HttpResponse, HttpRequest}
+import spray.http.{ HttpResponse, HttpRequest }
 
 import scala.concurrent.Future
 

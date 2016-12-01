@@ -1,6 +1,6 @@
 package stormlantern.consul.example
 
-import akka.actor.{Actor, Props}
+import akka.actor.{ Actor, Props }
 import spray.routing.HttpService
 
 import scala.concurrent.ExecutionContext
@@ -26,10 +26,10 @@ trait ReactiveConsulHttpService extends HttpService {
           complete(s"Hi, I'm a ${System.getenv("SERVICE_NAME")} called ${System.getenv("INSTANCE_NAME")}")
         }
       } ~
-      path("talk") {
-        get {
-          complete("pong")
+        path("talk") {
+          get {
+            complete("pong")
+          }
         }
-      }
     }
 }

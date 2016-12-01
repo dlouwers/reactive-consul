@@ -1,12 +1,13 @@
 import Dependencies._
 import sbt.Keys._
-
+import com.typesafe.sbt.SbtScalariform
+import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import scalariform.formatter.preferences._
 
 lazy val root = (project in file("."))
   .settings(
     name := "reactive-consul",
-    organization := "com.xebia",
+    organization := "stormlantern",
     version := "0.1.0",
     scalaVersion := "2.11.8"
   )
@@ -34,11 +35,11 @@ lazy val client = (project in file("client"))
       .setPreference(DoubleIndentClassDeclaration, true)
       .setPreference(PreserveDanglingCloseParenthesis, true)
       .setPreference(RewriteArrowSymbols, true),
-    scalaVersion := "2.11.5"
+    scalaVersion := "2.11.8"
   )
   .configs( IntegrationTest )
   .settings( Defaults.itSettings : _* )
-  .settings( scalariformSettingsWithIt : _* )
+  .settings( SbtScalariform.scalariformSettingsWithIt : _* )
   .dependsOn(dockerTestkit % "test,it")
 
 lazy val dockerTestkit = (project in file("docker-testkit"))
@@ -53,7 +54,7 @@ lazy val dockerTestkit = (project in file("docker-testkit"))
   )
   .configs( IntegrationTest )
   .settings( Defaults.itSettings : _* )
-  .settings( scalariformSettingsWithIt : _* )
+  .settings( SbtScalariform.scalariformSettingsWithIt : _* )
 
 
 lazy val example = (project in file("example"))
@@ -77,7 +78,7 @@ lazy val example = (project in file("example"))
   .enablePlugins(JavaAppPackaging)
   .settings(
     packageName in Docker := "reactive-consul-example",
-    maintainer in Docker := "Dirk Louwers <dlouwers@xebia.com> & Marc Rooding <mrooding@xebia.com>",
+    maintainer in Docker := "Dirk Louwers <dirk.louwers@stormlantern.nl>",
     dockerExposedPorts in Docker := Seq(8080),
     dockerExposedVolumes in Docker := Seq("/opt/docker/logs")
   )

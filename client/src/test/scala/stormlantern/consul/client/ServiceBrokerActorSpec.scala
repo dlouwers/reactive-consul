@@ -24,12 +24,12 @@ class ServiceBrokerActorSpec(_system: ActorSystem) extends TestKit(_system) with
 
   trait TestScope {
     val httpClient = mock[ConsulHttpClient]
-    val serviceAvailabilityActorFactory = mock[(ActorRefFactory, ServiceDefinition, ActorRef) => ActorRef]
+    val serviceAvailabilityActorFactory = mock[(ActorRefFactory, ServiceDefinition, ActorRef) ⇒ ActorRef]
     val connectionProviderFactory = mock[ConnectionProviderFactory]
     val connectionProvider = mock[ConnectionProvider]
     val connectionHolder = mock[ConnectionHolder]
-    val connectionStrategyForService1 = ConnectionStrategy(ServiceDefinition("service1"), connectionProviderFactory, ctx => self)
-    val connectionStrategyForService2 = ConnectionStrategy(ServiceDefinition("service2"), connectionProviderFactory, ctx => self)
+    val connectionStrategyForService1 = ConnectionStrategy(ServiceDefinition("service1"), connectionProviderFactory, ctx ⇒ self)
+    val connectionStrategyForService2 = ConnectionStrategy(ServiceDefinition("service2"), connectionProviderFactory, ctx ⇒ self)
   }
 
   "The ServiceBrokerActor" should "create a child actor per service" in new TestScope {
@@ -85,10 +85,10 @@ class ServiceBrokerActorSpec(_system: ActorSystem) extends TestKit(_system) with
     expectMsgAllOf(Start, Start)
     sut ! ServiceBrokerActor.AllConnectionProvidersAvailable
     expectMsgPF() {
-      case LoadBalancerActor.HasAvailableConnectionProvider => lastSender ! true
+      case LoadBalancerActor.HasAvailableConnectionProvider ⇒ lastSender ! true
     }
     expectMsgPF() {
-      case LoadBalancerActor.HasAvailableConnectionProvider => lastSender ! false
+      case LoadBalancerActor.HasAvailableConnectionProvider ⇒ lastSender ! false
     }
     expectMsg(false)
     sut.stop()
@@ -101,10 +101,10 @@ class ServiceBrokerActorSpec(_system: ActorSystem) extends TestKit(_system) with
     expectMsgAllOf(Start, Start)
     sut ! ServiceBrokerActor.AllConnectionProvidersAvailable
     expectMsgPF() {
-      case LoadBalancerActor.HasAvailableConnectionProvider => lastSender ! true
+      case LoadBalancerActor.HasAvailableConnectionProvider ⇒ lastSender ! true
     }
     expectMsgPF() {
-      case LoadBalancerActor.HasAvailableConnectionProvider => lastSender ! true
+      case LoadBalancerActor.HasAvailableConnectionProvider ⇒ lastSender ! true
     }
     expectMsg(true)
     sut.stop()

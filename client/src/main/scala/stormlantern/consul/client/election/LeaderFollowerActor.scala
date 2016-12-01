@@ -19,19 +19,19 @@ class LeaderFollowerActor(httpClient: ConsulHttpClient, sessionId: UUID, key: St
 
   // Behavior
   def receive = {
-    case Participate =>
+    case Participate ⇒
       httpClient.putKeyValuePair(key, leaderInfoBytes, Some(AcquireSession(sessionId))).map {
-        case true =>
+        case true ⇒
           self ! SetElectionState(Some(Leader))
           self ! MonitorLock(0)
-        case false =>
+        case false ⇒
           self ! MonitorLock(0)
       }
-    case SetElectionState(state) =>
+    case SetElectionState(state) ⇒
       electionState = state
-    case MonitorLock(index) =>
+    case MonitorLock(index) ⇒
       httpClient.getKeyValuePair(key, index = Some(index), wait = Some("1s")).map {
-        case Seq(KeyData(_, _, newIndex, _, _, BinaryData(data), session)) =>
+        case Seq(KeyData(_, _, newIndex, _, _, BinaryData(data), session)) ⇒
           if (newIndex > index) {
             if (session.isEmpty) {
               self ! SetElectionState(None)

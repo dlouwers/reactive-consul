@@ -32,7 +32,7 @@ class LeaderFollowerActorSpec(_system: ActorSystem) extends TestKit(_system) wit
 
   "The LeaderFollowerActor" should "participate in an election, win, watch for changes and participate again when session is lost" in new TestScope {
     val sut = TestActorRef(LeaderFollowerActor.props(consulHttpClient, sessionId, key, host, port))
-    (consulHttpClient.putKeyValuePair _).expects(where { (k, lib, op) =>
+    (consulHttpClient.putKeyValuePair _).expects(where { (k, lib, op) ⇒
       k == key && util.Arrays.equals(lib, leaderInfoBytes) && op.contains(AcquireSession(sessionId))
     }).returns(Future.successful(true))
     (consulHttpClient.getKeyValuePair _).expects(key, Some(0L), Some("1s"), false, false).returns {
@@ -41,9 +41,9 @@ class LeaderFollowerActorSpec(_system: ActorSystem) extends TestKit(_system) wit
     (consulHttpClient.getKeyValuePair _).expects(key, Some(1L), Some("1s"), false, false).returns {
       Future.successful(Seq(KeyData(key, 1, 2, 1, 0, BinaryData(leaderInfoBytes), None)))
     }
-    (consulHttpClient.putKeyValuePair _).expects(where { (k, lib, op) =>
+    (consulHttpClient.putKeyValuePair _).expects(where { (k, lib, op) ⇒
       k == key && util.Arrays.equals(lib, leaderInfoBytes) && op.contains(AcquireSession(sessionId))
-    }).onCall { p =>
+    }).onCall { p ⇒
       sut.stop()
       Future.successful(false)
     }
@@ -53,7 +53,7 @@ class LeaderFollowerActorSpec(_system: ActorSystem) extends TestKit(_system) wit
   it should "participate in an election, lose, watch for changes and participate again when session is lost" in new TestScope {
     val otherSessionId = UUID.fromString("9A3BB9C-E2E7-43DF-BFD5-845417146553")
     val sut = TestActorRef(LeaderFollowerActor.props(consulHttpClient, sessionId, key, host, port))
-    (consulHttpClient.putKeyValuePair _).expects(where { (k, lib, op) =>
+    (consulHttpClient.putKeyValuePair _).expects(where { (k, lib, op) ⇒
       k == key && util.Arrays.equals(lib, leaderInfoBytes) && op.contains(AcquireSession(sessionId))
     }).returns(Future.successful(false))
     (consulHttpClient.getKeyValuePair _).expects(key, Some(0L), Some("1s"), false, false).returns {
@@ -62,9 +62,9 @@ class LeaderFollowerActorSpec(_system: ActorSystem) extends TestKit(_system) wit
     (consulHttpClient.getKeyValuePair _).expects(key, Some(1L), Some("1s"), false, false).returns {
       Future.successful(Seq(KeyData(key, 1, 2, 1, 0, BinaryData(leaderInfoBytes), None)))
     }
-    (consulHttpClient.putKeyValuePair _).expects(where { (k, lib, op) =>
+    (consulHttpClient.putKeyValuePair _).expects(where { (k, lib, op) ⇒
       k == key && util.Arrays.equals(lib, leaderInfoBytes) && op.contains(AcquireSession(sessionId))
-    }).onCall { p =>
+    }).onCall { p ⇒
       sut.stop()
       Future.successful(true)
     }

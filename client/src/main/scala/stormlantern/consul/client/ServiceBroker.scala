@@ -21,12 +21,12 @@ class ServiceBroker(serviceBrokerActor: ActorRef, consulClient: ConsulHttpClient
 
   private[this] implicit val timeout = Timeout(10.seconds)
 
-  def withService[A, B](name: String)(f: A => Future[B]): Future[B] = {
+  def withService[A, B](name: String)(f: A ⇒ Future[B]): Future[B] = {
     logger.info(s"Trying to get connection for service $name")
-    serviceBrokerActor.ask(ServiceBrokerActor.GetServiceConnection(name)).mapTo[ConnectionHolder].flatMap { connectionHolder =>
+    serviceBrokerActor.ask(ServiceBrokerActor.GetServiceConnection(name)).mapTo[ConnectionHolder].flatMap { connectionHolder ⇒
       logger.info(s"Received connectionholder $connectionHolder")
       try {
-        connectionHolder.connection.flatMap(c => f(c.asInstanceOf[A]))
+        connectionHolder.connection.flatMap(c ⇒ f(c.asInstanceOf[A]))
       } finally {
         connectionHolder.loadBalancer ! LoadBalancerActor.ReturnConnection(connectionHolder)
       }
@@ -34,7 +34,7 @@ class ServiceBroker(serviceBrokerActor: ActorRef, consulClient: ConsulHttpClient
   }
 
   def registerService(registration: ServiceRegistration): Future[Unit] = {
-    consulClient.putService(registration).map { serviceId =>
+    consulClient.putService(registration).map { serviceId ⇒
       // Add shutdown hook
       val deregisterService = new Runnable {
         override def run(): Unit = consulClient.deleteService(serviceId)
@@ -43,7 +43,7 @@ class ServiceBroker(serviceBrokerActor: ActorRef, consulClient: ConsulHttpClient
     }
   }
 
-  def withLeader[A](key: String)(f: Option[LeaderInfo] => Future[A]): Future[A] = {
+  def withLeader[A](key: String)(f: Option[LeaderInfo] ⇒ Future[A]): Future[A] = {
     ???
   }
 
@@ -62,7 +62,7 @@ object ServiceBroker {
 
   def apply(rootActor: ActorSystem, httpClient: ConsulHttpClient, services: Set[ConnectionStrategy]): ServiceBroker = {
     implicit val ec = ExecutionContext.Implicits.global
-    val serviceAvailabilityActorFactory = (factory: ActorRefFactory, service: ServiceDefinition, listener: ActorRef) =>
+    val serviceAvailabilityActorFactory = (factory: ActorRefFactory, service: ServiceDefinition, listener: ActorRef) ⇒
       factory.actorOf(ServiceAvailabilityActor.props(httpClient, service, listener))
     val actorRef = rootActor.actorOf(ServiceBrokerActor.props(services, serviceAvailabilityActorFactory), "ServiceBroker")
     new ServiceBroker(actorRef, httpClient)

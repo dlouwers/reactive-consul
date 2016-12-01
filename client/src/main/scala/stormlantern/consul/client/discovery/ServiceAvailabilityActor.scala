@@ -15,13 +15,13 @@ class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceDefinition: 
   var serviceAvailabilityState: IndexedServiceInstances = IndexedServiceInstances.empty
 
   def receive = {
-    case Start => self ! UpdateServiceAvailability(IndexedServiceInstances.empty)
-    case UpdateServiceAvailability(services: IndexedServiceInstances) =>
+    case Start ⇒ self ! UpdateServiceAvailability(IndexedServiceInstances.empty)
+    case UpdateServiceAvailability(services: IndexedServiceInstances) ⇒
       val (update, serviceChange) = updateServiceAvailability(services)
       update.foreach(listener ! _)
       serviceChange.onComplete {
-        case Success(change) => self ! UpdateServiceAvailability(change)
-        case Failure(e) => throw e
+        case Success(change) ⇒ self ! UpdateServiceAvailability(change)
+        case Failure(e)      ⇒ throw e
       }
   }
 

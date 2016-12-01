@@ -7,8 +7,8 @@ import akka.io.IO
 import akka.pattern._
 import akka.util.Timeout
 import spray.can.Http
-import spray.json.{JsString, JsObject}
-import stormlantern.consul.client.discovery.{ConnectionStrategy, ServiceDefinition, ConnectionProvider}
+import spray.json.{ JsString, JsObject }
+import stormlantern.consul.client.discovery.{ ConnectionStrategy, ServiceDefinition, ConnectionProvider }
 import stormlantern.consul.client.loadbalancers.RoundRobinLoadBalancer
 import stormlantern.consul.client.ServiceBroker
 

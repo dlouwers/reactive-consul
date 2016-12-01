@@ -13,25 +13,25 @@ object ServiceDefinition {
 case class ConnectionStrategy(
   serviceDefinition: ServiceDefinition,
   connectionProviderFactory: ConnectionProviderFactory,
-  loadBalancerFactory: ActorRefFactory => ActorRef)
+  loadBalancerFactory: ActorRefFactory ⇒ ActorRef)
 
 object ConnectionStrategy {
 
   def apply(serviceDefinition: ServiceDefinition, connectionProviderFactory: ConnectionProviderFactory, loadBalancer: LoadBalancer): ConnectionStrategy =
-    ConnectionStrategy(serviceDefinition, connectionProviderFactory, ctx => ctx.actorOf(LoadBalancerActor.props(loadBalancer, serviceDefinition.serviceId)))
+    ConnectionStrategy(serviceDefinition, connectionProviderFactory, ctx ⇒ ctx.actorOf(LoadBalancerActor.props(loadBalancer, serviceDefinition.serviceId)))
 
-  def apply(serviceDefinition: ServiceDefinition, connectionProviderFactory: (String, Int) => ConnectionProvider, loadBalancer: LoadBalancer): ConnectionStrategy = {
+  def apply(serviceDefinition: ServiceDefinition, connectionProviderFactory: (String, Int) ⇒ ConnectionProvider, loadBalancer: LoadBalancer): ConnectionStrategy = {
     val cpf = new ConnectionProviderFactory {
       override def create(host: String, port: Int): ConnectionProvider = connectionProviderFactory(host, port)
     }
-    ConnectionStrategy(serviceDefinition, cpf, ctx => ctx.actorOf(LoadBalancerActor.props(loadBalancer, serviceDefinition.serviceId)))
+    ConnectionStrategy(serviceDefinition, cpf, ctx ⇒ ctx.actorOf(LoadBalancerActor.props(loadBalancer, serviceDefinition.serviceId)))
   }
 
-  def apply(serviceName: String, connectionProviderFactory: (String, Int) => ConnectionProvider, loadBalancer: LoadBalancer): ConnectionStrategy = {
+  def apply(serviceName: String, connectionProviderFactory: (String, Int) ⇒ ConnectionProvider, loadBalancer: LoadBalancer): ConnectionStrategy = {
     ConnectionStrategy(ServiceDefinition(serviceName), connectionProviderFactory, loadBalancer)
   }
 
-  def apply(serviceName: String, connectionProviderFactory: (String, Int) => ConnectionProvider): ConnectionStrategy = {
+  def apply(serviceName: String, connectionProviderFactory: (String, Int) ⇒ ConnectionProvider): ConnectionStrategy = {
     ConnectionStrategy(serviceName, connectionProviderFactory, new RoundRobinLoadBalancer)
   }
 

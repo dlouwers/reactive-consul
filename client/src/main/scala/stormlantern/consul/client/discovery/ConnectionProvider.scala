@@ -9,7 +9,7 @@ trait ConnectionProvider {
   def getConnection: Future[Any]
   def returnConnection(connectionHolder: ConnectionHolder): Unit = ()
   def destroy(): Unit = ()
-  def getConnectionHolder(k: String, lb: ActorRef): Future[ConnectionHolder] = getConnection.map { connection =>
+  def getConnectionHolder(k: String, lb: ActorRef): Future[ConnectionHolder] = getConnection.map { connection ⇒
     new ConnectionHolder {
       override def connection: Future[Any] = getConnection
       override val loadBalancer: ActorRef = lb
