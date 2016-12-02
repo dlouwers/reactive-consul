@@ -7,17 +7,18 @@ import org.scoverage.coveralls.Imports.CoverallsKeys._
 import scalariform.formatter.preferences._
 
 lazy val root = (project in file("."))
-  .settings(
-    name := "reactive-consul",
-    organization := "nl.stormlantern",
-    version := "0.1.0",
-    scalaVersion := "2.11.8",
-    coverageEnabled := false
-  )
+  .settings( publishSettings: _* )
   .aggregate(client, dockerTestkit, example)
 
 lazy val client = (project in file("client"))
+  .settings( publishSettings: _* )
   .settings(
+    name := "reactive-consul",
+    organization := "nl.stormlantern",
+    scalaVersion := "2.11.8",
+    version := "0.1",
+    publishArtifact in Compile := true,
+    publishArtifact in Test := false,
     fork := true,
     resolvers ++= Dependencies.resolutionRepos,
     libraryDependencies ++= Seq(
@@ -30,7 +31,7 @@ lazy val client = (project in file("client"))
       akkaSlf4j,
       scalaTest % "test, it",
       scalaMock % "test",
-      logback % "test,it",
+      logback % "test, it",
       akkaTestKit
     ),
     ScalariformKeys.preferences := ScalariformKeys.preferences.value
@@ -43,8 +44,7 @@ lazy val client = (project in file("client"))
   .configs( IntegrationTest )
   .settings( Defaults.itSettings : _* )
   .settings( SbtScalariform.scalariformSettingsWithIt : _* )
-  .settings( coverageEnabled := true )
-  .dependsOn(dockerTestkit % "test,it")
+  .dependsOn(dockerTestkit % "test, it")
 
 lazy val dockerTestkit = (project in file("docker-testkit"))
   .settings(
@@ -54,11 +54,13 @@ lazy val dockerTestkit = (project in file("docker-testkit"))
       scalaTest,
       spotifyDocker
     ),
-    scalaVersion := "2.11.8"
+    scalaVersion := "2.11.8",
+    coverageEnabled := false
   )
   .configs( IntegrationTest )
   .settings( Defaults.itSettings : _* )
   .settings( SbtScalariform.scalariformSettingsWithIt : _* )
+  .settings( publishSettings: _* )
 
 
 lazy val example = (project in file("example"))
@@ -79,6 +81,7 @@ lazy val example = (project in file("example"))
     scalaVersion := "2.11.8",
     scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
   )
+  .settings( publishSettings: _* )
   .enablePlugins(JavaAppPackaging)
   .settings(
     packageName in Docker := "reactive-consul-example",
@@ -88,9 +91,10 @@ lazy val example = (project in file("example"))
   )
 
 lazy val publishSettings = Seq(
+  publishArtifact := false,
   publishMavenStyle := true,
-  publishArtifact in Test := false,
   pomIncludeRepository := { _ => false },
+  credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
     if (isSnapshot.value)
