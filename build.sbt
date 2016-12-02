@@ -16,9 +16,11 @@ lazy val client = (project in file("client"))
     name := "reactive-consul",
     organization := "nl.stormlantern",
     scalaVersion := "2.11.8",
-    version := "0.1.1-SNAPSHOT",
+    version := "0.1.1",
     publishArtifact in Compile := true,
+    publishArtifact in makePom := true,
     publishArtifact in Test := false,
+    publishArtifact in IntegrationTest := false,
     fork := true,
     resolvers ++= Dependencies.resolutionRepos,
     libraryDependencies ++= Seq(
@@ -29,9 +31,9 @@ lazy val client = (project in file("client"))
       spotifyDns,
       slf4j,
       akkaSlf4j,
-      scalaTest % "test, it",
+      scalaTest % "it,test",
       scalaMock % "test",
-      logback % "test, it",
+      logback % "it,test",
       akkaTestKit
     ),
     ScalariformKeys.preferences := ScalariformKeys.preferences.value
@@ -43,7 +45,7 @@ lazy val client = (project in file("client"))
   .configs( IntegrationTest )
   .settings( Defaults.itSettings : _* )
   .settings( SbtScalariform.scalariformSettingsWithIt : _* )
-  .dependsOn(dockerTestkit % "it")
+  .dependsOn(dockerTestkit % "compile-internal")
 
 lazy val dockerTestkit = (project in file("docker-testkit"))
   .settings(
