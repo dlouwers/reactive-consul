@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/dlouwers/reactive-consul.svg?branch=master)](https://travis-ci.org/dlouwers/reactive-consul)
 [![Coverage Status](https://coveralls.io/repos/dlouwers/reactive-consul/badge.svg)](https://coveralls.io/r/dlouwers/reactive-consul)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/nl.stormlantern/reactive-consul/badge.svg)](https://maven-badges.herokuapp.com/maven-central/nl.stormlantern/reactive-consul)
 
 # Reactive Consul
 This project is a Consul client for Scala. It uses non-blocking I/O to communicate with a Consul cluster. You can use
