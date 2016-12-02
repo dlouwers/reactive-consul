@@ -5,9 +5,15 @@ import stormlantern.consul.client.loadbalancers.{ LoadBalancer, LoadBalancerActo
 
 case class ServiceDefinition(serviceId: String, serviceName: String, serviceTags: Set[String] = Set.empty, dataCenter: Option[String] = None)
 object ServiceDefinition {
+
   def apply(serviceName: String): ServiceDefinition = {
     ServiceDefinition(serviceName, serviceName)
   }
+
+  def apply(serviceName: String, serviceTags: Set[String]): ServiceDefinition = {
+    ServiceDefinition(serviceName, serviceName, serviceTags)
+  }
+
 }
 
 case class ConnectionStrategy(

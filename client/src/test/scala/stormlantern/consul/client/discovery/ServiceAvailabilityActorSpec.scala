@@ -46,8 +46,25 @@ class ServiceAvailabilityActorSpec(_system: ActorSystem) extends TestKit(_system
       Future.successful(IndexedServiceInstances(2, Set(service)))
     }
     sut ! Start
-    expectMsg(Duration(1, "s"), ServiceAvailabilityActor.ServiceAvailabilityUpdate.empty)
-    expectMsg(Duration(1, "s"), ServiceAvailabilityActor.ServiceAvailabilityUpdate(Set(service), Set.empty))
-    expectNoMsg(Duration(1, "s"))
+    expectMsg(1.second, ServiceAvailabilityActor.ServiceAvailabilityUpdate.empty)
+    expectMsg(1.second, ServiceAvailabilityActor.ServiceAvailabilityUpdate(Set(service), Set.empty))
+    expectNoMsg(1.second)
+  }
+
+  it should "receive one service update when there are two with different tags" in {
+    val httpClient: ConsulHttpClient = mock[ConsulHttpClient]
+    lazy val sut = TestActorRef(ServiceAvailabilityActor.props(httpClient, ServiceDefinition("bogus", Set("one", "two")), self))
+    val nonMatchingservice = ModelHelpers.createService("bogus", tags = Set("one"))
+    val matchingService = nonMatchingservice.copy(serviceTags = Set("one", "two"))
+    (httpClient.getService _).expects("bogus", Some("one"), Some(0L), Some("1s"), None).returns(Future.successful(IndexedServiceInstances(1, Set.empty)))
+    (httpClient.getService _).expects("bogus", Some("one"), Some(1L), Some("1s"), None).returns(Future.successful(IndexedServiceInstances(2, Set(nonMatchingservice, matchingService))))
+    (httpClient.getService _).expects("bogus", Some("one"), Some(2L), Some("1s"), None).onCall { p ⇒
+      sut.stop()
+      Future.successful(IndexedServiceInstances(2, Set(nonMatchingservice, matchingService)))
+    }
+    sut ! Start
+    expectMsg(1.second, ServiceAvailabilityActor.ServiceAvailabilityUpdate.empty)
+    expectMsg(1.second, ServiceAvailabilityActor.ServiceAvailabilityUpdate(Set(matchingService), Set.empty))
+    expectNoMsg(1.second)
   }
 }

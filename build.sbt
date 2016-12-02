@@ -16,7 +16,7 @@ lazy val client = (project in file("client"))
     name := "reactive-consul",
     organization := "nl.stormlantern",
     scalaVersion := "2.11.8",
-    version := "0.1",
+    version := "0.1.1-SNAPSHOT",
     publishArtifact in Compile := true,
     publishArtifact in Test := false,
     fork := true,
@@ -38,13 +38,12 @@ lazy val client = (project in file("client"))
       .setPreference(AlignSingleLineCaseStatements, true)
       .setPreference(DoubleIndentClassDeclaration, true)
       .setPreference(PreserveDanglingCloseParenthesis, true)
-      .setPreference(RewriteArrowSymbols, true),
-    scalaVersion := "2.11.8"
+      .setPreference(RewriteArrowSymbols, true)
   )
   .configs( IntegrationTest )
   .settings( Defaults.itSettings : _* )
   .settings( SbtScalariform.scalariformSettingsWithIt : _* )
-  .dependsOn(dockerTestkit % "test, it")
+  .dependsOn(dockerTestkit % "it")
 
 lazy val dockerTestkit = (project in file("docker-testkit"))
   .settings(

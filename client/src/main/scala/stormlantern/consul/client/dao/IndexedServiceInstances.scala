@@ -11,6 +11,7 @@ package stormlantern.consul.client.dao
 //    "ServicePort": 8000
 //  }
 //]
+
 case class ServiceInstance(
   node: String,
   address: String,
@@ -19,6 +20,7 @@ case class ServiceInstance(
   serviceTags: Set[String],
   serviceAddress: String,
   servicePort: Int)
+
 case class IndexedServiceInstances(index: Long, resource: Set[ServiceInstance]) extends Indexed[Set[ServiceInstance]] {
   def filterForTags(tags: Set[String]): IndexedServiceInstances = {
     this.copy(resource = resource.filter { s ⇒

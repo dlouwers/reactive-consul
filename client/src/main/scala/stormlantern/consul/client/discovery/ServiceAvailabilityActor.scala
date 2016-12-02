@@ -29,7 +29,7 @@ class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceDefinition: 
     val update = if (serviceAvailabilityState.index != services.index) {
       val oldServices = serviceAvailabilityState
       serviceAvailabilityState = services.filterForTags(serviceDefinition.serviceTags)
-      Some(createServiceAvailabilityUpdate(oldServices, services))
+      Some(createServiceAvailabilityUpdate(oldServices, serviceAvailabilityState))
     } else {
       None
     }
