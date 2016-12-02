@@ -10,8 +10,23 @@ the low-level ConsulHttpClient.
 
 Java 8
 
-## Installation
-Repo on Maven Central pending.
+## Adding it to your project
+Reactive Consul is available via [Maven Central](https://search.maven.org/), simply add it to your SBT build:
+
+```scala
+libraryDependencies += "nl.stormlantern" %% "reactive-consul" % "0.1.1"
+```
+
+If you want to use a development snapshots, use the 
+[Sonatype Snapshot Repository](https://oss.sonatype.org/content/repositories/snapshots/nl/stormlantern/). Add the
+following lines to your SBT build:
+```scala
+resolvers ++= Seq(
+  "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
+)
+
+libraryDependencies += "nl.stormlantern" %% "reactive-consul" % "0.1.1-SNAPSHOT"
+```
 
 ## Using the ServiceBroker
 The ServiceBroker can be used as follows:
