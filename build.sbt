@@ -2,7 +2,6 @@ import Dependencies._
 import sbt.Keys._
 import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
-import org.scoverage.coveralls.Imports.CoverallsKeys._
 
 import scalariform.formatter.preferences._
 
@@ -55,8 +54,7 @@ lazy val dockerTestkit = (project in file("docker-testkit"))
       scalaTest,
       spotifyDocker
     ),
-    scalaVersion := "2.11.8",
-    coverageEnabled := false
+    scalaVersion := "2.11.8"
   )
   .configs( IntegrationTest )
   .settings( Defaults.itSettings : _* )
