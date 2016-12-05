@@ -1,10 +1,10 @@
-package stormlantern.consul.client.dao
+package stormlantern.consul.client
+package dao
 
 import java.net.URL
 import java.util.UUID
 
 import akka.actor.ActorSystem
-import retry.Success
 import spray.client.pipelining._
 import spray.http._
 import spray.httpx.SprayJsonSupport._
@@ -20,6 +20,7 @@ class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extend
     with ConsulHttpProtocol with RetryPolicy with Logging {
 
   implicit val executionContext = actorSystem.dispatcher
+  implicit val scheduler = actorSystem.scheduler
   val pipeline: HttpRequest ⇒ Future[HttpResponse] = sendReceive
 
   def extractIndex(response: HttpResponse)(block: Long ⇒ IndexedServiceInstances): IndexedServiceInstances = {
@@ -56,8 +57,7 @@ class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extend
     val parameters = Seq(dcParameter, tagParameter, waitParameter, indexParameter).flatten.mkString("&")
     val request = Get(s"$host/v1/catalog/service/$service?$parameters")
     val myPipeline: HttpRequest ⇒ Future[IndexedServiceInstances] = pipeline ~> unmarshalWithIndex
-    implicit val success = Success[IndexedServiceInstances](r ⇒ true)
-    retry { () ⇒
+    retry[IndexedServiceInstances]() {
       myPipeline(request)
     }
   }
@@ -65,8 +65,7 @@ class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extend
   override def putService(registration: ServiceRegistration): Future[String] = {
     val request = Put(s"$host/v1/agent/service/register", registration.toJson.asJsObject())
     val myPipeline: HttpRequest ⇒ Future[HttpResponse] = pipeline
-    implicit val success = Success[HttpResponse](r ⇒ r.status.isSuccess)
-    retry { () ⇒
+    retry[HttpResponse](predicate = r ⇒ r.status.isSuccess) {
       myPipeline(request)
     }.map(r ⇒ registration.id.getOrElse(registration.name))
   }
@@ -74,8 +73,7 @@ class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extend
   override def deleteService(serviceId: String): Future[Unit] = {
     val request = Delete(s"$host/v1/agent/service/deregister/$serviceId")
     val myPipeline: HttpRequest ⇒ Future[HttpResponse] = pipeline
-    implicit val success = Success[HttpResponse](r ⇒ r.status.isSuccess)
-    retry { () ⇒
+    retry[HttpResponse](predicate = r ⇒ r.status.isSuccess) {
       myPipeline(request)
     }.map(r ⇒ ())
   }
@@ -85,8 +83,7 @@ class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extend
     val parameters = Seq(dcParameter).flatten.mkString("&")
     val request = Put(s"$host/v1/session/create?$parameters", sessionCreation.map(_.toJson.asJsObject))
     val myPipeline: HttpRequest ⇒ Future[HttpResponse] = pipeline
-    implicit val success = Success[HttpResponse](r ⇒ r.status.isSuccess)
-    retry { () ⇒
+    retry[HttpResponse](predicate = r ⇒ r.status.isSuccess) {
       myPipeline(request)
     }.map(r ⇒ r.entity.asString.parseJson.asJsObject.fields("ID").convertTo[UUID])
   }
@@ -97,8 +94,7 @@ class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extend
     val parameters = Seq(dcParameter, indexParameter).flatten.mkString("&")
     val request = Get(s"$host/v1/session/info/$sessionId?$parameters")
     val myPipeline: HttpRequest ⇒ Future[HttpResponse] = pipeline
-    implicit val success = Success[HttpResponse](r ⇒ r.status.isSuccess)
-    retry { () ⇒
+    retry[HttpResponse](predicate = r ⇒ r.status.isSuccess) {
       myPipeline(request)
     }.map(r ⇒ r.entity.asString.parseJson.convertTo[Option[Set[SessionInfo]]].getOrElse(Set.empty).headOption)
   }
@@ -111,8 +107,7 @@ class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extend
     val parameters = Seq(opParameter).flatten.mkString("&")
     val request = Put(s"$host/v1/kv/$key?$parameters", HttpEntity(value))
     val myPipeline: HttpRequest ⇒ Future[HttpResponse] = pipeline
-    implicit val success = Success[HttpResponse] { r ⇒ true }
-    retry { () ⇒
+    retry[HttpResponse]() {
       myPipeline(request)
     }.map { r ⇒
       if (r.status.isSuccess) {
@@ -138,8 +133,7 @@ class SprayConsulHttpClient(host: URL)(implicit actorSystem: ActorSystem) extend
     val parameters = Seq(indexParameter, waitParameter, recurseParameter, keysOnlyParameter).flatten.mkString("&")
     val request = Get(s"$host/v1/kv/$key?$parameters")
     val myPipeline: HttpRequest ⇒ Future[Seq[KeyData]] = pipeline ~> unmarshal[Seq[KeyData]]
-    implicit val success = Success[Seq[KeyData]](r ⇒ true)
-    retry { () ⇒
+    retry[Seq[KeyData]]() {
       myPipeline(request)
     }
   }

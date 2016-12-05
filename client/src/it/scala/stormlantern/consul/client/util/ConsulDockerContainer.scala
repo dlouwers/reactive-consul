@@ -1,4 +1,5 @@
-package stormlantern.consul.client.util
+package stormlantern.consul.client
+package util
 
 import com.spotify.docker.client.messages.ContainerConfig
 import org.scalatest.Suite

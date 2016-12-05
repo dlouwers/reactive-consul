@@ -4,12 +4,10 @@ import java.net.URL
 
 import org.scalatest._
 import org.scalatest.concurrent.{ Eventually, IntegrationPatience, ScalaFutures }
-import org.scalatest.time._
-import retry.Success
 import stormlantern.consul.client.dao.{ ConsulHttpClient, ServiceRegistration, SprayConsulHttpClient }
 import stormlantern.consul.client.discovery.{ ConnectionStrategy, ServiceDefinition, ConnectionProviderFactory, ConnectionProvider }
 import stormlantern.consul.client.loadbalancers.RoundRobinLoadBalancer
-import stormlantern.consul.client.util.{ ConsulDockerContainer, Logging, RetryPolicy, TestActorSystem }
+import stormlantern.consul.client.util.{ ConsulDockerContainer, Logging, TestActorSystem }
 
 import scala.concurrent.Future
 
@@ -36,6 +34,7 @@ class ServiceBrokerIntegrationTest extends FlatSpec with Matchers with ScalaFutu
         sut.withService("consul-http") { connection: ConsulHttpClient ⇒
           connection.getService("bogus").map(_.resource should have size 0)
         }
+        sut
       }
     }
   }

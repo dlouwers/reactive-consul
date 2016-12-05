@@ -26,14 +26,13 @@ lazy val client = (project in file("client"))
       sprayClient,
       sprayJson,
       akkaActor,
-      retry,
       spotifyDns,
       slf4j,
       akkaSlf4j,
       scalaTest % "it,test",
       scalaMock % "test",
       logback % "it,test",
-      akkaTestKit
+      akkaTestKit % "it,test"
     ),
     ScalariformKeys.preferences := ScalariformKeys.preferences.value
       .setPreference(AlignSingleLineCaseStatements, true)
@@ -44,7 +43,7 @@ lazy val client = (project in file("client"))
   .configs( IntegrationTest )
   .settings( Defaults.itSettings : _* )
   .settings( SbtScalariform.scalariformSettingsWithIt : _* )
-  .dependsOn(dockerTestkit % "compile-internal")
+  .dependsOn(dockerTestkit % "it,compile-internal")
 
 lazy val dockerTestkit = (project in file("docker-testkit"))
   .settings(

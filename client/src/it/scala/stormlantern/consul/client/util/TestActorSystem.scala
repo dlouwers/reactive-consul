@@ -8,7 +8,7 @@ trait TestActorSystem {
     try {
       f(actorSystem)
     } finally {
-      actorSystem.shutdown()
+      actorSystem.terminate()
     }
   }
 }
