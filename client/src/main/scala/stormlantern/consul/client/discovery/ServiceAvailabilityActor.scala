@@ -1,11 +1,13 @@
-package stormlantern.consul.client.discovery
-
-import akka.actor.{ Actor, ActorRef, Props }
-import stormlantern.consul.client.dao.{ ConsulHttpClient, IndexedServiceInstances, ServiceInstance }
-import stormlantern.consul.client.discovery.ServiceAvailabilityActor._
+package stormlantern.consul.client
+package discovery
 
 import scala.concurrent.Future
-import scala.util.{ Failure, Success }
+
+import akka.actor._
+import akka.pattern.pipe
+
+import dao._
+import ServiceAvailabilityActor._
 
 class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceDefinition: ServiceDefinition, listener: ActorRef) extends Actor {
 
@@ -19,10 +21,7 @@ class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceDefinition: 
     case UpdateServiceAvailability(services: IndexedServiceInstances) ⇒
       val (update, serviceChange) = updateServiceAvailability(services)
       update.foreach(listener ! _)
-      serviceChange.onComplete {
-        case Success(change) ⇒ self ! UpdateServiceAvailability(change)
-        case Failure(e)      ⇒ throw e
-      }
+      serviceChange.map(UpdateServiceAvailability) pipeTo self
   }
 
   def updateServiceAvailability(services: IndexedServiceInstances): (Option[ServiceAvailabilityUpdate], Future[IndexedServiceInstances]) = {
