@@ -4,14 +4,12 @@ import java.net.URL
 
 import akka.actor.{ ActorSystem, ActorRefFactory, ActorRef }
 import akka.util.Timeout
-import com.spotify.dns.DnsSrvResolvers
 import stormlantern.consul.client.dao.{ ServiceRegistration, ConsulHttpClient, SprayConsulHttpClient }
 import stormlantern.consul.client.discovery.{ ServiceAvailabilityActor, ServiceDefinition, ConnectionStrategy, ConnectionHolder }
 import stormlantern.consul.client.election.LeaderInfo
 import stormlantern.consul.client.loadbalancers.LoadBalancerActor
 import stormlantern.consul.client.util.{ Logging, RetryPolicy }
 import scala.concurrent.duration._
-import collection.JavaConversions._
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -54,12 +52,6 @@ class ServiceBroker(serviceBrokerActor: ActorRef, consulClient: ConsulHttpClient
 
 object ServiceBroker {
 
-  def findConsul(fqdn: String): URL = {
-    val resolver = DnsSrvResolvers.newBuilder().build()
-    val lookupResult = resolver.resolve(fqdn).headOption.getOrElse(throw new RuntimeException(s"No record found for $fqdn"))
-    new URL(s"http://${lookupResult.host()}:${lookupResult.port()}")
-  }
-
   def apply(rootActor: ActorSystem, httpClient: ConsulHttpClient, services: Set[ConnectionStrategy]): ServiceBroker = {
     implicit val ec = ExecutionContext.Implicits.global
     val serviceAvailabilityActorFactory = (factory: ActorRefFactory, service: ServiceDefinition, listener: ActorRef) ⇒
@@ -68,9 +60,9 @@ object ServiceBroker {
     new ServiceBroker(actorRef, httpClient)
   }
 
-  def apply(consulAddress: String, services: Set[ConnectionStrategy]): ServiceBroker = {
+  def apply(consulAddress: URL, services: Set[ConnectionStrategy]): ServiceBroker = {
     implicit val rootActor = ActorSystem("reactive-consul")
-    val httpClient = new SprayConsulHttpClient(findConsul(consulAddress))
+    val httpClient = new SprayConsulHttpClient(consulAddress)
     ServiceBroker(rootActor, httpClient, services)
   }
 
