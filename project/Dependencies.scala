@@ -11,6 +11,7 @@ object Dependencies {
   val akkaVersion   = "2.4.14"
 
   val sprayClient   = "io.spray"                    %% "spray-client"                 % sprayVersion
+  val akkaHttp      = "com.typesafe.akka"           %% "akka-http-core"               % "10.0.3"
   val sprayRouting  = "io.spray"                    %% "spray-routing"                % sprayVersion
   val sprayJson     = "io.spray"                    %% "spray-json"                   % "1.3.2"
   val akkaActor     = "com.typesafe.akka"           %% "akka-actor"                   % akkaVersion

@@ -1,0 +1,204 @@
+package stormlantern.consul.client.dao
+
+import java.net.URL
+import java.util.UUID
+
+import scala.concurrent.Future
+import scala.util.{ Failure, Success, Try }
+
+import akka.actor.ActorSystem
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.{ ContentTypes, HttpMethods, HttpRequest, HttpResponse, MediaType, StatusCodes }
+import akka.stream.{ ActorMaterializer, Materializer }
+import akka.util.ByteString
+import spray.json._
+import stormlantern.consul.client.util.{ Logging, RetryPolicy }
+import akka.http.scaladsl.model.StatusCode
+import scala.util._
+import akka.http.scaladsl.model.HttpHeader
+import javax.ws.rs.InternalServerErrorException
+
+class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem) extends ConsulHttpClient
+    with ConsulHttpProtocol with RetryPolicy with Logging {
+
+  implicit val executionContext = actorSystem.dispatcher
+  implicit val scheduler = actorSystem.scheduler
+  implicit val materializer: Materializer = ActorMaterializer()
+
+  private val JsonMediaType = ContentTypes.`application/json`.mediaType
+  private val TextMediaType = ContentTypes.`text/plain(UTF-8)`.mediaType
+
+  //
+  // Services
+  // /////////////////
+  def getService(service: String, tag: Option[String] = None, index: Option[Long] = None, wait: Option[String] = None, dataCenter: Option[String] = None): Future[IndexedServiceInstances] = {
+    val dcParameter = dataCenter.map(dc ⇒ s"dc=$dc")
+    val waitParameter = wait.map(w ⇒ s"wait=$w")
+    val indexParameter = index.map(i ⇒ s"index=$i")
+    val tagParameter = tag.map(t ⇒ s"tag=$t")
+    val parameters = Seq(dcParameter, tagParameter, waitParameter, indexParameter).flatten.mkString("&")
+    val request: HttpRequest = HttpRequest(HttpMethods.GET).withUri(s"${host}/v1/catalog/service/$service?${parameters}")
+
+    retry[IndexedServiceInstances]() {
+      getResponse(request, JsonMediaType).flatMap { response ⇒
+        validIndex(response).map { idx ⇒
+          val services = response.body.parseJson.convertTo[Option[Set[ServiceInstance]]]
+          IndexedServiceInstances(idx, services.getOrElse(Set.empty[ServiceInstance]))
+        }
+      }
+    }
+  }
+
+  def putService(registration: ServiceRegistration): Future[String] = {
+    val request = HttpRequest(HttpMethods.PUT).withUri(s"${host}/v1/agent/service/register")
+      .withEntity(registration.toJson.asJsObject().toString.getBytes)
+
+    retry[ConsulResponse]() {
+      getResponse(request, TextMediaType)
+    }.map(r ⇒ registration.id.getOrElse(registration.name))
+  }
+
+  def deleteService(serviceId: String): Future[Unit] = {
+    val request = HttpRequest(HttpMethods.DELETE).withUri(s"${host}/v1/agent/service/deregister/${serviceId}")
+
+    retry[ConsulResponse]() {
+      getResponse(request, TextMediaType)
+    }.map(r ⇒ ())
+  }
+
+  //
+  // Sessions
+  // /////////////////
+  def putSession(sessionCreation: Option[SessionCreation], dataCenter: Option[String]): Future[UUID] = {
+    val dcParameter = dataCenter.map(dc ⇒ s"dc=$dc")
+    val parameters = Seq(dcParameter).flatten.mkString("&")
+    val request = sessionCreation.map(_.toJson.asJsObject.toString.getBytes) match {
+      case None         ⇒ HttpRequest(HttpMethods.PUT).withUri(s"${host}/v1/session/create?${parameters}")
+      case Some(entity) ⇒ HttpRequest(HttpMethods.PUT).withUri(s"${host}/v1/session/create?${parameters}").withEntity(entity)
+    }
+
+    retry[UUID]() {
+      getResponse(request, JsonMediaType).map { response ⇒
+        response.body.parseJson.asJsObject.fields("ID").convertTo[UUID]
+      }
+    }
+  }
+
+  def getSessionInfo(sessionId: UUID, index: Option[Long], dataCenter: Option[String]): Future[Option[SessionInfo]] = {
+    val dcParameter = dataCenter.map(dc ⇒ s"dc=$dc")
+    val indexParameter = index.map(i ⇒ s"index=$i")
+    val parameters = Seq(dcParameter, indexParameter).flatten.mkString("&")
+    val request = HttpRequest(HttpMethods.GET).withUri(s"${host}/v1/session/info/${sessionId}?${parameters}")
+
+    retry[Option[SessionInfo]]() {
+      getResponse(request, JsonMediaType).map { response ⇒
+        response.body.parseJson.convertTo[Option[Set[SessionInfo]]].getOrElse(Set.empty).headOption
+      }
+    }
+  }
+
+  //
+  // Key Values 
+  // /////////////////
+  def putKeyValuePair(key: String, value: Array[Byte], sessionOp: Option[SessionOp]): Future[Boolean] = {
+    import StatusCodes._
+
+    val opParameter = sessionOp.map {
+      case AcquireSession(id) ⇒ s"acquire=$id"
+      case ReleaseSession(id) ⇒ s"release=$id"
+    }
+    val parameters = opParameter.getOrElse("")
+    val request = HttpRequest(HttpMethods.PUT).withUri(s"${host}/v1/kv/${key}?${parameters}").withEntity(value)
+
+    def validator(response: HttpResponse): Boolean = response.status.isSuccess() || response.status == InternalServerError
+
+    retry[Boolean]() {
+      getResponse(request, JsonMediaType, validator).flatMap { response ⇒
+        response match {
+          case ConsulResponse(OK, _, body)                               ⇒ Future successful Option(body.toBoolean).getOrElse(false)
+          case ConsulResponse(InternalServerError, _, "Invalid session") ⇒ Future successful false
+          case ConsulResponse(status, _, body)                           ⇒ Future failed new Exception(s"Request returned status code ${status} - ${body}")
+        }
+      }
+    }
+  }
+
+  def getKeyValuePair(key: String, index: Option[Long], wait: Option[String], recurse: Boolean, keysOnly: Boolean): Future[Seq[KeyData]] = {
+
+    val waitParameter = wait.map(p ⇒ s"wait=$p")
+    val indexParameter = index.map(p ⇒ s"index=$p")
+    val recurseParameter = if (recurse) Some("recurse") else None
+    val keysOnlyParameter = if (keysOnly) Some("keys") else None
+    val parameters = Seq(indexParameter, waitParameter, recurseParameter, keysOnlyParameter).flatten.mkString("&")
+    val request = HttpRequest(HttpMethods.GET).withUri(s"${host}/v1/kv/${key}?${parameters}")
+
+    retry[Seq[KeyData]]() {
+      getResponse(request, JsonMediaType).map { response ⇒
+        response.body.parseJson.convertTo[Seq[KeyData]]
+      }
+    }
+  }
+
+  //
+  // Internal Helpers
+  // //////////////////////////
+  private def getResponse[T, U](request: HttpRequest, expectedMediaType: MediaType, validator: HttpResponse ⇒ Boolean = (in) ⇒ in.status.isSuccess()): Future[ConsulResponse] = {
+
+    def validStatus(response: HttpResponse) = validator(response) match {
+      case true  ⇒ Future successful response
+      case false ⇒ parseBody(response).flatMap { body ⇒ Future failed ConsulException(s"Bad status code: ${response.status.intValue()} with body ${body}") }
+    }
+
+    //
+    //  Consul does not return the Charset with the Response Content Type, so just MediaType comparison
+    //  Furthermore, when an error is returned the content type is text/plain, thank you HashiCorp ...
+    // /////////////////////
+    def validContenType(resp: HttpResponse) = {
+      val expected = resp.status match {
+        case st if st.isSuccess()     ⇒ expectedMediaType
+        case st if st.isFailure()     ⇒ TextMediaType
+        case st if st.isRedirection() ⇒ TextMediaType // this is a guess 
+      }
+
+      (resp.entity.contentType.mediaType == expected) match {
+        case true  ⇒ Future successful resp
+        case false ⇒ Future failed ConsulException(resp.status, s"Unexpected content type: ${resp.entity.contentType}, expected ${expectedMediaType}")
+      }
+    }
+
+    def parseBody(response: HttpResponse): Future[String] = {
+      response.entity.dataBytes.runFold(ByteString(""))(_ ++ _).map(_.utf8String)
+    }
+
+    // make the call
+    Http()
+      .singleRequest(request)
+      .flatMap(validStatus)
+      .flatMap(validContenType)
+      .flatMap { response: HttpResponse ⇒
+        parseBody(response).map { body: String ⇒
+          ConsulResponse(response.status, response.headers, body)
+        }
+      }
+  }
+
+  private def validIndex(response: ConsulResponse): Future[Long] = response.headers.filter(_.name() == "X-Consul-Index").headOption match {
+    case None ⇒ Future failed ConsulException("X-Consul-Index header not found")
+    case Some(hdr) ⇒ Try(hdr.value.toLong) match {
+      case Success(idx) ⇒ Future successful idx
+      case Failure(ex)  ⇒ Future failed ConsulException("X-Consul-Index header was not numeric")
+    }
+  }
+}
+
+//
+// Internal Objects 
+// //////////////////////////
+case class ConsulResponse(status: StatusCode, headers: Seq[HttpHeader], body: String)
+
+case class ConsulException(message: String, response: HttpResponse, status: Option[StatusCode] = None) extends Exception(message)
+object ConsulException {
+  def apply(status: StatusCode, msg: String) = new ConsulException(msg, null, Option(status)) // I feel dirty after this
+  def apply(msg: String) = new ConsulException(msg, null) // I feel dirty after this
+
+}
