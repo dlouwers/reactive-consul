@@ -24,6 +24,7 @@ lazy val client = (project in file("client"))
     resolvers ++= Dependencies.resolutionRepos,
     libraryDependencies ++= Seq(
       sprayClient,
+      akkaHttp,
       sprayJson,
       akkaActor,
       spotifyDns,
@@ -32,7 +33,8 @@ lazy val client = (project in file("client"))
       scalaTest % "it,test",
       scalaMock % "test",
       logback % "it,test",
-      akkaTestKit % "it,test"
+      akkaTestKit % "it,test",
+      spotifyDocker % "it,test"
     ),
     ScalariformKeys.preferences := ScalariformKeys.preferences.value
       .setPreference(AlignSingleLineCaseStatements, true)
