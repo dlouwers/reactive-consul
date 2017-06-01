@@ -8,8 +8,9 @@ import scalariform.formatter.preferences._
 // Common variables
 lazy val commonSettings = Seq(
   scalaVersion := "2.11.8",
+  crossScalaVersions := Seq("2.11.8", "2.12.2"),
   organization := "nl.stormlantern",
-  version := "0.1.1",
+  version := "0.2.0-SNAPSHOT",
   resolvers ++= Dependencies.resolutionRepos,
   scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
   )
@@ -17,7 +18,7 @@ lazy val commonSettings = Seq(
 lazy val root = (project in file("."))
   .settings( commonSettings: _* )
   .settings( publishSettings: _* )
-  .aggregate(client, dnsHelper, dockerTestkit, example)
+  .aggregate(client, dnsHelper, dockerTestkit/*, example*/)
  
  
 lazy val dnsHelper = (project in file("dns-helper"))
@@ -51,7 +52,6 @@ lazy val client = (project in file("client"))
     publishArtifact in IntegrationTest := false,
     fork := true,
     libraryDependencies ++= Seq(
-      sprayClient,
       akkaHttp,
       sprayJson,
       akkaActor,
@@ -89,35 +89,38 @@ lazy val dockerTestkit = (project in file("docker-testkit"))
   .settings( publishSettings: _* )
 
 
-lazy val example = (project in file("example"))
-  .aggregate(client)
-  .dependsOn(client, dnsHelper)
-  .settings( commonSettings: _* )
-  .settings(
-      libraryDependencies ++= Seq(
-        sprayClient,
-        sprayRouting,
-        sprayJson,
-        slf4j,
-        logback
-      )
-  )
-  .settings(
-    fork := true,
-    libraryDependencies ++= Seq(
-      akkaActor,
-      sprayClient,
-      sprayJson
-    )
-  )
-  .settings( publishSettings: _* )
-  .enablePlugins(JavaAppPackaging)
-  .settings(
-    packageName in Docker := "reactive-consul-example",
-    maintainer in Docker := "Dirk Louwers <dirk.louwers@stormlantern.nl>",
-    dockerExposedPorts in Docker := Seq(8080),
-    dockerExposedVolumes in Docker := Seq("/opt/docker/logs")
-  )
+//lazy val example = (project in file("example"))
+//  .aggregate(client)
+//  .dependsOn(client, dnsHelper)
+//  .settings( commonSettings: _* )
+//  .settings(
+//    crossScalaVersions := Seq()
+//  )
+//  .settings(
+//      libraryDependencies ++= Seq(
+//        sprayClient,
+//        sprayRouting,
+//        sprayJson,
+//        slf4j,
+//        logback
+//      )
+//  )
+//  .settings(
+//    fork := true,
+//    libraryDependencies ++= Seq(
+//      akkaActor,
+//      sprayClient,
+//      sprayJson
+//    )
+//  )
+//  .settings( publishSettings: _* )
+//  .enablePlugins(JavaAppPackaging)
+//  .settings(
+//    packageName in Docker := "reactive-consul-example",
+//    maintainer in Docker := "Dirk Louwers <dirk.louwers@stormlantern.nl>",
+//    dockerExposedPorts in Docker := Seq(8080),
+//    dockerExposedVolumes in Docker := Seq("/opt/docker/logs")
+//  )
 
 lazy val publishSettings = Seq(
   publishArtifact := false,

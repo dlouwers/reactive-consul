@@ -20,7 +20,7 @@ object Dependencies {
   val logback       = "ch.qos.logback"              %  "logback-classic"              % "1.1.7"
   val spotifyDocker = "com.spotify"                 %  "docker-client"                % "3.6.8"
   val spotifyDns    = "com.spotify"                 %  "dns"                          % "3.1.4"
-  val scalaTest     = "org.scalatest"               %  "scalatest_2.11"               % "2.2.6"
-  val scalaMock     = "org.scalamock"               %% "scalamock-scalatest-support"  % "3.2.2"
+  val scalaTest     = "org.scalatest"               %% "scalatest"                    % "3.0.1"
+  val scalaMock     = "org.scalamock"               %% "scalamock-scalatest-support"  % "3.6.0"
   val akkaTestKit   = "com.typesafe.akka"           %% "akka-testkit"                 % akkaVersion
 }
