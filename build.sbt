@@ -5,29 +5,56 @@ import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 
 import scalariform.formatter.preferences._
 
-lazy val root = (project in file("."))
-  .settings( publishSettings: _* )
-  .aggregate(client, dockerTestkit, example)
+// Common variables
+lazy val commonSettings = Seq(
+  scalaVersion := "2.11.8",
+  organization := "nl.stormlantern",
+  version := "0.1.1",
+  resolvers ++= Dependencies.resolutionRepos,
+  scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
+  )
 
-lazy val client = (project in file("client"))
+lazy val root = (project in file("."))
+  .settings( commonSettings: _* )
+  .settings( publishSettings: _* )
+  .aggregate(client, dnsHelper, dockerTestkit, example)
+ 
+ 
+lazy val dnsHelper = (project in file("dns-helper"))
+  .settings( commonSettings: _* )
   .settings( publishSettings: _* )
   .settings(
-    name := "reactive-consul",
-    organization := "nl.stormlantern",
-    scalaVersion := "2.11.8",
-    version := "0.1.1",
+    name := "reactive-consul-dns",
     publishArtifact in Compile := true,
     publishArtifact in makePom := true,
     publishArtifact in Test := false,
     publishArtifact in IntegrationTest := false,
     fork := true,
-    resolvers ++= Dependencies.resolutionRepos,
+    libraryDependencies ++= Seq(
+      spotifyDns
+    ),
+    ScalariformKeys.preferences := ScalariformKeys.preferences.value
+      .setPreference(AlignSingleLineCaseStatements, true)
+      .setPreference(DoubleIndentClassDeclaration, true)
+      .setPreference(PreserveDanglingCloseParenthesis, true)
+      .setPreference(RewriteArrowSymbols, true)
+  )
+
+lazy val client = (project in file("client"))
+  .settings( commonSettings: _* )
+  .settings( publishSettings: _* )
+  .settings(
+    name := "reactive-consul",
+    publishArtifact in Compile := true,
+    publishArtifact in makePom := true,
+    publishArtifact in Test := false,
+    publishArtifact in IntegrationTest := false,
+    fork := true,
     libraryDependencies ++= Seq(
       sprayClient,
       akkaHttp,
       sprayJson,
       akkaActor,
-      spotifyDns,
       slf4j,
       akkaSlf4j,
       scalaTest % "it,test",
@@ -48,14 +75,13 @@ lazy val client = (project in file("client"))
   .dependsOn(dockerTestkit % "it,compile-internal")
 
 lazy val dockerTestkit = (project in file("docker-testkit"))
+  .settings( commonSettings: _* )
   .settings(
-    resolvers ++= Dependencies.resolutionRepos,
     libraryDependencies ++= Seq(
       slf4j,
       scalaTest,
       spotifyDocker
-    ),
-    scalaVersion := "2.11.8"
+    )
   )
   .configs( IntegrationTest )
   .settings( Defaults.itSettings : _* )
@@ -65,7 +91,8 @@ lazy val dockerTestkit = (project in file("docker-testkit"))
 
 lazy val example = (project in file("example"))
   .aggregate(client)
-  .dependsOn(client)
+  .dependsOn(client, dnsHelper)
+  .settings( commonSettings: _* )
   .settings(
       libraryDependencies ++= Seq(
         sprayClient,
@@ -77,9 +104,11 @@ lazy val example = (project in file("example"))
   )
   .settings(
     fork := true,
-    libraryDependencies ++= Seq(akkaActor, sprayClient, sprayJson),
-    scalaVersion := "2.11.8",
-    scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
+    libraryDependencies ++= Seq(
+      akkaActor,
+      sprayClient,
+      sprayJson
+    )
   )
   .settings( publishSettings: _* )
   .enablePlugins(JavaAppPackaging)
