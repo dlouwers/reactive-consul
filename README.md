@@ -6,15 +6,26 @@ This project is a Consul client for Scala. It uses non-blocking I/O to communica
 the ServiceBroker to get out of the box support for automatic-clustering, loadbalancing and failover or you can use
 the low-level ConsulHttpClient.
 
+
+## Releases
+
+### 0.2.0
+
+* Supports Scala 2.12
+* Uses akka-http instead of Spray, reducing the amount of dependencies (thanks [David Buschman](https://github.com/dbuschman7))
+* Uses native JDK 8 base64, reducing the amount of dependencies (thanks [David Buschman](https://github.com/dbuschman7))
+* Bootstrapping the library with SRV record is now an extra dependency (thanks [David Buschman](https://github.com/dbuschman7)) 
+
 ## Requirements
 
-Java 8
+* Java 8
+* Scala 2.11 or 2.12
 
 ## Adding it to your project
 Reactive Consul is available via [Maven Central](https://search.maven.org/), simply add it to your SBT build:
 
 ```scala
-libraryDependencies += "nl.stormlantern" %% "reactive-consul" % "0.1.1"
+libraryDependencies += "nl.stormlantern" %% "reactive-consul" % "0.2.0"
 ```
 
 If you want to use a development snapshots, use the 
