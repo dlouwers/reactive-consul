@@ -22,12 +22,12 @@ class LeaderFollowerActorSpec(_system: ActorSystem) extends TestKit(_system) wit
   }
 
   trait TestScope {
-    val sessionId = UUID.fromString("9A3BB9C-E2E7-43DF-BFD5-845417146552")
+    val sessionId: UUID = UUID.fromString("9A3BB9C-E2E7-43DF-BFD5-845417146552")
     val key = "path/to/our/key"
     val host = "myhost.mynetwork.net"
     val port = 1337
-    val consulHttpClient = mock[ConsulHttpClient]
-    val leaderInfoBytes = s"""{"host":"$host","port":$port}""".getBytes("UTF-8")
+    val consulHttpClient: ConsulHttpClient = mock[ConsulHttpClient]
+    val leaderInfoBytes: Array[Byte] = s"""{"host":"$host","port":$port}""".getBytes("UTF-8")
   }
 
   "The LeaderFollowerActor" should "participate in an election, win, watch for changes and participate again when session is lost" in new TestScope {
@@ -51,7 +51,7 @@ class LeaderFollowerActorSpec(_system: ActorSystem) extends TestKit(_system) wit
   }
 
   it should "participate in an election, lose, watch for changes and participate again when session is lost" in new TestScope {
-    val otherSessionId = UUID.fromString("9A3BB9C-E2E7-43DF-BFD5-845417146553")
+    val otherSessionId: UUID = UUID.fromString("9A3BB9C-E2E7-43DF-BFD5-845417146553")
     val sut = TestActorRef(LeaderFollowerActor.props(consulHttpClient, sessionId, key, host, port))
     (consulHttpClient.putKeyValuePair _).expects(where { (k, lib, op) ⇒
       k == key && util.Arrays.equals(lib, leaderInfoBytes) && op.contains(AcquireSession(sessionId))

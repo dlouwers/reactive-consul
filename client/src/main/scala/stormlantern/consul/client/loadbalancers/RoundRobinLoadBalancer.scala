@@ -3,7 +3,7 @@ package stormlantern.consul.client.loadbalancers
 class RoundRobinLoadBalancer extends LoadBalancer {
 
   val list = new CircularLinkedHashSet[String]
-  var iterator = list.iterator
+  var iterator: Iterator[String] = list.iterator
 
   override def connectionProviderAdded(key: String): Unit = {
     list.add(key)

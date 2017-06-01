@@ -1,28 +1,25 @@
-package stormlantern.consul.client.dao
+package stormlantern.consul.client.dao.akka
 
 import java.net.URL
 import java.util.UUID
 
-import scala.concurrent.Future
-import scala.util.{ Failure, Success, Try }
-
-import akka.actor.ActorSystem
+import akka.actor.{ ActorSystem, Scheduler }
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{ ContentTypes, HttpMethods, HttpRequest, HttpResponse, MediaType, StatusCodes }
+import akka.http.scaladsl.model.{ HttpHeader, StatusCode, _ }
 import akka.stream.{ ActorMaterializer, Materializer }
 import akka.util.ByteString
 import spray.json._
+import stormlantern.consul.client.dao._
 import stormlantern.consul.client.util.{ Logging, RetryPolicy }
-import akka.http.scaladsl.model.StatusCode
-import scala.util._
-import akka.http.scaladsl.model.HttpHeader
-import javax.ws.rs.InternalServerErrorException
+
+import scala.concurrent.{ ExecutionContextExecutor, Future }
+import scala.util.{ Failure, Success, Try }
 
 class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem) extends ConsulHttpClient
     with ConsulHttpProtocol with RetryPolicy with Logging {
 
-  implicit val executionContext = actorSystem.dispatcher
-  implicit val scheduler = actorSystem.scheduler
+  implicit val executionContext: ExecutionContextExecutor = actorSystem.dispatcher
+  implicit val scheduler: Scheduler = actorSystem.scheduler
   implicit val materializer: Materializer = ActorMaterializer()
 
   private val JsonMediaType = ContentTypes.`application/json`.mediaType
@@ -37,7 +34,7 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem) extends
     val indexParameter = index.map(i ⇒ s"index=$i")
     val tagParameter = tag.map(t ⇒ s"tag=$t")
     val parameters = Seq(dcParameter, tagParameter, waitParameter, indexParameter).flatten.mkString("&")
-    val request: HttpRequest = HttpRequest(HttpMethods.GET).withUri(s"${host}/v1/catalog/service/$service?${parameters}")
+    val request: HttpRequest = HttpRequest(HttpMethods.GET).withUri(s"$host/v1/catalog/service/$service?$parameters")
 
     retry[IndexedServiceInstances]() {
       getResponse(request, JsonMediaType).flatMap { response ⇒
@@ -50,7 +47,7 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem) extends
   }
 
   def putService(registration: ServiceRegistration): Future[String] = {
-    val request = HttpRequest(HttpMethods.PUT).withUri(s"${host}/v1/agent/service/register")
+    val request = HttpRequest(HttpMethods.PUT).withUri(s"$host/v1/agent/service/register")
       .withEntity(registration.toJson.asJsObject().toString.getBytes)
 
     retry[ConsulResponse]() {
@@ -59,7 +56,7 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem) extends
   }
 
   def deleteService(serviceId: String): Future[Unit] = {
-    val request = HttpRequest(HttpMethods.DELETE).withUri(s"${host}/v1/agent/service/deregister/${serviceId}")
+    val request = HttpRequest(HttpMethods.DELETE).withUri(s"$host/v1/agent/service/deregister/$serviceId")
 
     retry[ConsulResponse]() {
       getResponse(request, TextMediaType)
@@ -73,8 +70,8 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem) extends
     val dcParameter = dataCenter.map(dc ⇒ s"dc=$dc")
     val parameters = Seq(dcParameter).flatten.mkString("&")
     val request = sessionCreation.map(_.toJson.asJsObject.toString.getBytes) match {
-      case None         ⇒ HttpRequest(HttpMethods.PUT).withUri(s"${host}/v1/session/create?${parameters}")
-      case Some(entity) ⇒ HttpRequest(HttpMethods.PUT).withUri(s"${host}/v1/session/create?${parameters}").withEntity(entity)
+      case None         ⇒ HttpRequest(HttpMethods.PUT).withUri(s"$host/v1/session/create?$parameters")
+      case Some(entity) ⇒ HttpRequest(HttpMethods.PUT).withUri(s"$host/v1/session/create?$parameters").withEntity(entity)
     }
 
     retry[UUID]() {
@@ -88,7 +85,7 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem) extends
     val dcParameter = dataCenter.map(dc ⇒ s"dc=$dc")
     val indexParameter = index.map(i ⇒ s"index=$i")
     val parameters = Seq(dcParameter, indexParameter).flatten.mkString("&")
-    val request = HttpRequest(HttpMethods.GET).withUri(s"${host}/v1/session/info/${sessionId}?${parameters}")
+    val request = HttpRequest(HttpMethods.GET).withUri(s"$host/v1/session/info/$sessionId?$parameters")
 
     retry[Option[SessionInfo]]() {
       getResponse(request, JsonMediaType).map { response ⇒
@@ -108,17 +105,15 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem) extends
       case ReleaseSession(id) ⇒ s"release=$id"
     }
     val parameters = opParameter.getOrElse("")
-    val request = HttpRequest(HttpMethods.PUT).withUri(s"${host}/v1/kv/${key}?${parameters}").withEntity(value)
+    val request = HttpRequest(HttpMethods.PUT).withUri(s"$host/v1/kv/$key?$parameters").withEntity(value)
 
     def validator(response: HttpResponse): Boolean = response.status.isSuccess() || response.status == InternalServerError
 
     retry[Boolean]() {
-      getResponse(request, JsonMediaType, validator).flatMap { response ⇒
-        response match {
-          case ConsulResponse(OK, _, body)                               ⇒ Future successful Option(body.toBoolean).getOrElse(false)
-          case ConsulResponse(InternalServerError, _, "Invalid session") ⇒ Future successful false
-          case ConsulResponse(status, _, body)                           ⇒ Future failed new Exception(s"Request returned status code ${status} - ${body}")
-        }
+      getResponse(request, JsonMediaType, validator).flatMap {
+        case ConsulResponse(OK, _, body)                               ⇒ Future successful Option(body.toBoolean).getOrElse(false)
+        case ConsulResponse(InternalServerError, _, "Invalid session") ⇒ Future successful false
+        case ConsulResponse(status, _, body)                           ⇒ Future failed new Exception(s"Request returned status code $status - $body")
       }
     }
   }
@@ -130,7 +125,7 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem) extends
     val recurseParameter = if (recurse) Some("recurse") else None
     val keysOnlyParameter = if (keysOnly) Some("keys") else None
     val parameters = Seq(indexParameter, waitParameter, recurseParameter, keysOnlyParameter).flatten.mkString("&")
-    val request = HttpRequest(HttpMethods.GET).withUri(s"${host}/v1/kv/${key}?${parameters}")
+    val request = HttpRequest(HttpMethods.GET).withUri(s"$host/v1/kv/$key?$parameters")
 
     retry[Seq[KeyData]]() {
       getResponse(request, JsonMediaType).map { response ⇒
@@ -144,9 +139,10 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem) extends
   // //////////////////////////
   private def getResponse[T, U](request: HttpRequest, expectedMediaType: MediaType, validator: HttpResponse ⇒ Boolean = (in) ⇒ in.status.isSuccess()): Future[ConsulResponse] = {
 
-    def validStatus(response: HttpResponse) = validator(response) match {
-      case true  ⇒ Future successful response
-      case false ⇒ parseBody(response).flatMap { body ⇒ Future failed ConsulException(s"Bad status code: ${response.status.intValue()} with body ${body}") }
+    def validStatus(response: HttpResponse) = if (validator(response)) {
+      Future successful response
+    } else {
+      parseBody(response).flatMap { body ⇒ Future failed ConsulException(s"Bad status code: ${response.status.intValue()} with body $body") }
     }
 
     //
@@ -160,9 +156,10 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem) extends
         case st if st.isRedirection() ⇒ TextMediaType // this is a guess 
       }
 
-      (resp.entity.contentType.mediaType == expected) match {
-        case true  ⇒ Future successful resp
-        case false ⇒ Future failed ConsulException(resp.status, s"Unexpected content type: ${resp.entity.contentType}, expected ${expectedMediaType}")
+      if (resp.entity.contentType.mediaType == expected) {
+        Future successful resp
+      } else {
+        Future failed ConsulException(resp.status, s"Unexpected content type: ${resp.entity.contentType}, expected $expectedMediaType")
       }
     }
 
@@ -182,7 +179,7 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem) extends
       }
   }
 
-  private def validIndex(response: ConsulResponse): Future[Long] = response.headers.filter(_.name() == "X-Consul-Index").headOption match {
+  private def validIndex(response: ConsulResponse): Future[Long] = response.headers.find(_.name() == "X-Consul-Index") match {
     case None ⇒ Future failed ConsulException("X-Consul-Index header not found")
     case Some(hdr) ⇒ Try(hdr.value.toLong) match {
       case Success(idx) ⇒ Future successful idx

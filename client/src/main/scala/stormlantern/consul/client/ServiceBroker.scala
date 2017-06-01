@@ -2,20 +2,21 @@ package stormlantern.consul.client
 
 import java.net.URL
 
-import akka.actor.{ ActorSystem, ActorRefFactory, ActorRef }
+import scala.concurrent.duration._
+import scala.concurrent._
+
+import akka.actor._
 import akka.util.Timeout
-import stormlantern.consul.client.dao.{ ServiceRegistration, ConsulHttpClient, SprayConsulHttpClient }
-import stormlantern.consul.client.discovery.{ ServiceAvailabilityActor, ServiceDefinition, ConnectionStrategy, ConnectionHolder }
+import akka.pattern.ask
+
+import stormlantern.consul.client.dao._
+import stormlantern.consul.client.dao.akka.AkkaHttpConsulClient
+import stormlantern.consul.client.discovery._
 import stormlantern.consul.client.election.LeaderInfo
 import stormlantern.consul.client.loadbalancers.LoadBalancerActor
-import stormlantern.consul.client.util.{ Logging, RetryPolicy }
-import scala.concurrent.duration._
-
-import scala.concurrent.{ ExecutionContext, Future }
+import stormlantern.consul.client.util._
 
 class ServiceBroker(serviceBrokerActor: ActorRef, consulClient: ConsulHttpClient)(implicit ec: ExecutionContext) extends RetryPolicy with Logging {
-
-  import akka.pattern.ask
 
   private[this] implicit val timeout = Timeout(10.seconds)
 
@@ -62,7 +63,7 @@ object ServiceBroker {
 
   def apply(consulAddress: URL, services: Set[ConnectionStrategy]): ServiceBroker = {
     implicit val rootActor = ActorSystem("reactive-consul")
-    val httpClient = new SprayConsulHttpClient(consulAddress)
+    val httpClient = new AkkaHttpConsulClient(consulAddress)
     ServiceBroker(rootActor, httpClient, services)
   }
 

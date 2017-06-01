@@ -15,7 +15,6 @@ import scala.concurrent.duration._
 class ServiceAvailabilityActorSpec(_system: ActorSystem) extends TestKit(_system) with ImplicitSender with FlatSpecLike
     with Matchers with BeforeAndAfterAll with MockFactory with Logging {
 
-  implicit val ec = system.dispatcher
   def this() = this(ActorSystem("ServiceAvailabilityActorSpec"))
 
   override def afterAll() {

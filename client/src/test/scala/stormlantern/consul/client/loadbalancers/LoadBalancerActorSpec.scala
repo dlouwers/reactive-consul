@@ -14,7 +14,6 @@ import scala.concurrent.Future
 class LoadBalancerActorSpec(_system: ActorSystem) extends TestKit(_system) with ImplicitSender with FlatSpecLike
     with Matchers with BeforeAndAfterAll with MockFactory with Logging {
 
-  implicit val ec = system.dispatcher
   def this() = this(ActorSystem("LoadBalancerActorSpec"))
 
   override def afterAll() {

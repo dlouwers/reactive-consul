@@ -20,12 +20,12 @@ class LoadBalancerActor(loadBalancer: LoadBalancer, serviceName: String) extends
     connectionProviders.values.foreach(_.destroy())
   }
 
-  def receive = {
+  def receive: PartialFunction[Any, Unit] = {
 
     case GetConnection ⇒
       selectConnection match {
         case Some((key, connectionProvider)) ⇒ connectionProvider.getConnectionHolder(key, self) pipeTo sender
-        case None                            ⇒ sender ! Failure(new ServiceUnavailableException(serviceName))
+        case None                            ⇒ sender ! Failure(ServiceUnavailableException(serviceName))
       }
     case ReturnConnection(connection)         ⇒ returnConnection(connection)
     case AddConnectionProvider(key, provider) ⇒ addConnectionProvider(key, provider)
