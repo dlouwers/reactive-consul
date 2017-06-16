@@ -19,7 +19,8 @@ object ServiceDefinition {
 case class ConnectionStrategy(
   serviceDefinition: ServiceDefinition,
   connectionProviderFactory: ConnectionProviderFactory,
-  loadBalancerFactory: ActorRefFactory ⇒ ActorRef)
+  loadBalancerFactory: ActorRefFactory ⇒ ActorRef
+)
 
 object ConnectionStrategy {
 

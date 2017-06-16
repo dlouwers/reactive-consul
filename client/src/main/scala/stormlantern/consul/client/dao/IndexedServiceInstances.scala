@@ -19,7 +19,8 @@ case class ServiceInstance(
   serviceName: String,
   serviceTags: Set[String],
   serviceAddress: String,
-  servicePort: Int)
+  servicePort: Int
+)
 
 case class IndexedServiceInstances(index: Long, resource: Set[ServiceInstance]) extends Indexed[Set[ServiceInstance]] {
   def filterForTags(tags: Set[String]): IndexedServiceInstances = {

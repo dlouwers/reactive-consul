@@ -10,4 +10,5 @@ case class SessionInfo(
   createIndex: Long,
   name: Option[String],
   behavior: String,
-  TTL: String)
+  TTL: String
+)

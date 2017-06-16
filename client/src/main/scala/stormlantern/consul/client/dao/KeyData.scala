@@ -22,4 +22,5 @@ case class KeyData(
   lockIndex: Long,
   flags: Long,
   value: BinaryData,
-  session: Option[UUID])
+  session: Option[UUID]
+)

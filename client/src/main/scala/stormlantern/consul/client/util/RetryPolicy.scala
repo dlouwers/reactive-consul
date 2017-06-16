@@ -13,7 +13,8 @@ trait RetryPolicy {
     delay: FiniteDuration = 500.milli,
     retries: Int = 4,
     backoff: Int = 2,
-    predicate: T ⇒ Boolean = (r: T) ⇒ true)(f: ⇒ Future[T])(implicit ec: ExecutionContext, s: Scheduler): Future[T] = {
+    predicate: T ⇒ Boolean = (r: T) ⇒ true
+  )(f: ⇒ Future[T])(implicit ec: ExecutionContext, s: Scheduler): Future[T] = {
     f.map {
       case r if !predicate(r) ⇒ throw new IllegalStateException("Result does not satisfy the predicate specified")
       case r                  ⇒ r

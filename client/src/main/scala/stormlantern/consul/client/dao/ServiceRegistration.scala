@@ -22,4 +22,5 @@ case class ServiceRegistration(
   tags: Set[String] = Set.empty,
   address: Option[String] = None,
   port: Option[Long] = None,
-  check: Option[HealthCheck] = None)
+  check: Option[HealthCheck] = None
+)
