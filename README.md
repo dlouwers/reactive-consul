@@ -9,6 +9,10 @@ the low-level ConsulHttpClient.
 
 ## Releases
 
+### 0.2.1
+
+* Fixed the POM having an unwanted dependencies
+
 ### 0.2.0
 
 * Supports Scala 2.12

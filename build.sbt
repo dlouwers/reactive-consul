@@ -10,12 +10,12 @@ lazy val commonSettings = Seq(
   scalaVersion := "2.11.8",
   crossScalaVersions := Seq("2.11.8", "2.12.2"),
   organization := "nl.stormlantern",
-  version := "0.2.0",
+  version := "0.2.1",
   resolvers ++= Dependencies.resolutionRepos,
   scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
   )
 
-lazy val root = (project in file("."))
+lazy val reactiveConsul = (project in file("."))
   .settings( commonSettings: _* )
   .settings( publishSettings: _* )
   .aggregate(client, dnsHelper, dockerTestkit/*, example*/)
@@ -72,7 +72,7 @@ lazy val client = (project in file("client"))
   .configs( IntegrationTest )
   .settings( Defaults.itSettings : _* )
   .settings( SbtScalariform.scalariformSettingsWithIt : _* )
-  .dependsOn(dockerTestkit % "it,compile-internal")
+  .dependsOn(dockerTestkit % "it-internal")
 
 lazy val dockerTestkit = (project in file("docker-testkit"))
   .settings( commonSettings: _* )
