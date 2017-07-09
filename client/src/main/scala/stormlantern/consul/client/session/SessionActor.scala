@@ -2,13 +2,13 @@ package stormlantern.consul.client.session
 
 import java.util.UUID
 
-import akka.actor.{ ActorRef, Props, Actor }
-import stormlantern.consul.client.dao.ConsulHttpClient
+import akka.actor.{ Actor, ActorRef, Props }
+import stormlantern.consul.client.dao.{ KeyValueClient, ServiceDiscoveryClient }
 import stormlantern.consul.client.session.SessionActor.{ MonitorSession, SessionAcquired, StartSession }
 
 import scala.concurrent.Future
 
-class SessionActor(httpClient: ConsulHttpClient, listener: ActorRef) extends Actor {
+class SessionActor(httpClient: KeyValueClient, listener: ActorRef) extends Actor {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -38,7 +38,7 @@ class SessionActor(httpClient: ConsulHttpClient, listener: ActorRef) extends Act
 
 object SessionActor {
   // Constructors
-  def props(httpClient: ConsulHttpClient, listener: ActorRef) = Props(new SessionActor(httpClient, listener))
+  def props(keyValueClient: KeyValueClient, listener: ActorRef) = Props(new SessionActor(keyValueClient, listener))
   // Public messages
   case object StartSession
   case class SessionAcquired(sessionId: UUID)

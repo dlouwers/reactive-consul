@@ -5,16 +5,16 @@ import java.util.UUID
 
 import org.scalatest._
 import org.scalatest.concurrent.{ Eventually, IntegrationPatience, ScalaFutures }
-import stormlantern.consul.client.dao.akka.AkkaHttpConsulClient
+import stormlantern.consul.client.dao.akkaconsul.AkkaHttpConsulClient
 import stormlantern.consul.client.util.{ ConsulDockerContainer, Logging, RetryPolicy, TestActorSystem }
 
 class AkkaHttpConsulClientIntegrationTest extends FlatSpec with Matchers with ScalaFutures with Eventually with IntegrationPatience with ConsulDockerContainer with TestActorSystem with RetryPolicy with Logging {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  def withConsulHttpClient[T](f: ConsulHttpClient ⇒ T): T = withConsulHost { (host, port) ⇒
+  def withConsulHttpClient[T](f: ServiceDiscoveryClient with KeyValueClient ⇒ T): T = withConsulHost { (host, port) ⇒
     withActorSystem { implicit actorSystem ⇒
-      val subject: ConsulHttpClient = new AkkaHttpConsulClient(new URL(s"http://$host:$port"))
+      val subject: ServiceDiscoveryClient with KeyValueClient = new AkkaHttpConsulClient(new URL(s"http://$host:$port"))
       f(subject)
     }
   }

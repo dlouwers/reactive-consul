@@ -9,7 +9,7 @@ import akka.pattern.pipe
 import dao._
 import ServiceAvailabilityActor._
 
-class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceDefinition: ServiceDefinition, listener: ActorRef) extends Actor {
+class ServiceAvailabilityActor(httpClient: ServiceDiscoveryClient, serviceDefinition: ServiceDefinition, listener: ActorRef) extends Actor {
 
   implicit val ec = context.dispatcher
 
@@ -45,7 +45,7 @@ class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceDefinition: 
 
 object ServiceAvailabilityActor {
 
-  def props(httpClient: ConsulHttpClient, serviceDefinition: ServiceDefinition, listener: ActorRef): Props = Props(new ServiceAvailabilityActor(httpClient, serviceDefinition, listener))
+  def props(httpClient: ServiceDiscoveryClient, serviceDefinition: ServiceDefinition, listener: ActorRef): Props = Props(new ServiceAvailabilityActor(httpClient, serviceDefinition, listener))
 
   // Messages
   case object Start

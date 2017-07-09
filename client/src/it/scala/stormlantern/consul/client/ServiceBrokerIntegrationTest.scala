@@ -4,8 +4,8 @@ import java.net.URL
 
 import org.scalatest._
 import org.scalatest.concurrent.{ Eventually, IntegrationPatience, ScalaFutures }
-import stormlantern.consul.client.dao.akka.AkkaHttpConsulClient
-import stormlantern.consul.client.dao.{ ConsulHttpClient, ServiceRegistration }
+import stormlantern.consul.client.dao.akkaconsul.AkkaHttpConsulClient
+import stormlantern.consul.client.dao.{ ServiceDiscoveryClient, ServiceRegistration }
 import stormlantern.consul.client.discovery.{ ConnectionProvider, ConnectionProviderFactory, ConnectionStrategy, ServiceDefinition }
 import stormlantern.consul.client.loadbalancers.RoundRobinLoadBalancer
 import stormlantern.consul.client.util.{ ConsulDockerContainer, Logging, TestActorSystem }
@@ -25,14 +25,14 @@ class ServiceBrokerIntegrationTest extends FlatSpec with Matchers with ScalaFutu
       val connectionProviderFactory = new ConnectionProviderFactory {
         override def create(host: String, port: Int): ConnectionProvider = new ConnectionProvider {
           logger.info(s"Asked to create connection provider for $host:$port")
-          val httpClient: ConsulHttpClient = new AkkaHttpConsulClient(new URL(s"http://$host:$port"))
+          val httpClient: ServiceDiscoveryClient = new AkkaHttpConsulClient(new URL(s"http://$host:$port"))
           override def getConnection: Future[Any] = Future.successful(httpClient)
         }
       }
       val connectionStrategy = ConnectionStrategy(ServiceDefinition("consul-http"), connectionProviderFactory, new RoundRobinLoadBalancer)
       val sut = ServiceBroker(actorSystem, akkaHttpClient, Set(connectionStrategy))
       eventually {
-        sut.withService("consul-http") { connection: ConsulHttpClient ⇒
+        sut.withService("consul-http") { connection: ServiceDiscoveryClient ⇒
           connection.getService("bogus").map(_.resource should have size 0)
         }
         sut

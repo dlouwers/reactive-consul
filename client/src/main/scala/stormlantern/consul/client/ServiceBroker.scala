@@ -10,13 +10,13 @@ import akka.util.Timeout
 import akka.pattern.ask
 
 import stormlantern.consul.client.dao._
-import stormlantern.consul.client.dao.akka.AkkaHttpConsulClient
+import stormlantern.consul.client.dao.akkaconsul.AkkaHttpConsulClient
 import stormlantern.consul.client.discovery._
 import stormlantern.consul.client.election.LeaderInfo
 import stormlantern.consul.client.loadbalancers.LoadBalancerActor
 import stormlantern.consul.client.util._
 
-class ServiceBroker(serviceBrokerActor: ActorRef, consulClient: ConsulHttpClient)(implicit ec: ExecutionContext) extends RetryPolicy with Logging {
+class ServiceBroker(serviceBrokerActor: ActorRef, consulClient: ServiceDiscoveryClient)(implicit ec: ExecutionContext) extends RetryPolicy with Logging {
 
   private[this] implicit val timeout = Timeout(10.seconds)
 
@@ -53,7 +53,7 @@ class ServiceBroker(serviceBrokerActor: ActorRef, consulClient: ConsulHttpClient
 
 object ServiceBroker {
 
-  def apply(rootActor: ActorSystem, httpClient: ConsulHttpClient, services: Set[ConnectionStrategy]): ServiceBroker = {
+  def apply(rootActor: ActorSystem, httpClient: ServiceDiscoveryClient, services: Set[ConnectionStrategy]): ServiceBroker = {
     implicit val ec = ExecutionContext.Implicits.global
     val serviceAvailabilityActorFactory = (factory: ActorRefFactory, service: ServiceDefinition, listener: ActorRef) ⇒
       factory.actorOf(ServiceAvailabilityActor.props(httpClient, service, listener))

@@ -4,10 +4,10 @@ import java.util
 import java.util.UUID
 
 import akka.actor.ActorSystem
-import akka.testkit.{ TestActorRef, ImplicitSender, TestKit }
+import akka.testkit.{ ImplicitSender, TestActorRef, TestKit }
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{ BeforeAndAfterAll, Matchers, FlatSpecLike }
-import stormlantern.consul.client.dao.{ BinaryData, KeyData, AcquireSession, ConsulHttpClient }
+import org.scalatest.{ BeforeAndAfterAll, FlatSpecLike, Matchers }
+import stormlantern.consul.client.dao._
 import stormlantern.consul.client.election.LeaderFollowerActor.Participate
 
 import scala.concurrent.Future
@@ -26,7 +26,7 @@ class LeaderFollowerActorSpec(_system: ActorSystem) extends TestKit(_system) wit
     val key = "path/to/our/key"
     val host = "myhost.mynetwork.net"
     val port = 1337
-    val consulHttpClient: ConsulHttpClient = mock[ConsulHttpClient]
+    val consulHttpClient: KeyValueClient = mock[KeyValueClient]
     val leaderInfoBytes: Array[Byte] = s"""{"host":"$host","port":$port}""".getBytes("UTF-8")
   }
 

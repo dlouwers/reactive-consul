@@ -23,4 +23,6 @@ object Dependencies {
   val scalaTest     = "org.scalatest"               %% "scalatest"                    % "3.0.1"
   val scalaMock     = "org.scalamock"               %% "scalamock-scalatest-support"  % "3.6.0"
   val akkaTestKit   = "com.typesafe.akka"           %% "akka-testkit"                 % akkaVersion
+  val etcd2Client   = "me.maciejb.etcd-client"      %% "etcd-client"                  % "0.1.1"
+
 }

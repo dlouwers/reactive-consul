@@ -6,7 +6,7 @@ import akka.testkit.{ ImplicitSender, TestKit }
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{ BeforeAndAfterAll, FlatSpecLike, Matchers }
-import stormlantern.consul.client.dao.ConsulHttpClient
+import stormlantern.consul.client.dao.ServiceDiscoveryClient
 import stormlantern.consul.client.discovery.ConnectionHolder
 import stormlantern.consul.client.helpers.CallingThreadExecutionContext
 import stormlantern.consul.client.loadbalancers.LoadBalancerActor
@@ -26,7 +26,7 @@ class ServiceBrokerSpec(_system: ActorSystem) extends TestKit(_system) with Impl
 
   trait TestScope {
     val connectionHolder: ConnectionHolder = mock[ConnectionHolder]
-    val httpClient: ConsulHttpClient = mock[ConsulHttpClient]
+    val httpClient: ServiceDiscoveryClient = mock[ServiceDiscoveryClient]
     val loadBalancer: ActorRef = self
   }
 

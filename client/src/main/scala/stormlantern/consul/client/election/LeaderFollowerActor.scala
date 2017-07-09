@@ -4,10 +4,10 @@ import java.util.UUID
 
 import akka.actor.{ Actor, Props }
 import spray.json._
-import stormlantern.consul.client.dao.{ AcquireSession, BinaryData, ConsulHttpClient, KeyData }
+import stormlantern.consul.client.dao._
 import stormlantern.consul.client.election.LeaderFollowerActor._
 
-class LeaderFollowerActor(httpClient: ConsulHttpClient, sessionId: UUID, key: String, host: String, port: Int) extends Actor with DefaultJsonProtocol {
+class LeaderFollowerActor(keyValueClient: KeyValueClient, sessionId: UUID, key: String, host: String, port: Int) extends Actor with DefaultJsonProtocol {
 
   implicit val ec = context.dispatcher
 
@@ -20,7 +20,7 @@ class LeaderFollowerActor(httpClient: ConsulHttpClient, sessionId: UUID, key: St
   // Behavior
   def receive = {
     case Participate ⇒
-      httpClient.putKeyValuePair(key, leaderInfoBytes, Some(AcquireSession(sessionId))).map {
+      keyValueClient.putKeyValuePair(key, leaderInfoBytes, Some(AcquireSession(sessionId))).map {
         case true ⇒
           self ! SetElectionState(Some(Leader))
           self ! MonitorLock(0)
@@ -30,7 +30,7 @@ class LeaderFollowerActor(httpClient: ConsulHttpClient, sessionId: UUID, key: St
     case SetElectionState(state) ⇒
       electionState = state
     case MonitorLock(index) ⇒
-      httpClient.getKeyValuePair(key, index = Some(index), wait = Some("1s")).map {
+      keyValueClient.getKeyValuePair(key, index = Some(index), wait = Some("1s")).map {
         case Seq(KeyData(_, _, newIndex, _, _, BinaryData(data), session)) ⇒
           if (newIndex > index) {
             if (session.isEmpty) {
@@ -54,8 +54,8 @@ class LeaderFollowerActor(httpClient: ConsulHttpClient, sessionId: UUID, key: St
 object LeaderFollowerActor {
 
   //Props
-  def props(httpClient: ConsulHttpClient, sessionId: UUID, key: String, host: String, port: Int): Props =
-    Props(new LeaderFollowerActor(httpClient, sessionId, key, host, port))
+  def props(keyValueClient: KeyValueClient, sessionId: UUID, key: String, host: String, port: Int): Props =
+    Props(new LeaderFollowerActor(keyValueClient, sessionId, key, host, port))
 
   // Election state
   sealed trait ElectionState

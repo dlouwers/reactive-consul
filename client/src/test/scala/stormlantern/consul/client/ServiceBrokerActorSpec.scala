@@ -5,7 +5,7 @@ import akka.actor._
 import akka.testkit.{ ImplicitSender, TestActorRef, TestKit }
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{ BeforeAndAfterAll, FlatSpecLike, Matchers }
-import stormlantern.consul.client.dao.{ ConsulHttpClient, ServiceInstance }
+import stormlantern.consul.client.dao.{ ServiceDiscoveryClient, ServiceInstance }
 import stormlantern.consul.client.discovery.ServiceAvailabilityActor.Start
 import stormlantern.consul.client.discovery._
 import stormlantern.consul.client.helpers.{ CallingThreadExecutionContext, ModelHelpers }
@@ -23,7 +23,7 @@ class ServiceBrokerActorSpec(_system: ActorSystem) extends TestKit(_system) with
   }
 
   trait TestScope {
-    val httpClient: ConsulHttpClient = mock[ConsulHttpClient]
+    val httpClient: ServiceDiscoveryClient = mock[ServiceDiscoveryClient]
     val serviceAvailabilityActorFactory: (ActorRefFactory, ServiceDefinition, ActorRef) ⇒ ActorRef = mock[(ActorRefFactory, ServiceDefinition, ActorRef) ⇒ ActorRef]
     val connectionProviderFactory: ConnectionProviderFactory = mock[ConnectionProviderFactory]
     val connectionProvider: ConnectionProvider = mock[ConnectionProvider]

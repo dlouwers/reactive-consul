@@ -1,4 +1,4 @@
-package stormlantern.consul.client.dao.akka
+package stormlantern.consul.client.dao.akkaconsul
 
 import java.net.URL
 import java.util.UUID
@@ -15,7 +15,7 @@ import stormlantern.consul.client.util.{ Logging, RetryPolicy }
 import scala.concurrent.{ ExecutionContextExecutor, Future }
 import scala.util.{ Failure, Success, Try }
 
-class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem) extends ConsulHttpClient
+class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem) extends ServiceDiscoveryClient with KeyValueClient
     with ConsulHttpProtocol with RetryPolicy with Logging {
 
   implicit val executionContext: ExecutionContextExecutor = actorSystem.dispatcher
