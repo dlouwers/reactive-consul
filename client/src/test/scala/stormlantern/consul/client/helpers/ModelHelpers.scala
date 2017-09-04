@@ -13,5 +13,5 @@ object ModelHelpers {
     serviceAddress = s"${name}Address",
     servicePort = port
   )
-  def createService(service: ServiceDefinition): ServiceInstance = createService(service.serviceId, service.serviceName)
+  def createService(service: ServiceDefinition): ServiceInstance = createService(service.key, service.serviceName)
 }

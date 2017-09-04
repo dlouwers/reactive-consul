@@ -37,7 +37,7 @@ class ServiceBrokerActorSpec(_system: ActorSystem) extends TestKit(_system) with
   "The ServiceBrokerActor" should "create a child actor per service" in new TestScope {
     (serviceAvailabilityActorFactory.apply _).expects(*, service1, *).returns(self)
     val sut: TestActorRef[ServiceBrokerActor] = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(Set(connectionStrategyForService1), serviceAvailabilityActorFactory), "ServiceBroker")
-    sut.underlyingActor.loadbalancers.keys should contain(service1.serviceId)
+    sut.underlyingActor.loadbalancers.keys should contain(service1.key)
     expectMsg(Start)
     sut.stop()
   }
@@ -45,11 +45,22 @@ class ServiceBrokerActorSpec(_system: ActorSystem) extends TestKit(_system) with
   it should "create a load balancer for each new service" in new TestScope {
     (serviceAvailabilityActorFactory.apply _).expects(*, service1, *).returns(self)
     val sut: TestActorRef[ServiceBrokerActor] = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(Set(connectionStrategyForService1), serviceAvailabilityActorFactory), "ServiceBroker")
-    val service: ServiceInstance = ModelHelpers.createService(service1)
+    val service: ServiceInstance = ModelHelpers.createService("service1:Id", "service1")
     (connectionProviderFactory.create _).expects(service.serviceAddress, service.servicePort).returns(connectionProvider)
-    sut ! ServiceAvailabilityActor.ServiceAvailabilityUpdate(added = Set(service), removed = Set.empty)
+    sut ! ServiceAvailabilityActor.ServiceAvailabilityUpdate(service1.key, added = Set(service), removed = Set.empty)
     expectMsg(Start)
     expectMsg(LoadBalancerActor.AddConnectionProvider(service.serviceId, connectionProvider))
+    sut.stop()
+  }
+
+  it should "remove the load balancer for each old service" in new TestScope {
+    (serviceAvailabilityActorFactory.apply _).expects(*, service1, *).returns(self)
+    val sut: TestActorRef[ServiceBrokerActor] = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(Set(connectionStrategyForService1), serviceAvailabilityActorFactory), "ServiceBroker")
+    val service: ServiceInstance = ModelHelpers.createService("service1:Id", "service1")
+
+    sut ! ServiceAvailabilityActor.ServiceAvailabilityUpdate(service1.key, added = Set.empty, removed = Set(service))
+    expectMsg(Start)
+    expectMsg(LoadBalancerActor.RemoveConnectionProvider(service.serviceId))
     sut.stop()
   }
 
@@ -75,7 +86,7 @@ class ServiceBrokerActorSpec(_system: ActorSystem) extends TestKit(_system) with
     (serviceAvailabilityActorFactory.apply _).expects(*, service1, *).returns(self)
     val sut: TestActorRef[ServiceBrokerActor] = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(Set(connectionStrategyForService1), serviceAvailabilityActorFactory), "ServiceBroker")
     expectMsg(Start)
-    sut ! ServiceBrokerActor.HasAvailableConnectionProviderFor(service1.serviceId)
+    sut ! ServiceBrokerActor.HasAvailableConnectionProviderFor(service1.key)
     expectMsg(LoadBalancerActor.HasAvailableConnectionProvider)
     sut.stop()
   }
