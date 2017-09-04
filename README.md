@@ -9,6 +9,10 @@ the low-level ConsulHttpClient.
 
 ## Releases
 
+### 0.3.1
+
+* Multiple _connectionStrategies_ are now allowed per named service so that they can be distinguished between by tags
+
 ### 0.2.1
 
 * Fixed the POM having an unwanted dependencies
@@ -29,7 +33,7 @@ the low-level ConsulHttpClient.
 Reactive Consul is available via [Maven Central](https://search.maven.org/), simply add it to your SBT build:
 
 ```scala
-libraryDependencies += "nl.stormlantern" %% "reactive-consul" % "0.2.0"
+libraryDependencies += "nl.stormlantern" %% "reactive-consul" % "0.3.1"
 ```
 
 If you want to use a development snapshots, use the 
@@ -40,7 +44,7 @@ resolvers ++= Seq(
   "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
 )
 
-libraryDependencies += "nl.stormlantern" %% "reactive-consul" % "0.1.1-SNAPSHOT"
+libraryDependencies += "nl.stormlantern" %% "reactive-consul" % "0.3.1-SNAPSHOT"
 ```
 
 ## Using the ServiceBroker
@@ -51,7 +55,7 @@ import stormlantern.consul.client.ServiceBroker
 
 val serviceBroker = ServiceBroker("localhost", connectionStrategies)
 
-val result = serviceBroker.withService("<service_name>") { myServiceConnection =>
+val result = serviceBroker.withService("<service_key>") { myServiceConnection =>
   myServiceConnection.getData()
 }
 ```
