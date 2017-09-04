@@ -50,8 +50,6 @@ object ServiceAvailabilityActor {
   // Messages
   case object Start
   private case class UpdateServiceAvailability(services: IndexedServiceInstances)
-  private[client] case class ServiceAvailabilityUpdate(key: String, added: Set[ServiceInstance], removed: Set[ServiceInstance])
-  private[client] object ServiceAvailabilityUpdate {
-    def empty = ServiceAvailabilityUpdate("", Set.empty, Set.empty)
-  }
+  private[client] case class ServiceAvailabilityUpdate(key: String, added: Set[ServiceInstance] = Set.empty,
+    removed: Set[ServiceInstance] = Set.empty)
 }

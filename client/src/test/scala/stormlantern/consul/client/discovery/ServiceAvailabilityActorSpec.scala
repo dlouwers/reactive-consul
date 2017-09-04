@@ -30,7 +30,7 @@ class ServiceAvailabilityActorSpec(_system: ActorSystem) extends TestKit(_system
       Future.successful(IndexedServiceInstances(1, Set.empty))
     }
     sut ! Start
-    expectMsg(1.second, ServiceAvailabilityActor.ServiceAvailabilityUpdate.empty)
+    expectMsg(1.second, ServiceAvailabilityActor.ServiceAvailabilityUpdate("bogus123"))
     expectNoMsg(1.second)
   }
 
@@ -45,8 +45,8 @@ class ServiceAvailabilityActorSpec(_system: ActorSystem) extends TestKit(_system
       Future.successful(IndexedServiceInstances(2, Set(service)))
     }
     sut ! Start
-    expectMsg(1.second, ServiceAvailabilityActor.ServiceAvailabilityUpdate.empty)
-    expectMsg(1.second, ServiceAvailabilityActor.ServiceAvailabilityUpdate("bugus123", Set(service), Set.empty))
+    expectMsg(1.second, ServiceAvailabilityActor.ServiceAvailabilityUpdate("bogus123"))
+    expectMsg(1.second, ServiceAvailabilityActor.ServiceAvailabilityUpdate("bogus123", Set(service), Set.empty))
     expectNoMsg(1.second)
   }
 
@@ -62,8 +62,8 @@ class ServiceAvailabilityActorSpec(_system: ActorSystem) extends TestKit(_system
       Future.successful(IndexedServiceInstances(2, Set(nonMatchingservice, matchingService)))
     }
     sut ! Start
-    expectMsg(1.second, ServiceAvailabilityActor.ServiceAvailabilityUpdate.empty)
-    expectMsg(1.second, ServiceAvailabilityActor.ServiceAvailabilityUpdate("bugus123", Set(matchingService), Set.empty))
+    expectMsg(1.second, ServiceAvailabilityActor.ServiceAvailabilityUpdate("bogus123"))
+    expectMsg(1.second, ServiceAvailabilityActor.ServiceAvailabilityUpdate("bogus123", Set(matchingService), Set.empty))
     expectNoMsg(1.second)
   }
 }

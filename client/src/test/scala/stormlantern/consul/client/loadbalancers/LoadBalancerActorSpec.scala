@@ -53,9 +53,9 @@ class LoadBalancerActorSpec(_system: ActorSystem) extends TestKit(_system) with 
 
   it should "return a connection holder when requested" in new TestScope {
     val instanceKey = "instanceKey"
-    (connectionHolder.key _).expects().returns(instanceKey)
+    (connectionHolder.id _).expects().returns(instanceKey)
     (connectionProvider.returnConnection _).expects(connectionHolder)
-    (connectionHolder.key _).expects().returns(instanceKey)
+    (connectionHolder.id _).expects().returns(instanceKey)
     (loadBalancer.connectionReturned _).expects(instanceKey)
     (connectionProvider.destroy _).expects()
     val sut = TestActorRef(new LoadBalancerActor(loadBalancer, "service1"))
@@ -70,7 +70,7 @@ class LoadBalancerActorSpec(_system: ActorSystem) extends TestKit(_system) with 
     (connectionProvider.destroy _).expects()
     val sut = TestActorRef(new LoadBalancerActor(loadBalancer, "service1"))
     sut ! LoadBalancerActor.AddConnectionProvider(instanceKey, connectionProvider)
-    sut.underlyingActor.connectionProviders should contain(instanceKey -> connectionProvider)
+    sut.underlyingActor.connectionProviders should contain(instanceKey → connectionProvider)
     sut.stop()
   }
 
@@ -81,7 +81,7 @@ class LoadBalancerActorSpec(_system: ActorSystem) extends TestKit(_system) with 
     val sut = TestActorRef(new LoadBalancerActor(loadBalancer, "service1"))
     sut.underlyingActor.connectionProviders.put(instanceKey, connectionProvider)
     sut ! LoadBalancerActor.RemoveConnectionProvider(instanceKey)
-    sut.underlyingActor.connectionProviders should not contain (instanceKey -> connectionProvider)
+    sut.underlyingActor.connectionProviders should not contain (instanceKey → connectionProvider)
   }
 
   it should "return true when it has at least one available connection provider for the service" in new TestScope {
