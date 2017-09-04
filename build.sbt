@@ -10,7 +10,7 @@ lazy val commonSettings = Seq(
   scalaVersion := "2.11.8",
   crossScalaVersions := Seq("2.11.8", "2.12.2"),
   organization := "nl.stormlantern",
-  version := "0.2.1",
+  version := "0.3.1-SNAPSHOT",
   resolvers ++= Dependencies.resolutionRepos,
   scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
   )
@@ -37,7 +37,7 @@ lazy val dnsHelper = (project in file("dns-helper"))
     ScalariformKeys.preferences := ScalariformKeys.preferences.value
       .setPreference(AlignSingleLineCaseStatements, true)
       .setPreference(DoubleIndentClassDeclaration, true)
-      .setPreference(DanglingCloseParenthesis., true)
+      .setPreference(DanglingCloseParenthesis, Preserve)
       .setPreference(RewriteArrowSymbols, true)
   )
 
@@ -66,7 +66,7 @@ lazy val client = (project in file("client"))
     ScalariformKeys.preferences := ScalariformKeys.preferences.value
       .setPreference(AlignSingleLineCaseStatements, true)
       .setPreference(DoubleIndentClassDeclaration, true)
-      .setPreference(DanglingCloseParenthesis, true)
+      .setPreference(DanglingCloseParenthesis, Preserve)
       .setPreference(RewriteArrowSymbols, true)
   )
   .configs( IntegrationTest )
