@@ -53,9 +53,9 @@ class LoadBalancerActorSpec(_system: ActorSystem) extends TestKit(_system) with 
 
   it should "return a connection holder when requested" in new TestScope {
     val instanceKey = "instanceKey"
-    (connectionHolder.key _).expects().returns(instanceKey)
+    (connectionHolder.id _).expects().returns(instanceKey)
     (connectionProvider.returnConnection _).expects(connectionHolder)
-    (connectionHolder.key _).expects().returns(instanceKey)
+    (connectionHolder.id _).expects().returns(instanceKey)
     (loadBalancer.connectionReturned _).expects(instanceKey)
     (connectionProvider.destroy _).expects()
     val sut = TestActorRef(new LoadBalancerActor(loadBalancer, "service1"))

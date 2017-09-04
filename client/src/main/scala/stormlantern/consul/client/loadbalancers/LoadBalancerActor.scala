@@ -8,7 +8,7 @@ import stormlantern.consul.client.ServiceUnavailableException
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.mutable
 
-class LoadBalancerActor(loadBalancer: LoadBalancer, serviceName: String) extends Actor with ActorLogging {
+class LoadBalancerActor(loadBalancer: LoadBalancer, key: String) extends Actor with ActorLogging {
 
   import akka.pattern.pipe
 
@@ -16,7 +16,7 @@ class LoadBalancerActor(loadBalancer: LoadBalancer, serviceName: String) extends
   val connectionProviders = mutable.Map.empty[String, ConnectionProvider]
 
   override def postStop(): Unit = {
-    log.debug(s"LoadBalancerActor for $serviceName stopped, destroying all connection providers")
+    log.debug(s"LoadBalancerActor for $key stopped, destroying all connection providers")
     connectionProviders.values.foreach(_.destroy())
   }
 
@@ -24,41 +24,41 @@ class LoadBalancerActor(loadBalancer: LoadBalancer, serviceName: String) extends
 
     case GetConnection ⇒
       selectConnection match {
-        case Some((key, connectionProvider)) ⇒ connectionProvider.getConnectionHolder(key, self) pipeTo sender
-        case None                            ⇒ sender ! Failure(ServiceUnavailableException(serviceName))
+        case Some((id, connectionProvider)) ⇒ connectionProvider.getConnectionHolder(id, self) pipeTo sender
+        case None                           ⇒ sender ! Failure(ServiceUnavailableException(key))
       }
-    case ReturnConnection(connection)         ⇒ returnConnection(connection)
-    case AddConnectionProvider(key, provider) ⇒ addConnectionProvider(key, provider)
-    case RemoveConnectionProvider(key)        ⇒ removeConnectionProvider(key)
-    case HasAvailableConnectionProvider       ⇒ sender ! connectionProviders.nonEmpty
+    case ReturnConnection(connection)        ⇒ returnConnection(connection)
+    case AddConnectionProvider(id, provider) ⇒ addConnectionProvider(id, provider)
+    case RemoveConnectionProvider(id)        ⇒ removeConnectionProvider(id)
+    case HasAvailableConnectionProvider      ⇒ sender ! connectionProviders.nonEmpty
   }
 
   def selectConnection: Option[(String, ConnectionProvider)] =
-    loadBalancer.selectConnection.flatMap(key ⇒ connectionProviders.get(key).map(key → _))
+    loadBalancer.selectConnection.flatMap(id ⇒ connectionProviders.get(id).map(id → _))
 
   def returnConnection(connection: ConnectionHolder): Unit = {
-    connectionProviders.get(connection.key).foreach(_.returnConnection(connection))
-    loadBalancer.connectionReturned(connection.key)
+    connectionProviders.get(connection.id).foreach(_.returnConnection(connection))
+    loadBalancer.connectionReturned(connection.id)
   }
 
-  def addConnectionProvider(key: String, provider: ConnectionProvider): Unit = {
-    connectionProviders.put(key, provider)
-    loadBalancer.connectionProviderAdded(key)
+  def addConnectionProvider(id: String, provider: ConnectionProvider): Unit = {
+    connectionProviders.put(id, provider)
+    loadBalancer.connectionProviderAdded(id)
   }
 
-  def removeConnectionProvider(key: String): Unit = {
-    connectionProviders.remove(key).foreach(_.destroy())
-    loadBalancer.connectionProviderRemoved(key)
+  def removeConnectionProvider(id: String): Unit = {
+    connectionProviders.remove(id).foreach(_.destroy())
+    loadBalancer.connectionProviderRemoved(id)
   }
 }
 
 object LoadBalancerActor {
   // Props
-  def props(loadBalancer: LoadBalancer, serviceName: String) = Props(new LoadBalancerActor(loadBalancer, serviceName))
+  def props(loadBalancer: LoadBalancer, key: String) = Props(new LoadBalancerActor(loadBalancer, key))
   // Messsages
   case object GetConnection
   case class ReturnConnection(connection: ConnectionHolder)
-  case class AddConnectionProvider(key: String, provider: ConnectionProvider)
-  case class RemoveConnectionProvider(key: String)
+  case class AddConnectionProvider(id: String, provider: ConnectionProvider)
+  case class RemoveConnectionProvider(id: String)
   case object HasAvailableConnectionProvider
 }

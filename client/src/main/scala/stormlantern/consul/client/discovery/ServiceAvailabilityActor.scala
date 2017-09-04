@@ -38,7 +38,7 @@ class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceDefinition: 
   def createServiceAvailabilityUpdate(oldState: IndexedServiceInstances, newState: IndexedServiceInstances): ServiceAvailabilityUpdate = {
     val deleted = oldState.resource.diff(newState.resource)
     val added = newState.resource.diff(oldState.resource)
-    ServiceAvailabilityUpdate(added, deleted)
+    ServiceAvailabilityUpdate(serviceDefinition.key, added, deleted)
   }
 
 }
@@ -50,8 +50,6 @@ object ServiceAvailabilityActor {
   // Messages
   case object Start
   private case class UpdateServiceAvailability(services: IndexedServiceInstances)
-  private[client] case class ServiceAvailabilityUpdate(added: Set[ServiceInstance], removed: Set[ServiceInstance])
-  private[client] object ServiceAvailabilityUpdate {
-    def empty = ServiceAvailabilityUpdate(Set.empty, Set.empty)
-  }
+  private[client] case class ServiceAvailabilityUpdate(key: String, added: Set[ServiceInstance] = Set.empty,
+    removed: Set[ServiceInstance] = Set.empty)
 }
