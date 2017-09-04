@@ -37,7 +37,7 @@ lazy val dnsHelper = (project in file("dns-helper"))
     ScalariformKeys.preferences := ScalariformKeys.preferences.value
       .setPreference(AlignSingleLineCaseStatements, true)
       .setPreference(DoubleIndentClassDeclaration, true)
-      .setPreference(PreserveDanglingCloseParenthesis, true)
+      .setPreference(DanglingCloseParenthesis., true)
       .setPreference(RewriteArrowSymbols, true)
   )
 
@@ -66,7 +66,7 @@ lazy val client = (project in file("client"))
     ScalariformKeys.preferences := ScalariformKeys.preferences.value
       .setPreference(AlignSingleLineCaseStatements, true)
       .setPreference(DoubleIndentClassDeclaration, true)
-      .setPreference(PreserveDanglingCloseParenthesis, true)
+      .setPreference(DanglingCloseParenthesis, true)
       .setPreference(RewriteArrowSymbols, true)
   )
   .configs( IntegrationTest )
