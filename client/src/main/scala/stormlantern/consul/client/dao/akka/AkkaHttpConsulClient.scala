@@ -128,8 +128,12 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem) extends
     val request = HttpRequest(HttpMethods.GET).withUri(s"$host/v1/kv/$key?$parameters")
 
     retry[Seq[KeyData]]() {
-      getResponse(request, JsonMediaType).map { response ⇒
-        response.body.parseJson.convertTo[Seq[KeyData]]
+      getResponse(request, JsonMediaType, _ => true).map { response ⇒
+        if (response.status == StatusCodes.NotFound) {
+          Seq.empty
+        } else {
+          response.body.parseJson.convertTo[Seq[KeyData]]
+        }
       }
     }
   }
