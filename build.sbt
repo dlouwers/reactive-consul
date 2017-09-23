@@ -10,7 +10,7 @@ lazy val commonSettings = Seq(
   scalaVersion := "2.11.8",
   crossScalaVersions := Seq("2.11.8", "2.12.2"),
   organization := "nl.stormlantern",
-  version := "0.3.0",
+  version := "0.4.0-SNAPSHOT",
   resolvers ++= Dependencies.resolutionRepos,
   scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
   )

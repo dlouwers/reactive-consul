@@ -44,7 +44,7 @@ resolvers ++= Seq(
   "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
 )
 
-libraryDependencies += "nl.stormlantern" %% "reactive-consul" % "0.3.0-SNAPSHOT"
+libraryDependencies += "nl.stormlantern" %% "reactive-consul" % "0.4.0-SNAPSHOT"
 ```
 
 ## Using the ServiceBroker
