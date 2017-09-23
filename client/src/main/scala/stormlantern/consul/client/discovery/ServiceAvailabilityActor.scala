@@ -1,27 +1,31 @@
 package stormlantern.consul.client
 package discovery
 
-import scala.concurrent.Future
-
+import scala.concurrent.{ ExecutionContext, Future }
 import akka.actor._
 import akka.pattern.pipe
-
 import dao._
 import ServiceAvailabilityActor._
 
 class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceDefinition: ServiceDefinition, listener: ActorRef) extends Actor {
 
-  implicit val ec = context.dispatcher
+  implicit val ec: ExecutionContext = context.dispatcher
 
   // Actor state
+  var initialized = false
   var serviceAvailabilityState: IndexedServiceInstances = IndexedServiceInstances.empty
 
-  def receive = {
-    case Start ⇒ self ! UpdateServiceAvailability(IndexedServiceInstances.empty)
-    case UpdateServiceAvailability(services: IndexedServiceInstances) ⇒
-      val (update, serviceChange) = updateServiceAvailability(services)
+  def receive: Receive = {
+    case Start ⇒
+      self ! UpdateServiceAvailability(None)
+    case UpdateServiceAvailability(services: Option[IndexedServiceInstances]) ⇒
+      val (update, serviceChange) = updateServiceAvailability(services.getOrElse(IndexedServiceInstances.empty))
       update.foreach(listener ! _)
-      serviceChange.map(UpdateServiceAvailability) pipeTo self
+      if (!initialized && services.isDefined) {
+        initialized = true
+        listener ! Started
+      }
+      serviceChange.map(changes ⇒ UpdateServiceAvailability(Some(changes))) pipeTo self
   }
 
   def updateServiceAvailability(services: IndexedServiceInstances): (Option[ServiceAvailabilityUpdate], Future[IndexedServiceInstances]) = {
@@ -32,7 +36,12 @@ class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceDefinition: 
     } else {
       None
     }
-    (update, httpClient.getService(serviceDefinition.serviceName, serviceDefinition.serviceTags.headOption, Some(services.index), Some("1s")))
+    (update, httpClient.getService(
+      serviceDefinition.serviceName,
+      serviceDefinition.serviceTags.headOption,
+      Some(services.index),
+      Some("1s")
+    ))
   }
 
   def createServiceAvailabilityUpdate(oldState: IndexedServiceInstances, newState: IndexedServiceInstances): ServiceAvailabilityUpdate = {
@@ -49,7 +58,9 @@ object ServiceAvailabilityActor {
 
   // Messages
   case object Start
-  private case class UpdateServiceAvailability(services: IndexedServiceInstances)
+  case object Started
+  case object Initialized
+  private case class UpdateServiceAvailability(services: Option[IndexedServiceInstances])
   private[client] case class ServiceAvailabilityUpdate(key: String, added: Set[ServiceInstance] = Set.empty,
     removed: Set[ServiceInstance] = Set.empty)
 }

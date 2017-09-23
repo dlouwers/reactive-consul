@@ -31,6 +31,7 @@ class ServiceAvailabilityActorSpec(_system: ActorSystem) extends TestKit(_system
     }
     sut ! Start
     expectMsg(1.second, ServiceAvailabilityActor.ServiceAvailabilityUpdate("bogus123"))
+    expectMsg(1.second, ServiceAvailabilityActor.Started)
     expectNoMsg(1.second)
   }
 
@@ -46,6 +47,7 @@ class ServiceAvailabilityActorSpec(_system: ActorSystem) extends TestKit(_system
     }
     sut ! Start
     expectMsg(1.second, ServiceAvailabilityActor.ServiceAvailabilityUpdate("bogus123"))
+    expectMsg(1.second, ServiceAvailabilityActor.Started)
     expectMsg(1.second, ServiceAvailabilityActor.ServiceAvailabilityUpdate("bogus123", Set(service), Set.empty))
     expectNoMsg(1.second)
   }
@@ -63,6 +65,7 @@ class ServiceAvailabilityActorSpec(_system: ActorSystem) extends TestKit(_system
     }
     sut ! Start
     expectMsg(1.second, ServiceAvailabilityActor.ServiceAvailabilityUpdate("bogus123"))
+    expectMsg(1.second, ServiceAvailabilityActor.Started)
     expectMsg(1.second, ServiceAvailabilityActor.ServiceAvailabilityUpdate("bogus123", Set(matchingService), Set.empty))
     expectNoMsg(1.second)
   }

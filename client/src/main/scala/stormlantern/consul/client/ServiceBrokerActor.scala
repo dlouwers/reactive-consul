@@ -6,23 +6,27 @@ import akka.actor.Status.Failure
 import akka.actor._
 import akka.util.Timeout
 import stormlantern.consul.client.dao.ServiceInstance
-import stormlantern.consul.client.discovery.{ ServiceAvailabilityActor, ServiceDefinition, ConnectionStrategy }
+import stormlantern.consul.client.discovery.{ ConnectionStrategy, ServiceAvailabilityActor, ServiceDefinition }
 import stormlantern.consul.client.loadbalancers.LoadBalancerActor
-import stormlantern.consul.client.loadbalancers.LoadBalancerActor.{ HasAvailableConnectionProvider, GetConnection }
+import stormlantern.consul.client.loadbalancers.LoadBalancerActor.{ GetConnection, HasAvailableConnectionProvider }
 import ServiceAvailabilityActor._
-import stormlantern.consul.client.ServiceBrokerActor.{ JoinElection, AllConnectionProvidersAvailable, HasAvailableConnectionProviderFor, GetServiceConnection }
+import stormlantern.consul.client.ServiceBrokerActor._
 
 import scala.collection.mutable
-import scala.concurrent.{ Future, ExecutionContext }
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration._
 
-class ServiceBrokerActor(services: Set[ConnectionStrategy], serviceAvailabilityActorFactory: (ActorRefFactory, ServiceDefinition, ActorRef) ⇒ ActorRef)(implicit ec: ExecutionContext) extends Actor with ActorLogging {
+class ServiceBrokerActor(
+  services: Set[ConnectionStrategy],
+  serviceAvailabilityActorFactory: (ActorRefFactory, ServiceDefinition, ActorRef) ⇒ ActorRef)(implicit ec: ExecutionContext)
+    extends Actor with ActorLogging with Stash {
 
   // Actor state
   val indexedServices: Map[String, ConnectionStrategy] = services.map(s ⇒ (s.serviceDefinition.key, s)).toMap
   val loadbalancers: mutable.Map[String, ActorRef] = mutable.Map.empty
   val serviceAvailability: mutable.Set[ActorRef] = mutable.Set.empty
   val sessionId: Option[UUID] = None
+  var initializationCountdown: Int = services.size
 
   override def preStart(): Unit = {
     indexedServices.foreach {
@@ -35,19 +39,29 @@ class ServiceBrokerActor(services: Set[ConnectionStrategy], serviceAvailabilityA
     }
   }
 
-  def receive = {
+  def receive: Receive = {
+    case Started ⇒
+      log.debug(s"Service availability initialized for ${sender()}")
+      initializationCountdown -= 1
+      if (initializationCountdown == 0) {
+        unstashAll()
+      }
     case ServiceAvailabilityUpdate(key, added, removed) ⇒
       log.debug(s"Adding connection providers for $key: $added")
       addConnectionProviders(key, added)
       log.debug(s"Removing conection providers for $key: $removed")
       removeConnectionProviders(key, removed)
     case GetServiceConnection(key: String) ⇒
-      log.debug(s"Getting a service connection for $key")
-      loadbalancers.get(key) match {
-        case Some(loadbalancer) ⇒
-          loadbalancer forward GetConnection
-        case None ⇒
-          sender ! Failure(new ServiceUnavailableException(key))
+      if (initializationCountdown != 0) {
+        stash()
+      } else {
+        log.debug(s"Getting a service connection for $key")
+        loadbalancers.get(key) match {
+          case Some(loadbalancer) ⇒
+            loadbalancer forward GetConnection
+          case None ⇒
+            sender ! Failure(ServiceUnavailableException(key))
+        }
       }
     case HasAvailableConnectionProviderFor(key: String) ⇒
       loadbalancers.get(key) match {
@@ -60,7 +74,6 @@ class ServiceBrokerActor(services: Set[ConnectionStrategy], serviceAvailabilityA
       import akka.pattern.pipe
       queryConnectionProviderAvailability pipeTo sender
     case JoinElection(key) ⇒
-
   }
 
   // Internal methods
@@ -81,14 +94,17 @@ class ServiceBrokerActor(services: Set[ConnectionStrategy], serviceAvailabilityA
   def queryConnectionProviderAvailability: Future[Boolean] = {
     implicit val timeout: Timeout = 1.second
     import akka.pattern.ask
-    Future.sequence(loadbalancers.values.map(_.ask(LoadBalancerActor.HasAvailableConnectionProvider).mapTo[Boolean])).map(_.forall(p ⇒ p))
+    Future.sequence(loadbalancers.values.map(_.ask(LoadBalancerActor.HasAvailableConnectionProvider).mapTo[Boolean]))
+      .map(_.forall(p ⇒ p))
   }
 }
 
 object ServiceBrokerActor {
   // Constructors
-  def props(services: Set[ConnectionStrategy], serviceAvailabilityActorFactory: (ActorRefFactory, ServiceDefinition, ActorRef) ⇒ ActorRef)(implicit ec: ExecutionContext): Props = Props(new ServiceBrokerActor(services, serviceAvailabilityActorFactory))
-  // Public messages
+  def props(
+    services: Set[ConnectionStrategy],
+    serviceAvailabilityActorFactory: (ActorRefFactory, ServiceDefinition, ActorRef) ⇒ ActorRef)(implicit ec: ExecutionContext): Props =
+    Props(new ServiceBrokerActor(services, serviceAvailabilityActorFactory))
   case class GetServiceConnection(key: String)
   case object Stop
   case class HasAvailableConnectionProviderFor(key: String)
