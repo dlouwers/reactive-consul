@@ -56,7 +56,7 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem) extends
   }
 
   def deleteService(serviceId: String): Future[Unit] = {
-    val request = HttpRequest(HttpMethods.DELETE).withUri(s"$host/v1/agent/service/deregister/$serviceId")
+    val request = HttpRequest(HttpMethods.PUT).withUri(s"$host/v1/agent/service/deregister/$serviceId")
 
     retry[ConsulResponse]() {
       getResponse(request, TextMediaType)
