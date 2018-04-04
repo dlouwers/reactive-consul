@@ -7,10 +7,10 @@ import scalariform.formatter.preferences._
 
 // Common variables
 lazy val commonSettings = Seq(
-  scalaVersion := "2.11.8",
-  crossScalaVersions := Seq("2.11.8", "2.12.2"),
+  scalaVersion := "2.11.11",
+  crossScalaVersions := Seq("2.11.11", "2.12.4"),
   organization := "nl.stormlantern",
-  version := "0.4.0-SNAPSHOT",
+  version := "0.4.0",
   resolvers ++= Dependencies.resolutionRepos,
   scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
   )
@@ -53,8 +53,9 @@ lazy val client = (project in file("client"))
     fork := true,
     libraryDependencies ++= Seq(
       akkaHttp,
-      sprayJson,
+      akkaHttpSprayJson,
       akkaActor,
+      akkaStream,
       slf4j,
       akkaSlf4j,
       scalaTest % "it,test",
