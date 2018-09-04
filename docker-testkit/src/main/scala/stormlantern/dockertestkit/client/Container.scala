@@ -5,7 +5,7 @@ import java.util
 import com.spotify.docker.client.messages._
 import stormlantern.dockertestkit.DockerClientProvider
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 class Container(config: ContainerConfig) {
 
@@ -33,7 +33,7 @@ class Container(config: ContainerConfig) {
   def mappedPort(port: String): Seq[PortBinding] = {
     val ports: util.Map[String, util.List[PortBinding]] = Option(docker.inspectContainer(id).networkSettings().ports())
       .getOrElse(throw new IllegalStateException(s"No ports found for on container with id $id"))
-    Option(ports.get(port)).getOrElse(throw new IllegalStateException(s"Port $port not found on caintainer with id $id"))
+    Option(ports.get(port)).getOrElse(throw new IllegalStateException(s"Port $port not found on caintainer with id $id")).asScala
   }
 }
 

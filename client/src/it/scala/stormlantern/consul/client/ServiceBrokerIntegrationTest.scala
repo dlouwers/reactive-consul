@@ -29,7 +29,7 @@ class ServiceBrokerIntegrationTest extends FlatSpec with Matchers with ScalaFutu
           override def getConnection: Future[Any] = Future.successful(httpClient)
         }
       }
-      val connectionStrategy = ConnectionStrategy(ServiceDefinition("consul-http"), connectionProviderFactory, new RoundRobinLoadBalancer)
+      val connectionStrategy = ConnectionStrategy(ServiceDefinition("consul-http"), connectionProviderFactory, new RoundRobinLoadBalancer, onlyHealthyServices = true)
       val sut = ServiceBroker(actorSystem, akkaHttpClient, Set(connectionStrategy))
       eventually {
         sut.withService("consul-http") { connection: ConsulHttpClient ⇒

@@ -55,8 +55,8 @@ object ServiceBroker {
 
   def apply(rootActor: ActorSystem, httpClient: ConsulHttpClient, services: Set[ConnectionStrategy]): ServiceBroker = {
     implicit val ec = ExecutionContext.Implicits.global
-    val serviceAvailabilityActorFactory = (factory: ActorRefFactory, service: ServiceDefinition, listener: ActorRef) ⇒
-      factory.actorOf(ServiceAvailabilityActor.props(httpClient, service, listener))
+    val serviceAvailabilityActorFactory = (factory: ActorRefFactory, service: ServiceDefinition, listener: ActorRef, onlyHealthyServices: Boolean) ⇒
+      factory.actorOf(ServiceAvailabilityActor.props(httpClient, service, listener, onlyHealthyServices))
     val actorRef = rootActor.actorOf(ServiceBrokerActor.props(services, serviceAvailabilityActorFactory), "ServiceBroker")
     new ServiceBroker(actorRef, httpClient)
   }

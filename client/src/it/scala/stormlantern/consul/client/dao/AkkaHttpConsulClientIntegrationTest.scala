@@ -28,6 +28,16 @@ class AkkaHttpConsulClientIntegrationTest extends FlatSpec with Matchers with Sc
     }
   }
 
+  it should "retrieve a single health aware Consul service from a freshly started Consul instance" in withConsulHttpClient {
+    subject ⇒
+      eventually {
+        subject.getServiceHealthAware("consul").map { result ⇒
+          result.resource should have size 1
+          result.resource.head.serviceName shouldEqual "consul"
+        }.futureValue
+      }
+  }
+
   it should "retrieve no unknown service from a freshly started Consul instance" in withConsulHttpClient { subject ⇒
     eventually {
       subject.getService("bogus").map { result ⇒

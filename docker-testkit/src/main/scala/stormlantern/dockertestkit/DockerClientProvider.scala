@@ -5,7 +5,7 @@ import java.net.URI
 import com.spotify.docker.client.DockerClient.ListContainersParam
 import com.spotify.docker.client.{ DefaultDockerClient, DockerClient }
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 object DockerClientProvider {
 
@@ -20,6 +20,6 @@ object DockerClientProvider {
   }
 
   def cleanUp(): Unit = {
-    client.listContainers(ListContainersParam.allContainers()).foreach(c => client.removeContainer(c.id()))
+    client.listContainers(ListContainersParam.allContainers()).asScala.foreach(c => client.removeContainer(c.id()))
   }
 }

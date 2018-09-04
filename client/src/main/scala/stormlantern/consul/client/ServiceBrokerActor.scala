@@ -18,7 +18,7 @@ import scala.concurrent.duration._
 
 class ServiceBrokerActor(
   services: Set[ConnectionStrategy],
-  serviceAvailabilityActorFactory: (ActorRefFactory, ServiceDefinition, ActorRef) ⇒ ActorRef)(implicit ec: ExecutionContext)
+  serviceAvailabilityActorFactory: (ActorRefFactory, ServiceDefinition, ActorRef, Boolean) ⇒ ActorRef)(implicit ec: ExecutionContext)
     extends Actor with ActorLogging with Stash {
 
   // Actor state
@@ -33,7 +33,7 @@ class ServiceBrokerActor(
       case (key, strategy) ⇒
         loadbalancers.put(key, strategy.loadBalancerFactory(context))
         log.info(s"Starting service availability Actor for $key")
-        val serviceAvailabilityActorRef = serviceAvailabilityActorFactory(context, strategy.serviceDefinition, self)
+        val serviceAvailabilityActorRef = serviceAvailabilityActorFactory(context, strategy.serviceDefinition, self, strategy.onlyHealthyServices)
         serviceAvailabilityActorRef ! Start
         serviceAvailability += serviceAvailabilityActorRef
     }
@@ -103,7 +103,7 @@ object ServiceBrokerActor {
   // Constructors
   def props(
     services: Set[ConnectionStrategy],
-    serviceAvailabilityActorFactory: (ActorRefFactory, ServiceDefinition, ActorRef) ⇒ ActorRef)(implicit ec: ExecutionContext): Props =
+    serviceAvailabilityActorFactory: (ActorRefFactory, ServiceDefinition, ActorRef, Boolean) ⇒ ActorRef)(implicit ec: ExecutionContext): Props =
     Props(new ServiceBrokerActor(services, serviceAvailabilityActorFactory))
   case class GetServiceConnection(key: String)
   case object Stop

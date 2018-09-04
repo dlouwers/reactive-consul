@@ -24,8 +24,8 @@ class ServiceBrokerActorSpec(_system: ActorSystem) extends TestKit(_system) with
 
   trait TestScope {
     val httpClient: ConsulHttpClient = mock[ConsulHttpClient]
-    val serviceAvailabilityActorFactory: (ActorRefFactory, ServiceDefinition, ActorRef) ⇒ ActorRef =
-      mock[(ActorRefFactory, ServiceDefinition, ActorRef) ⇒ ActorRef]
+    val serviceAvailabilityActorFactory: (ActorRefFactory, ServiceDefinition, ActorRef, Boolean) ⇒ ActorRef =
+      mock[(ActorRefFactory, ServiceDefinition, ActorRef, Boolean) ⇒ ActorRef]
     val connectionProviderFactory: ConnectionProviderFactory = mock[ConnectionProviderFactory]
     val connectionProvider: ConnectionProvider = mock[ConnectionProvider]
     val connectionHolder: ConnectionHolder = mock[ConnectionHolder]
@@ -33,13 +33,13 @@ class ServiceBrokerActorSpec(_system: ActorSystem) extends TestKit(_system) with
     val service2 = ServiceDefinition("service2Key", "service2")
     val loadBalancerProbeForService1 = TestProbe("LoadBalancerActorForService1")
     val loadBalancerProbeForService2 = TestProbe("LoadBalancerActorForService2")
-    val connectionStrategyForService1 = ConnectionStrategy(service1, connectionProviderFactory, ctx ⇒ loadBalancerProbeForService1.ref)
-    val connectionStrategyForService2 = ConnectionStrategy(service2, connectionProviderFactory, ctx ⇒ loadBalancerProbeForService2.ref)
+    val connectionStrategyForService1 = ConnectionStrategy(service1, connectionProviderFactory, ctx ⇒ loadBalancerProbeForService1.ref, onlyHealthyServices = true)
+    val connectionStrategyForService2 = ConnectionStrategy(service2, connectionProviderFactory, ctx ⇒ loadBalancerProbeForService2.ref, onlyHealthyServices = false)
   }
 
   "The ServiceBrokerActor" should "create a child actor per service" in new TestScope {
     val serviceAvailabilityProbe = TestProbe("ServiceAvailabilityActor")
-    (serviceAvailabilityActorFactory.apply _).expects(*, service1, *).returns(serviceAvailabilityProbe.ref)
+    (serviceAvailabilityActorFactory.apply _).expects(*, service1, *, *).returns(serviceAvailabilityProbe.ref)
     val sut: TestActorRef[ServiceBrokerActor] = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(
       Set(connectionStrategyForService1), serviceAvailabilityActorFactory))
     serviceAvailabilityProbe.expectMsg(Start)
@@ -49,7 +49,7 @@ class ServiceBrokerActorSpec(_system: ActorSystem) extends TestKit(_system) with
 
   it should "create a load balancer for each new service" in new TestScope {
     val serviceAvailabilityProbe = TestProbe("ServiceAvailabilityActor")
-    (serviceAvailabilityActorFactory.apply _).expects(*, service1, *).returns(serviceAvailabilityProbe.ref)
+    (serviceAvailabilityActorFactory.apply _).expects(*, service1, *, *).returns(serviceAvailabilityProbe.ref)
     val sut: TestActorRef[ServiceBrokerActor] = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(
       Set(connectionStrategyForService1), serviceAvailabilityActorFactory))
     serviceAvailabilityProbe.expectMsg(Start)
@@ -63,7 +63,7 @@ class ServiceBrokerActorSpec(_system: ActorSystem) extends TestKit(_system) with
 
   it should "remove the load balancer for each old service" in new TestScope {
     val serviceAvailabilityProbe = TestProbe("ServiceAvailabilityActor")
-    (serviceAvailabilityActorFactory.apply _).expects(*, service1, *).returns(serviceAvailabilityProbe.ref)
+    (serviceAvailabilityActorFactory.apply _).expects(*, service1, *, *).returns(serviceAvailabilityProbe.ref)
     val sut: TestActorRef[ServiceBrokerActor] = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(
       Set(connectionStrategyForService1), serviceAvailabilityActorFactory))
     serviceAvailabilityProbe.expectMsg(Start)
@@ -76,7 +76,7 @@ class ServiceBrokerActorSpec(_system: ActorSystem) extends TestKit(_system) with
 
   it should "initialize after all services have been seen" in new TestScope {
     val serviceAvailabilityProbe = TestProbe("ServiceAvailabilityActor")
-    (serviceAvailabilityActorFactory.apply _).expects(*, service1, *).returns(serviceAvailabilityProbe.ref)
+    (serviceAvailabilityActorFactory.apply _).expects(*, service1, *, *).returns(serviceAvailabilityProbe.ref)
     val sut: TestActorRef[ServiceBrokerActor] = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(
       Set(connectionStrategyForService1), serviceAvailabilityActorFactory))
     serviceAvailabilityProbe.expectMsg(Start)
@@ -85,7 +85,7 @@ class ServiceBrokerActorSpec(_system: ActorSystem) extends TestKit(_system) with
 
   it should "request a connection from a loadbalancer" in new TestScope {
     val serviceAvailabilityProbe = TestProbe("ServiceAvailabilityActor")
-    (serviceAvailabilityActorFactory.apply _).expects(*, service1, *).returns(serviceAvailabilityProbe.ref)
+    (serviceAvailabilityActorFactory.apply _).expects(*, service1, *, *).returns(serviceAvailabilityProbe.ref)
     val sut: TestActorRef[ServiceBrokerActor] = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(
       Set(connectionStrategyForService1), serviceAvailabilityActorFactory))
     serviceAvailabilityProbe.expectMsg(Start)
@@ -107,7 +107,7 @@ class ServiceBrokerActorSpec(_system: ActorSystem) extends TestKit(_system) with
 
   it should "forward a query for connection provider availability" in new TestScope {
     val serviceAvailabilityProbe = TestProbe("ServiceAvailabilityActor")
-    (serviceAvailabilityActorFactory.apply _).expects(*, service1, *).returns(serviceAvailabilityProbe.ref)
+    (serviceAvailabilityActorFactory.apply _).expects(*, service1, *, *).returns(serviceAvailabilityProbe.ref)
     val sut: TestActorRef[ServiceBrokerActor] = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(
       Set(connectionStrategyForService1), serviceAvailabilityActorFactory))
     serviceAvailabilityProbe.expectMsg(Start)
@@ -122,8 +122,8 @@ class ServiceBrokerActorSpec(_system: ActorSystem) extends TestKit(_system) with
   it should "return false when every service doesn't have at least one connection provider available" in new TestScope {
     val service1AvailabilityProbe = TestProbe("Service1AvailabilityActor")
     val service2AvailabilityProbe = TestProbe("Service2AvailabilityActor")
-    (serviceAvailabilityActorFactory.apply _).expects(*, service1, *).returns(service1AvailabilityProbe.ref)
-    (serviceAvailabilityActorFactory.apply _).expects(*, service2, *).returns(service2AvailabilityProbe.ref)
+    (serviceAvailabilityActorFactory.apply _).expects(*, service1, *, *).returns(service1AvailabilityProbe.ref)
+    (serviceAvailabilityActorFactory.apply _).expects(*, service2, *, *).returns(service2AvailabilityProbe.ref)
     val sut: TestActorRef[ServiceBrokerActor] = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(
       Set(connectionStrategyForService1, connectionStrategyForService2), serviceAvailabilityActorFactory))
     service1AvailabilityProbe.expectMsg(Start)
@@ -142,8 +142,8 @@ class ServiceBrokerActorSpec(_system: ActorSystem) extends TestKit(_system) with
   it should "return true when every service has at least one connection provider avaiable" in new TestScope {
     val service1AvailabilityProbe = TestProbe("Service1AvailabilityActor")
     val service2AvailabilityProbe = TestProbe("Service2AvailabilityActor")
-    (serviceAvailabilityActorFactory.apply _).expects(*, service1, *).returns(service1AvailabilityProbe.ref)
-    (serviceAvailabilityActorFactory.apply _).expects(*, service2, *).returns(service2AvailabilityProbe.ref)
+    (serviceAvailabilityActorFactory.apply _).expects(*, service1, *, *).returns(service1AvailabilityProbe.ref)
+    (serviceAvailabilityActorFactory.apply _).expects(*, service2, *, *).returns(service2AvailabilityProbe.ref)
     val sut: TestActorRef[ServiceBrokerActor] = TestActorRef[ServiceBrokerActor](ServiceBrokerActor.props(
       Set(connectionStrategyForService1, connectionStrategyForService2), serviceAvailabilityActorFactory))
     service1AvailabilityProbe.expectMsg(Start)

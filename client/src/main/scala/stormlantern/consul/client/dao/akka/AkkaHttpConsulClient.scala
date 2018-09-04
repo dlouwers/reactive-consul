@@ -46,6 +46,26 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem) extends
     }
   }
 
+  def getServiceHealthAware(service: String, tag: Option[String] = None, index: Option[Long] = None, wait: Option[String] = None, dataCenter: Option[String] = None): Future[IndexedServiceInstances] = {
+    val dcParameter = dataCenter.map(dc ⇒ s"dc=$dc")
+    val waitParameter = wait.map(w ⇒ s"wait=$w")
+    val indexParameter = index.map(i ⇒ s"index=$i")
+    val tagParameter = tag.map(t ⇒ s"tag=$t")
+    val passingParameter = Some(s"passing=true")
+    val parameters = Seq(dcParameter, tagParameter, waitParameter, indexParameter, passingParameter).flatten.mkString("&")
+    val request: HttpRequest = HttpRequest(HttpMethods.GET).withUri(s"$host/v1/health/service/$service?$parameters")
+
+    retry[IndexedServiceInstances]() {
+      getResponse(request, JsonMediaType).flatMap { response ⇒
+        validIndex(response).map { idx ⇒
+          println(response.body)
+          val services = response.body.parseJson.convertTo[Option[Set[HealthServiceInstance]]]
+          IndexedServiceInstances(idx, services.getOrElse(Set.empty[HealthServiceInstance]).map(_.asServiceInstance))
+        }
+      }
+    }
+  }
+
   def putService(registration: ServiceRegistration): Future[String] = {
     val request = HttpRequest(HttpMethods.PUT).withUri(s"$host/v1/agent/service/register")
       .withEntity(registration.toJson.asJsObject().toString.getBytes)
@@ -95,7 +115,7 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem) extends
   }
 
   //
-  // Key Values 
+  // Key Values
   // /////////////////
   def putKeyValuePair(key: String, value: Array[Byte], sessionOp: Option[SessionOp]): Future[Boolean] = {
     import StatusCodes._
@@ -157,7 +177,7 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem) extends
       val expected = resp.status match {
         case st if st.isSuccess()     ⇒ expectedMediaType
         case st if st.isFailure()     ⇒ TextMediaType
-        case st if st.isRedirection() ⇒ TextMediaType // this is a guess 
+        case st if st.isRedirection() ⇒ TextMediaType // this is a guess
       }
 
       if (resp.entity.contentType.mediaType == expected) {
@@ -193,7 +213,7 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem) extends
 }
 
 //
-// Internal Objects 
+// Internal Objects
 // //////////////////////////
 case class ConsulResponse(status: StatusCode, headers: Seq[HttpHeader], body: String)
 
