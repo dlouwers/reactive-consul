@@ -130,7 +130,6 @@ lazy val publishSettings = Seq(
   publishArtifact := false,
   publishMavenStyle := true,
   pomIncludeRepository := { _ => false },
-  credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
     if (isSnapshot.value)
