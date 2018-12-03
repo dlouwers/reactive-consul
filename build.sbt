@@ -2,10 +2,8 @@ import Dependencies._
 import sbt.Keys._
 import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
-
+import com.typesafe.sbt.pgp.PgpKeys
 import scalariform.formatter.preferences._
-
-import xerial.sbt.Sonatype._
 sonatypeProfileName := "com.crobox"
 
 // Common variables
@@ -129,6 +127,7 @@ lazy val publishSettings = Seq(
   publishArtifact := false,
   publishMavenStyle := true,
   pomIncludeRepository := { _ => false },
+  sbtrelease.ReleasePlugin.autoImport.releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
     if (isSnapshot.value)
