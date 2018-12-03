@@ -4,7 +4,6 @@ object Dependencies {
 
   val resolutionRepos = Seq(
     "spray repo" at "http://repo.spray.io",
-    "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases",
     "softprops-maven" at "http://dl.bintray.com/content/softprops/maven"
   )
 

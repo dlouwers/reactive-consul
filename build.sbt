@@ -5,11 +5,14 @@ import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 
 import scalariform.formatter.preferences._
 
+import xerial.sbt.Sonatype._
+sonatypeProfileName := "com.crobox"
+
 // Common variables
 lazy val commonSettings = Seq(
   scalaVersion := "2.12.4",
   crossScalaVersions := Seq("2.11.11", "2.12.4"),
-  organization := "nl.stormlantern",
+  organization := "com.crobox",
   version := "0.4.1-SNAPSHOT",
   resolvers ++= Dependencies.resolutionRepos,
   scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
