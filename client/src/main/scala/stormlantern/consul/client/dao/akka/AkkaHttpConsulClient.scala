@@ -58,7 +58,6 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem) extends
     retry[IndexedServiceInstances]() {
       getResponse(request, JsonMediaType).flatMap { response ⇒
         validIndex(response).map { idx ⇒
-          println(response.body)
           val services = response.body.parseJson.convertTo[Option[Set[HealthServiceInstance]]]
           IndexedServiceInstances(idx, services.getOrElse(Set.empty[HealthServiceInstance]).map(_.asServiceInstance))
         }
