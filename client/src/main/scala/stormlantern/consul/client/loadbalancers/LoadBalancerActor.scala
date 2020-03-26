@@ -34,7 +34,7 @@ class LoadBalancerActor(loadBalancer: LoadBalancer, key: String) extends Actor w
   }
 
   def selectConnection: Option[(String, ConnectionProvider)] =
-    loadBalancer.selectConnection.flatMap(id ⇒ connectionProviders.get(id).map(id → _))
+    loadBalancer.selectConnection.flatMap(id ⇒ connectionProviders.get(id).map(id -> _))
 
   def returnConnection(connection: ConnectionHolder): Unit = {
     connectionProviders.get(connection.id).foreach(_.returnConnection(connection))

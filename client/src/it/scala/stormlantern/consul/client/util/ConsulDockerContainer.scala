@@ -7,11 +7,11 @@ import stormlantern.dockertestkit.{ DockerClientProvider, DockerContainer }
 
 import scala.collection.JavaConversions._
 
-trait ConsulDockerContainer extends DockerContainer { this: Suite ⇒
+trait ConsulDockerContainer extends DockerContainer { this: Suite =>
 
   def image: String = "progrium/consul"
   def command: Seq[String] = Seq("-server", "-bootstrap", DockerClientProvider.hostname)
   override def containerConfig = ContainerConfig.builder().image(image).hostConfig(hostConfig).cmd(command).build()
 
-  def withConsulHost[T](f: (String, Int) ⇒ T): T = super.withDockerHost("8500/tcp")(f)
+  def withConsulHost[T](f: (String, Int) => T): T = super.withDockerHost("8500/tcp")(f)
 }

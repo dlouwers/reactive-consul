@@ -26,7 +26,7 @@ object Boot extends App {
 
   IO(Http) ? Http.Bind(service, interface = "0.0.0.0", port = 8080)
 
-  def connectionProviderFactory = (host: String, port: Int) ⇒ new ConnectionProvider {
+  def connectionProviderFactory = (host: String, port: Int) => new ConnectionProvider {
     val client = new SprayExampleServiceClient(new URL(s"http://$host:$port"))
     override def getConnection: Future[Any] = Future.successful(client)
   }
@@ -37,10 +37,10 @@ object Boot extends App {
   val serviceBroker = ServiceBroker(DNS.lookup("consul-8500.service.consul"), services)
 
   system.scheduler.schedule(5.seconds, 5.seconds) {
-    serviceBroker.withService("example-service-1") { client: SprayExampleServiceClient ⇒
+    serviceBroker.withService("example-service-1") { client: SprayExampleServiceClient =>
       client.identify
     }.foreach(println)
-    serviceBroker.withService("example-service-2") { client: SprayExampleServiceClient ⇒
+    serviceBroker.withService("example-service-2") { client: SprayExampleServiceClient =>
       client.identify
     }.foreach(println)
   }
