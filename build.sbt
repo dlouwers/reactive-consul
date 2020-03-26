@@ -8,8 +8,8 @@ sonatypeProfileName := "com.crobox"
 
 // Common variables
 lazy val commonSettings = Seq(
-  scalaVersion := "2.12.4",
-  crossScalaVersions := Seq("2.11.11", "2.12.4"),
+  scalaVersion := "2.13.1",
+  crossScalaVersions := Seq("2.12.11", "2.13.1"),
   organization := "com.crobox",
   resolvers ++= Dependencies.resolutionRepos,
   scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
@@ -19,8 +19,8 @@ lazy val reactiveConsul = (project in file("."))
   .settings( commonSettings: _* )
   .settings( publishSettings: _* )
   .aggregate(client, dnsHelper, dockerTestkit/*, example*/)
- 
- 
+
+
 lazy val dnsHelper = (project in file("dns-helper"))
   .settings( commonSettings: _* )
   .settings( publishSettings: _* )
