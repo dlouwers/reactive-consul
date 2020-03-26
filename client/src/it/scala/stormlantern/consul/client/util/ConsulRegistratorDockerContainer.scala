@@ -6,7 +6,7 @@ import stormlantern.dockertestkit.{ DockerClientProvider, DockerContainers }
 
 import scala.collection.JavaConversions._
 
-trait ConsulRegistratorDockerContainer extends DockerContainers { this: Suite ⇒
+trait ConsulRegistratorDockerContainer extends DockerContainers { this: Suite =>
 
   def consulContainerConfig = {
     val image: String = "progrium/consul"
@@ -24,7 +24,7 @@ trait ConsulRegistratorDockerContainer extends DockerContainers { this: Suite �
 
   override def containerConfigs = Set(consulContainerConfig, registratorContainerConfig)
 
-  def withConsulHost[T](f: (String, Int) ⇒ T): T = super.withDockerHosts(Set("8500/tcp")) { pb ⇒
+  def withConsulHost[T](f: (String, Int) => T): T = super.withDockerHosts(Set("8500/tcp")) { pb =>
     val (h, p) = pb("8500/tcp")
     f(h, p)
   }

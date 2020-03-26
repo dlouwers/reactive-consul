@@ -7,7 +7,7 @@ import akka.pattern.pipe
 import dao._
 import ServiceAvailabilityActor._
 
-class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceDefinition: ServiceDefinition, listener: ActorRef) extends Actor {
+class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceDefinition: ServiceDefinition, listener: ActorRef, onlyHealthServices: Boolean) extends Actor {
 
   implicit val ec: ExecutionContext = context.dispatcher
 
@@ -36,7 +36,14 @@ class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceDefinition: 
     } else {
       None
     }
-    (update, httpClient.getService(
+    (update, if (onlyHealthServices)
+      httpClient.getServiceHealthAware(
+      serviceDefinition.serviceName,
+      serviceDefinition.serviceTags.headOption,
+      Some(services.index),
+      Some("1s")
+    )
+    else httpClient.getService(
       serviceDefinition.serviceName,
       serviceDefinition.serviceTags.headOption,
       Some(services.index),
@@ -54,7 +61,7 @@ class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceDefinition: 
 
 object ServiceAvailabilityActor {
 
-  def props(httpClient: ConsulHttpClient, serviceDefinition: ServiceDefinition, listener: ActorRef): Props = Props(new ServiceAvailabilityActor(httpClient, serviceDefinition, listener))
+  def props(httpClient: ConsulHttpClient, serviceDefinition: ServiceDefinition, listener: ActorRef, onlyHealthyServices: Boolean): Props = Props(new ServiceAvailabilityActor(httpClient, serviceDefinition, listener, onlyHealthyServices))
 
   // Messages
   case object Start

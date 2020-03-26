@@ -1,16 +1,15 @@
 import Dependencies._
 import sbt.Keys._
 import com.typesafe.sbt.SbtScalariform
-import com.typesafe.sbt.SbtScalariform.ScalariformKeys
-
+import com.typesafe.sbt.pgp.PgpKeys
 import scalariform.formatter.preferences._
+sonatypeProfileName := "com.crobox"
 
 // Common variables
 lazy val commonSettings = Seq(
-  scalaVersion := "2.11.8",
-  crossScalaVersions := Seq("2.11.8", "2.12.2"),
-  organization := "nl.stormlantern",
-  version := "0.4.0-SNAPSHOT",
+  scalaVersion := "2.13.1",
+  crossScalaVersions := Seq("2.12.11", "2.13.1"),
+  organization := "com.crobox",
   resolvers ++= Dependencies.resolutionRepos,
   scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
   )
@@ -19,8 +18,8 @@ lazy val reactiveConsul = (project in file("."))
   .settings( commonSettings: _* )
   .settings( publishSettings: _* )
   .aggregate(client, dnsHelper, dockerTestkit/*, example*/)
- 
- 
+
+
 lazy val dnsHelper = (project in file("dns-helper"))
   .settings( commonSettings: _* )
   .settings( publishSettings: _* )
@@ -33,12 +32,7 @@ lazy val dnsHelper = (project in file("dns-helper"))
     fork := true,
     libraryDependencies ++= Seq(
       spotifyDns
-    ),
-    ScalariformKeys.preferences := ScalariformKeys.preferences.value
-      .setPreference(AlignSingleLineCaseStatements, true)
-      .setPreference(DoubleIndentClassDeclaration, true)
-      .setPreference(DanglingCloseParenthesis, Preserve)
-      .setPreference(RewriteArrowSymbols, true)
+    )
   )
 
 lazy val client = (project in file("client"))
@@ -53,8 +47,9 @@ lazy val client = (project in file("client"))
     fork := true,
     libraryDependencies ++= Seq(
       akkaHttp,
-      sprayJson,
+      akkaHttpSprayJson,
       akkaActor,
+      akkaStream,
       slf4j,
       akkaSlf4j,
       scalaTest % "it,test",
@@ -62,12 +57,7 @@ lazy val client = (project in file("client"))
       logback % "it,test",
       akkaTestKit % "it,test",
       spotifyDocker % "it,test"
-    ),
-    ScalariformKeys.preferences := ScalariformKeys.preferences.value
-      .setPreference(AlignSingleLineCaseStatements, true)
-      .setPreference(DoubleIndentClassDeclaration, true)
-      .setPreference(DanglingCloseParenthesis, Preserve)
-      .setPreference(RewriteArrowSymbols, true)
+    )
   )
   .configs( IntegrationTest )
   .settings( Defaults.itSettings : _* )
@@ -126,7 +116,7 @@ lazy val publishSettings = Seq(
   publishArtifact := false,
   publishMavenStyle := true,
   pomIncludeRepository := { _ => false },
-  credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
+  sbtrelease.ReleasePlugin.autoImport.releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
     if (isSnapshot.value)
@@ -135,7 +125,7 @@ lazy val publishSettings = Seq(
       Some("releases" at nexus + "service/local/staging/deploy/maven2")
   },
   pomExtra := (
-    <url>http://github.com/dlouwers/reactive-consul</url>
+    <url>http://github.com/crobox/reactive-consul</url>
       <licenses>
         <license>
           <name>MIT</name>
@@ -144,10 +134,15 @@ lazy val publishSettings = Seq(
         </license>
       </licenses>
       <scm>
-        <url>git@github.com:dlouwers/reactive-consul.git</url>
-        <connection>scm:git@github.com:dlouwers/reactive-consul.git</connection>
+        <url>git@github.com:crobox/reactive-consul.git</url>
+        <connection>scm:git@github.com:crobox/reactive-consul.git</connection>
       </scm>
       <developers>
+        <developer>
+          <id>sjoerdmulder</id>
+          <name>Sjoerd Mulder</name>
+          <url>http://github.com/sjoerdmulder</url>
+        </developer>
         <developer>
           <id>dlouwers</id>
           <name>Dirk Louwers</name>

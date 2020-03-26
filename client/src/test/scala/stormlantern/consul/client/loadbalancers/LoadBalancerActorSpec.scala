@@ -70,7 +70,7 @@ class LoadBalancerActorSpec(_system: ActorSystem) extends TestKit(_system) with 
     (connectionProvider.destroy _).expects()
     val sut = TestActorRef(new LoadBalancerActor(loadBalancer, "service1"))
     sut ! LoadBalancerActor.AddConnectionProvider(instanceKey, connectionProvider)
-    sut.underlyingActor.connectionProviders should contain(instanceKey → connectionProvider)
+    sut.underlyingActor.connectionProviders should contain(instanceKey -> connectionProvider)
     sut.stop()
   }
 
@@ -81,7 +81,7 @@ class LoadBalancerActorSpec(_system: ActorSystem) extends TestKit(_system) with 
     val sut = TestActorRef(new LoadBalancerActor(loadBalancer, "service1"))
     sut.underlyingActor.connectionProviders.put(instanceKey, connectionProvider)
     sut ! LoadBalancerActor.RemoveConnectionProvider(instanceKey)
-    sut.underlyingActor.connectionProviders should not contain (instanceKey → connectionProvider)
+    sut.underlyingActor.connectionProviders should not contain (instanceKey -> connectionProvider)
   }
 
   it should "return true when it has at least one available connection provider for the service" in new TestScope {

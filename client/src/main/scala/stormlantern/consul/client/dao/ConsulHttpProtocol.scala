@@ -35,11 +35,16 @@ trait ConsulHttpProtocol extends DefaultJsonProtocol {
     override def write(obj: BinaryData): JsValue = JsString(Base64.getMimeEncoder.encodeToString(obj.data))
   }
 
-  implicit val serviceFormat = jsonFormat(
+  implicit val serviceFormat: RootJsonFormat[ServiceInstance] = jsonFormat(
     (node: String, address: String, serviceId: String, serviceName: String, serviceTags: Option[Set[String]], serviceAddress: String, servicePort: Int) ⇒
       ServiceInstance(node, address, serviceId, serviceName, serviceTags.getOrElse(Set.empty), serviceAddress, servicePort),
     "Node", "Address", "ServiceID", "ServiceName", "ServiceTags", "ServiceAddress", "ServicePort"
   )
+
+  implicit val nodeFormat = jsonFormat(Node, "Node", "Address")
+  implicit val healthServiceFormat = jsonFormat(Service, "ID", "Service", "Tags", "Address", "Port")
+  implicit val healthServiceInstanceFormat = jsonFormat(HealthServiceInstance, "Node", "Service")
+
   implicit val httpCheckFormat = jsonFormat(HttpHealthCheck, "HTTP", "Interval")
   implicit val scriptCheckFormat = jsonFormat(ScriptHealthCheck, "Script", "Interval")
   implicit val ttlCheckFormat = jsonFormat(TTLHealthCheck, "TTL")
