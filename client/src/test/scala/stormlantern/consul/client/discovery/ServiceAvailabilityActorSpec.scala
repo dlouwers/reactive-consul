@@ -1,7 +1,7 @@
 package stormlantern.consul.client.discovery
 
-import akka.actor.ActorSystem
-import akka.testkit.{ ImplicitSender, TestActorRef, TestKit }
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.testkit.{ ImplicitSender, TestActorRef, TestKit }
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{ BeforeAndAfterAll, FlatSpecLike, Matchers }
 import stormlantern.consul.client.dao.{ ConsulHttpClient, IndexedServiceInstances }

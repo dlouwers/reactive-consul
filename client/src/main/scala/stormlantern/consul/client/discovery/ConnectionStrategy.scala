@@ -1,6 +1,6 @@
 package stormlantern.consul.client.discovery
 
-import akka.actor.{ ActorRef, ActorRefFactory }
+import org.apache.pekko.actor.{ ActorRef, ActorRefFactory }
 import stormlantern.consul.client.loadbalancers.{ LoadBalancer, LoadBalancerActor, RoundRobinLoadBalancer }
 
 case class ServiceDefinition(key: String, serviceName: String, serviceTags: Set[String] = Set.empty, dataCenter: Option[String] = None)

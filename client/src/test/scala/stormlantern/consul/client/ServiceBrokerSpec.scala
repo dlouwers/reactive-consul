@@ -1,8 +1,8 @@
 package stormlantern.consul.client
 
-import akka.actor.{ ActorRef, ActorSystem }
-import akka.actor.Status.Failure
-import akka.testkit.{ ImplicitSender, TestKit }
+import org.apache.pekko.actor.{ ActorRef, ActorSystem }
+import org.apache.pekko.actor.Status.Failure
+import org.apache.pekko.testkit.{ ImplicitSender, TestKit }
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{ BeforeAndAfterAll, FlatSpecLike, Matchers }

@@ -4,7 +4,7 @@ import java.net.URL
 
 import org.scalatest._
 import org.scalatest.concurrent.{ Eventually, IntegrationPatience, ScalaFutures }
-import stormlantern.consul.client.dao.akka.AkkaHttpConsulClient
+import stormlantern.consul.client.dao.org.apache.pekko.AkkaHttpConsulClient
 import stormlantern.consul.client.dao.{ ConsulHttpClient, ServiceRegistration }
 import stormlantern.consul.client.discovery.{ ConnectionProvider, ConnectionProviderFactory, ConnectionStrategy, ServiceDefinition }
 import stormlantern.consul.client.loadbalancers.RoundRobinLoadBalancer

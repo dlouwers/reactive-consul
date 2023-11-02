@@ -4,8 +4,8 @@ package util
 import scala.concurrent._
 import scala.concurrent.duration._
 
-import akka.actor.Scheduler
-import akka.pattern.after
+import org.apache.pekko.actor.Scheduler
+import org.apache.pekko.pattern.after
 
 trait RetryPolicy {
   def maxRetries = 4

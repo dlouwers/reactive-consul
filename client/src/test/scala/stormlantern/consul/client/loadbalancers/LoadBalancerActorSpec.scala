@@ -1,8 +1,8 @@
 package stormlantern.consul.client.loadbalancers
 
-import akka.actor.ActorSystem
-import akka.actor.Status.Failure
-import akka.testkit.{ ImplicitSender, TestActorRef, TestKit }
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.actor.Status.Failure
+import org.apache.pekko.testkit.{ ImplicitSender, TestActorRef, TestKit }
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{ BeforeAndAfterAll, FlatSpecLike, Matchers }
 import stormlantern.consul.client.ServiceUnavailableException

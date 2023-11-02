@@ -3,11 +3,11 @@ package stormlantern.consul.client.dao.akka
 import java.net.URL
 import java.util.UUID
 
-import akka.actor.{ ActorSystem, Scheduler }
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{ HttpHeader, StatusCode, _ }
-import akka.stream.{ ActorMaterializer, Materializer }
-import akka.util.ByteString
+import org.apache.pekko.actor.{ ActorSystem, Scheduler }
+import org.apache.pekko.http.scaladsl.Http
+import org.apache.pekko.http.scaladsl.model.{ HttpHeader, StatusCode, _ }
+import org.apache.pekko.stream.{ ActorMaterializer, Materializer }
+import org.apache.pekko.util.ByteString
 import spray.json._
 import stormlantern.consul.client.dao._
 import stormlantern.consul.client.util.{ Logging, RetryPolicy }

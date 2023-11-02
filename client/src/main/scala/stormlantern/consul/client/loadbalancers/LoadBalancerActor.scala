@@ -1,7 +1,7 @@
 package stormlantern.consul.client.loadbalancers
 
-import akka.actor.Status.Failure
-import akka.actor.{ Props, Actor, ActorLogging }
+import org.apache.pekko.actor.Status.Failure
+import org.apache.pekko.actor.{ Props, Actor, ActorLogging }
 import LoadBalancerActor._
 import stormlantern.consul.client.discovery.{ ConnectionProvider, ConnectionHolder }
 import stormlantern.consul.client.ServiceUnavailableException
@@ -10,7 +10,7 @@ import scala.collection.mutable
 
 class LoadBalancerActor(loadBalancer: LoadBalancer, key: String) extends Actor with ActorLogging {
 
-  import akka.pattern.pipe
+  import org.apache.pekko.pattern.pipe
 
   // Actor state
   val connectionProviders = mutable.Map.empty[String, ConnectionProvider]

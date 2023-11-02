@@ -1,6 +1,6 @@
 package stormlantern.consul.client.util
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 
 trait TestActorSystem {
   def withActorSystem[T](f: ActorSystem => T): T = {

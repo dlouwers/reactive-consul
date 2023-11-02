@@ -5,12 +5,12 @@ import java.net.URL
 import scala.concurrent.duration._
 import scala.concurrent._
 
-import akka.actor._
-import akka.util.Timeout
-import akka.pattern.ask
+import org.apache.pekko.actor._
+import org.apache.pekko.util.Timeout
+import org.apache.pekko.pattern.ask
 
 import stormlantern.consul.client.dao._
-import stormlantern.consul.client.dao.akka.AkkaHttpConsulClient
+import stormlantern.consul.client.dao.org.apache.pekko.AkkaHttpConsulClient
 import stormlantern.consul.client.discovery._
 import stormlantern.consul.client.election.LeaderInfo
 import stormlantern.consul.client.loadbalancers.LoadBalancerActor

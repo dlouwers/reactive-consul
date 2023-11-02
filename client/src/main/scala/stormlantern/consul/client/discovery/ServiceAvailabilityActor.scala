@@ -2,8 +2,8 @@ package stormlantern.consul.client
 package discovery
 
 import scala.concurrent.{ ExecutionContext, Future }
-import akka.actor._
-import akka.pattern.pipe
+import org.apache.pekko.actor._
+import org.apache.pekko.pattern.pipe
 import dao._
 import ServiceAvailabilityActor._
 

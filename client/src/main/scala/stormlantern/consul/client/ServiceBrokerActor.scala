@@ -2,9 +2,9 @@ package stormlantern.consul.client
 
 import java.util.UUID
 
-import akka.actor.Status.Failure
-import akka.actor._
-import akka.util.Timeout
+import org.apache.pekko.actor.Status.Failure
+import org.apache.pekko.actor._
+import org.apache.pekko.util.Timeout
 import stormlantern.consul.client.dao.ServiceInstance
 import stormlantern.consul.client.discovery.{ ConnectionStrategy, ServiceAvailabilityActor, ServiceDefinition }
 import stormlantern.consul.client.loadbalancers.LoadBalancerActor
@@ -71,7 +71,7 @@ class ServiceBrokerActor(
           sender ! false
       }
     case AllConnectionProvidersAvailable ⇒
-      import akka.pattern.pipe
+      import org.apache.pekko.pattern.pipe
       queryConnectionProviderAvailability pipeTo sender
     case JoinElection(key) ⇒
   }
@@ -93,7 +93,7 @@ class ServiceBrokerActor(
 
   def queryConnectionProviderAvailability: Future[Boolean] = {
     implicit val timeout: Timeout = 1.second
-    import akka.pattern.ask
+    import org.apache.pekko.pattern.ask
     Future.sequence(loadbalancers.values.map(_.ask(LoadBalancerActor.HasAvailableConnectionProvider).mapTo[Boolean]))
       .map(_.forall(p ⇒ p))
   }

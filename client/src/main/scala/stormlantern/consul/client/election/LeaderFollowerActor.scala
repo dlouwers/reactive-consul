@@ -2,7 +2,7 @@ package stormlantern.consul.client.election
 
 import java.util.UUID
 
-import akka.actor.{ Actor, Props }
+import org.apache.pekko.actor.{ Actor, Props }
 import spray.json._
 import stormlantern.consul.client.dao.{ AcquireSession, BinaryData, ConsulHttpClient, KeyData }
 import stormlantern.consul.client.election.LeaderFollowerActor._

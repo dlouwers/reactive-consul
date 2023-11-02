@@ -3,8 +3,8 @@ package stormlantern.consul.client.election
 import java.util
 import java.util.UUID
 
-import akka.actor.ActorSystem
-import akka.testkit.{ TestActorRef, ImplicitSender, TestKit }
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.testkit.{ TestActorRef, ImplicitSender, TestKit }
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{ BeforeAndAfterAll, Matchers, FlatSpecLike }
 import stormlantern.consul.client.dao.{ BinaryData, KeyData, AcquireSession, ConsulHttpClient }

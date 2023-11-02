@@ -2,7 +2,7 @@ package stormlantern.consul.client.session
 
 import java.util.UUID
 
-import akka.actor.{ ActorRef, Props, Actor }
+import org.apache.pekko.actor.{ ActorRef, Props, Actor }
 import stormlantern.consul.client.dao.ConsulHttpClient
 import stormlantern.consul.client.session.SessionActor.{ MonitorSession, SessionAcquired, StartSession }
 
