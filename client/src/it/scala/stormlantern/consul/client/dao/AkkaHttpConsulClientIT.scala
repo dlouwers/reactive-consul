@@ -2,21 +2,20 @@ package stormlantern.consul.client.dao
 
 import java.net.URL
 import java.util.UUID
-
 import org.scalatest._
-import org.scalatest.concurrent.{ Eventually, IntegrationPatience, ScalaFutures }
+import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
+import stormlantern.consul.client.ClientITSpec
+import stormlantern.consul.client.dao.akka.AkkaHttpConsulClient
 import stormlantern.consul.client.dao.org.apache.pekko.AkkaHttpConsulClient
-import stormlantern.consul.client.util.{ ConsulDockerContainer, Logging, RetryPolicy }
+import stormlantern.consul.client.util.{Logging, RetryPolicy}
 
-class AkkaHttpConsulClientIntegrationTest extends FlatSpec with Matchers with ScalaFutures with Eventually with IntegrationPatience with ConsulDockerContainer with TestActorSystem with RetryPolicy with Logging {
+class AkkaHttpConsulClientIT extends ClientITSpec with RetryPolicy with Logging {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
   def withConsulHttpClient[T](f: ConsulHttpClient => T): T = withConsulHost { (host, port) =>
-    withActorSystem { implicit actorSystem =>
       val subject: ConsulHttpClient = new AkkaHttpConsulClient(new URL(s"http://$host:$port"))
       f(subject)
-    }
   }
 
   "The AkkaHttpConsulClient" should "retrieve a single Consul service from a freshly started Consul instance" in withConsulHttpClient { subject =>
