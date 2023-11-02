@@ -24,8 +24,8 @@ class ServiceBrokerActorSpec(_system: ActorSystem) extends TestKit(_system) with
 
   trait TestScope {
     val httpClient: ConsulHttpClient = mock[ConsulHttpClient]
-    val serviceAvailabilityActorFactory: (ActorRefFactory, ServiceDefinition, ActorRef, Boolean) ⇒ ActorRef =
-      mock[(ActorRefFactory, ServiceDefinition, ActorRef, Boolean) ⇒ ActorRef]
+    val serviceAvailabilityActorFactory: (ActorRefFactory, ServiceDefinition, ActorRef, Boolean) => ActorRef =
+      mock[(ActorRefFactory, ServiceDefinition, ActorRef, Boolean) => ActorRef]
     val connectionProviderFactory: ConnectionProviderFactory = mock[ConnectionProviderFactory]
     val connectionProvider: ConnectionProvider = mock[ConnectionProvider]
     val connectionHolder: ConnectionHolder = mock[ConnectionHolder]
@@ -33,8 +33,8 @@ class ServiceBrokerActorSpec(_system: ActorSystem) extends TestKit(_system) with
     val service2 = ServiceDefinition("service2Key", "service2")
     val loadBalancerProbeForService1 = TestProbe("LoadBalancerActorForService1")
     val loadBalancerProbeForService2 = TestProbe("LoadBalancerActorForService2")
-    val connectionStrategyForService1 = ConnectionStrategy(service1, connectionProviderFactory, ctx ⇒ loadBalancerProbeForService1.ref, onlyHealthyServices = true)
-    val connectionStrategyForService2 = ConnectionStrategy(service2, connectionProviderFactory, ctx ⇒ loadBalancerProbeForService2.ref, onlyHealthyServices = false)
+    val connectionStrategyForService1 = ConnectionStrategy(service1, connectionProviderFactory, ctx => loadBalancerProbeForService1.ref, onlyHealthyServices = true)
+    val connectionStrategyForService2 = ConnectionStrategy(service2, connectionProviderFactory, ctx => loadBalancerProbeForService2.ref, onlyHealthyServices = false)
   }
 
   "The ServiceBrokerActor" should "create a child actor per service" in new TestScope {
@@ -113,7 +113,7 @@ class ServiceBrokerActorSpec(_system: ActorSystem) extends TestKit(_system) with
     serviceAvailabilityProbe.expectMsg(Start)
     sut ! ServiceBrokerActor.HasAvailableConnectionProviderFor(service1.key)
     loadBalancerProbeForService1.expectMsgPF() {
-      case LoadBalancerActor.HasAvailableConnectionProvider ⇒ loadBalancerProbeForService1.sender() ! true
+      case LoadBalancerActor.HasAvailableConnectionProvider => loadBalancerProbeForService1.sender() ! true
     }
     expectMsg(true)
     sut.stop()
@@ -130,10 +130,10 @@ class ServiceBrokerActorSpec(_system: ActorSystem) extends TestKit(_system) with
     service2AvailabilityProbe.expectMsg(Start)
     sut ! ServiceBrokerActor.AllConnectionProvidersAvailable
     loadBalancerProbeForService1.expectMsgPF() {
-      case LoadBalancerActor.HasAvailableConnectionProvider ⇒ loadBalancerProbeForService1.sender() ! true
+      case LoadBalancerActor.HasAvailableConnectionProvider => loadBalancerProbeForService1.sender() ! true
     }
     loadBalancerProbeForService2.expectMsgPF() {
-      case LoadBalancerActor.HasAvailableConnectionProvider ⇒ loadBalancerProbeForService2.sender() ! false
+      case LoadBalancerActor.HasAvailableConnectionProvider => loadBalancerProbeForService2.sender() ! false
     }
     expectMsg(false)
     sut.stop()
@@ -150,10 +150,10 @@ class ServiceBrokerActorSpec(_system: ActorSystem) extends TestKit(_system) with
     service2AvailabilityProbe.expectMsg(Start)
     sut ! ServiceBrokerActor.AllConnectionProvidersAvailable
     loadBalancerProbeForService1.expectMsgPF() {
-      case LoadBalancerActor.HasAvailableConnectionProvider ⇒ loadBalancerProbeForService1.sender() ! true
+      case LoadBalancerActor.HasAvailableConnectionProvider => loadBalancerProbeForService1.sender() ! true
     }
     loadBalancerProbeForService2.expectMsgPF() {
-      case LoadBalancerActor.HasAvailableConnectionProvider ⇒ loadBalancerProbeForService2.sender() ! true
+      case LoadBalancerActor.HasAvailableConnectionProvider => loadBalancerProbeForService2.sender() ! true
     }
     expectMsg(true)
     sut.stop()

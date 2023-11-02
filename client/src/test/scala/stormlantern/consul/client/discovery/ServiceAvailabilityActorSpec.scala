@@ -25,7 +25,7 @@ class ServiceAvailabilityActorSpec(_system: ActorSystem) extends TestKit(_system
     val httpClient: ConsulHttpClient = mock[ConsulHttpClient]
     val sut = TestActorRef(ServiceAvailabilityActor.props(httpClient, ServiceDefinition("bogus123", "bogus"), self, onlyHealthyServices = false))
     (httpClient.getService _).expects("bogus", None, Some(0L), Some("1s"), None).returns(Future.successful(IndexedServiceInstances(1, Set.empty)))
-    (httpClient.getService _).expects("bogus", None, Some(1L), Some("1s"), None).onCall { p ⇒
+    (httpClient.getService _).expects("bogus", None, Some(1L), Some("1s"), None).onCall { p =>
       sut.stop()
       Future.successful(IndexedServiceInstances(1, Set.empty))
     }
@@ -41,7 +41,7 @@ class ServiceAvailabilityActorSpec(_system: ActorSystem) extends TestKit(_system
     val service = ModelHelpers.createService("bogus123", "bogus")
     (httpClient.getService _).expects("bogus", None, Some(0L), Some("1s"), None).returns(Future.successful(IndexedServiceInstances(1, Set.empty)))
     (httpClient.getService _).expects("bogus", None, Some(1L), Some("1s"), None).returns(Future.successful(IndexedServiceInstances(2, Set(service))))
-    (httpClient.getService _).expects("bogus", None, Some(2L), Some("1s"), None).onCall { p ⇒
+    (httpClient.getService _).expects("bogus", None, Some(2L), Some("1s"), None).onCall { p =>
       sut.stop()
       Future.successful(IndexedServiceInstances(2, Set(service)))
     }
@@ -59,7 +59,7 @@ class ServiceAvailabilityActorSpec(_system: ActorSystem) extends TestKit(_system
     val matchingService = nonMatchingservice.copy(serviceTags = Set("one", "two"))
     (httpClient.getService _).expects("bogus", Some("one"), Some(0L), Some("1s"), None).returns(Future.successful(IndexedServiceInstances(1, Set.empty)))
     (httpClient.getService _).expects("bogus", Some("one"), Some(1L), Some("1s"), None).returns(Future.successful(IndexedServiceInstances(2, Set(nonMatchingservice, matchingService))))
-    (httpClient.getService _).expects("bogus", Some("one"), Some(2L), Some("1s"), None).onCall { p ⇒
+    (httpClient.getService _).expects("bogus", Some("one"), Some(2L), Some("1s"), None).onCall { p =>
       sut.stop()
       Future.successful(IndexedServiceInstances(2, Set(nonMatchingservice, matchingService)))
     }

@@ -34,11 +34,11 @@ class ServiceBrokerSpec(_system: ActorSystem) extends TestKit(_system) with Impl
     (connectionHolder.connection _).expects().returns(Future.successful(true))
     (connectionHolder.loadBalancer _).expects().returns(loadBalancer)
     val sut = new ServiceBroker(self, httpClient)
-    val result: Future[Boolean] = sut.withService("service1") { service: Boolean ⇒
+    val result: Future[Boolean] = sut.withService("service1") { service: Boolean =>
       Future.successful(service)
     }
     expectMsgPF() {
-      case ServiceBrokerActor.GetServiceConnection("service1") ⇒
+      case ServiceBrokerActor.GetServiceConnection("service1") =>
         lastSender ! connectionHolder
         result.map(_ shouldEqual true).futureValue
     }
@@ -49,11 +49,11 @@ class ServiceBrokerSpec(_system: ActorSystem) extends TestKit(_system) with Impl
     (connectionHolder.connection _).expects().returns(Future.successful(true))
     (connectionHolder.loadBalancer _).expects().returns(loadBalancer)
     val sut = new ServiceBroker(self, httpClient)
-    val result: Future[Boolean] = sut.withService[Boolean, Boolean]("service1") { service: Boolean ⇒
+    val result: Future[Boolean] = sut.withService[Boolean, Boolean]("service1") { service: Boolean =>
       throw new RuntimeException()
     }
     expectMsgPF() {
-      case ServiceBrokerActor.GetServiceConnection("service1") ⇒
+      case ServiceBrokerActor.GetServiceConnection("service1") =>
         lastSender ! connectionHolder
         an[RuntimeException] should be thrownBy result.futureValue
     }
@@ -62,11 +62,11 @@ class ServiceBrokerSpec(_system: ActorSystem) extends TestKit(_system) with Impl
 
   it should "throw an error when an excpetion is returned" in new TestScope {
     val sut = new ServiceBroker(self, httpClient)
-    val result: Future[Boolean] = sut.withService("service1") { service: Boolean ⇒
+    val result: Future[Boolean] = sut.withService("service1") { service: Boolean =>
       Future.successful(service)
     }
     expectMsgPF() {
-      case ServiceBrokerActor.GetServiceConnection("service1") ⇒
+      case ServiceBrokerActor.GetServiceConnection("service1") =>
         lastSender ! Failure(new RuntimeException())
         an[RuntimeException] should be thrownBy result.futureValue
     }

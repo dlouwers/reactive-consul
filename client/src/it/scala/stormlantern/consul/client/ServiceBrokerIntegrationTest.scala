@@ -1,15 +1,13 @@
 package stormlantern.consul.client
 
-import java.net.URL
-
-import org.scalatest._
-import org.scalatest.concurrent.{ Eventually, IntegrationPatience, ScalaFutures }
-import stormlantern.consul.client.dao.org.apache.pekko.AkkaHttpConsulClient
-import stormlantern.consul.client.dao.{ ConsulHttpClient, ServiceRegistration }
-import stormlantern.consul.client.discovery.{ ConnectionProvider, ConnectionProviderFactory, ConnectionStrategy, ServiceDefinition }
+import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
+import stormlantern.consul.client.dao.akka.AkkaHttpConsulClient
+import stormlantern.consul.client.dao.{ConsulHttpClient, ServiceRegistration}
+import stormlantern.consul.client.discovery.{ConnectionProvider, ConnectionProviderFactory, ConnectionStrategy, ServiceDefinition}
 import stormlantern.consul.client.loadbalancers.RoundRobinLoadBalancer
-import stormlantern.consul.client.util.{ ConsulDockerContainer, Logging, TestActorSystem }
+import stormlantern.consul.client.util.{ConsulDockerContainer, Logging, TestActorSystem}
 
+import java.net.URL
 import scala.concurrent.Future
 
 class ServiceBrokerIntegrationTest extends FlatSpec with Matchers with ScalaFutures with Eventually with IntegrationPatience with ConsulDockerContainer with TestActorSystem with Logging {
@@ -26,6 +24,7 @@ class ServiceBrokerIntegrationTest extends FlatSpec with Matchers with ScalaFutu
         override def create(host: String, port: Int): ConnectionProvider = new ConnectionProvider {
           logger.info(s"Asked to create connection provider for $host:$port")
           val httpClient: ConsulHttpClient = new AkkaHttpConsulClient(new URL(s"http://$host:$port"))
+
           override def getConnection: Future[Any] = Future.successful(httpClient)
         }
       }
