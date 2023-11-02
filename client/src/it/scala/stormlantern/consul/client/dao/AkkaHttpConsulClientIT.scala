@@ -8,7 +8,6 @@ import java.net.URL
 import java.util.UUID
 
 class AkkaHttpConsulClientIT extends ClientITSpec with RetryPolicy with Logging {
-
   val subject = new AkkaHttpConsulClient(new URL(s"http://$host:$port"))
 
   "The AkkaHttpConsulClient" should "retrieve a single Consul service from a freshly started Consul instance" in {

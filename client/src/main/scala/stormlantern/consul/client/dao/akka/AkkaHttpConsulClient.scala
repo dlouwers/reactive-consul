@@ -204,11 +204,11 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem)
       }
 
       if (resp.entity.contentType.mediaType == expected) {
-        Future successful resp
+        Future.successful(resp)
       } else {
-        Future failed ConsulException(
-          resp.status,
-          s"Unexpected content type: ${resp.entity.contentType}, expected $expectedMediaType"
+        Future.failed(
+          ConsulException(resp.status,
+                          s"Unexpected content type: ${resp.entity.contentType}, expected $expectedMediaType")
         )
       }
     }
@@ -219,8 +219,9 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem)
     // make the call
     Http()
       .singleRequest(request)
+      .map(response => { logger.info("RESPONSE: " + response); response })
       .flatMap(validStatus)
-      .flatMap(validContenType)
+      .flatMap(validContentType)
       .flatMap { response: HttpResponse =>
         parseBody(response).map { body: String =>
           ConsulResponse(response.status, response.headers, body)
