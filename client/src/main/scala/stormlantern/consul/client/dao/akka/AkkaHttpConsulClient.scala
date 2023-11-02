@@ -162,7 +162,7 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem)
             case JsonMediaType => Future.successful(Option(body.parseJson.convertTo[Boolean]).getOrElse(false))
             case TextMediaType => Future.successful(Option(body.toBoolean).getOrElse(false))
           }
-        case ConsulResponse(InternalServerError, _, _, "Invalid session") =>
+        case ConsulResponse(InternalServerError, _, _, body) if body.startsWith("invalid session") =>
           Future.successful(false)
         case ConsulResponse(status, _, _, body) =>
           Future.failed(new Exception(s"Request returned status code $status - $body"))

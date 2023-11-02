@@ -161,8 +161,9 @@ class AkkaHttpConsulClientIT extends ClientITSpec with RetryPolicy with Logging 
   it should "fail when aquiring a lock on a key with a non-existent session" in {
     val payload              = """ { "name" : "test" } """.getBytes("UTF-8")
     val nonExistentSessionId = UUID.fromString("9A3BB9C-E2E7-43DF-BFD5-845417146552")
+    val key                  = "my/key" + rnd.nextInt(100000)
     subject
-      .putKeyValuePair("my/key", payload, Some(AcquireSession(nonExistentSessionId)))
+      .putKeyValuePair(key, payload, Some(AcquireSession(nonExistentSessionId)))
       .futureValue should be(false)
   }
 }
