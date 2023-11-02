@@ -6,8 +6,10 @@ import stormlantern.consul.client.util.{Logging, RetryPolicy}
 
 import java.net.URL
 import java.util.UUID
+import scala.util.Random
 
 class AkkaHttpConsulClientIT extends ClientITSpec with RetryPolicy with Logging {
+  val rnd     = new Random()
   val subject = new AkkaHttpConsulClient(new URL(s"http://$host:$port"))
 
   "The AkkaHttpConsulClient" should "retrieve a single Consul service from a freshly started Consul instance" in {
@@ -132,31 +134,34 @@ class AkkaHttpConsulClientIT extends ClientITSpec with RetryPolicy with Logging 
   it should "get a session lock on a key/value pair and fail to get a second lock" in {
     val id: UUID = subject.putSession(Some(SessionCreation(name = Some("MySession")))).futureValue
     val payload  = """ { "name" : "test" } """.getBytes("UTF-8")
-    subject.putKeyValuePair("my/key", payload, Some(AcquireSession(id))).futureValue should be(true)
-    subject.putKeyValuePair("my/key", payload, Some(AcquireSession(id))).futureValue should be(false)
-    subject.putKeyValuePair("my/key", payload, Some(ReleaseSession(id))).futureValue should be(true)
+    val key      = "my/key" + rnd.nextInt(100000)
+    subject.putKeyValuePair(key, payload, Some(AcquireSession(id))).futureValue should be(true)
+    subject.putKeyValuePair(key, payload, Some(AcquireSession(id))).futureValue should be(false)
+    subject.putKeyValuePair(key, payload, Some(ReleaseSession(id))).futureValue should be(true)
   }
 
   it should "get a session lock on a key/value pair and get a second lock after release" in {
     val id: UUID = subject.putSession(Some(SessionCreation(name = Some("MySession")))).futureValue
     val payload  = """ { "name" : "test" } """.getBytes("UTF-8")
-    subject.putKeyValuePair("my/key", payload, Some(AcquireSession(id))).futureValue should be(true)
-    subject.putKeyValuePair("my/key", payload, Some(ReleaseSession(id))).futureValue should be(true)
-    subject.putKeyValuePair("my/key", payload, Some(AcquireSession(id))).futureValue should be(true)
-    subject.putKeyValuePair("my/key", payload, Some(ReleaseSession(id))).futureValue should be(true)
+    val key      = "my/key" + rnd.nextInt(100000)
+    subject.putKeyValuePair(key, payload, Some(AcquireSession(id))).futureValue should be(true)
+    subject.putKeyValuePair(key, payload, Some(ReleaseSession(id))).futureValue should be(true)
+    subject.putKeyValuePair(key, payload, Some(AcquireSession(id))).futureValue should be(true)
+    subject.putKeyValuePair(key, payload, Some(ReleaseSession(id))).futureValue should be(true)
   }
 
   it should "write a key/value pair and read it back" in {
     val payload = """ { "name" : "test" } """.getBytes("UTF-8")
-    subject.putKeyValuePair("my/key", payload).futureValue should be(true)
-    val keyDataSeq = subject.getKeyValuePair("my/key").futureValue
+    val key     = "my/key" + rnd.nextInt(100000)
+    subject.putKeyValuePair(key, payload).futureValue should be(true)
+    val keyDataSeq = subject.getKeyValuePair(key).futureValue
     keyDataSeq.head.value should equal(BinaryData(payload))
   }
 
   it should "fail when aquiring a lock on a key with a non-existent session" in {
     val payload              = """ { "name" : "test" } """.getBytes("UTF-8")
     val nonExistentSessionId = UUID.fromString("9A3BB9C-E2E7-43DF-BFD5-845417146552")
-    val result = subject
+    subject
       .putKeyValuePair("my/key", payload, Some(AcquireSession(nonExistentSessionId)))
       .futureValue should be(false)
   }

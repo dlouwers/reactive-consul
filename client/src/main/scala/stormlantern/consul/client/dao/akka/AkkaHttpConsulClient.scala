@@ -157,8 +157,11 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem)
 
     retry[Boolean]() {
       getResponse(request, validator).flatMap {
-        case ConsulResponse(OK, MediaTypes.`application/json`, _, body) =>
-          Future.successful(Option(body.parseJson.convertTo[Boolean]).getOrElse(false))
+        case ConsulResponse(OK, mediaType, _, body) =>
+          mediaType match {
+            case JsonMediaType => Future.successful(Option(body.parseJson.convertTo[Boolean]).getOrElse(false))
+            case TextMediaType => Future.successful(Option(body.toBoolean).getOrElse(false))
+          }
         case ConsulResponse(InternalServerError, _, _, "Invalid session") =>
           Future.successful(false)
         case ConsulResponse(status, _, _, body) =>
