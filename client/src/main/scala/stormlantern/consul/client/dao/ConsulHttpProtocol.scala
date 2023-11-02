@@ -11,12 +11,12 @@ trait ConsulHttpProtocol extends DefaultJsonProtocol {
 
   implicit val uuidFormat = new JsonFormat[UUID] {
     override def read(json: JsValue): UUID = json match {
-      case JsString(uuid) ⇒ try {
+      case JsString(uuid) => try {
         UUID.fromString(uuid)
       } catch {
-        case NonFatal(e) ⇒ deserializationError("Expected UUID, but got " + uuid)
+        case NonFatal(e) => deserializationError("Expected UUID, but got " + uuid)
       }
-      case x ⇒ deserializationError("Expected UUID as JsString, but got " + x)
+      case x => deserializationError("Expected UUID as JsString, but got " + x)
     }
 
     override def write(obj: UUID): JsValue = JsString(obj.toString)
@@ -24,31 +24,36 @@ trait ConsulHttpProtocol extends DefaultJsonProtocol {
 
   implicit val binaryDataFormat = new JsonFormat[BinaryData] {
     override def read(json: JsValue): BinaryData = json match {
-      case JsString(data) ⇒ try {
+      case JsString(data) => try {
         BinaryData(Base64.getMimeDecoder.decode(data))
       } catch {
-        case NonFatal(e) ⇒ deserializationError("Expected base64 encoded binary data, but got " + data)
+        case NonFatal(e) => deserializationError("Expected base64 encoded binary data, but got " + data)
       }
-      case x ⇒ deserializationError("Expected base64 encoded binary data as JsString, but got " + x)
+      case x => deserializationError("Expected base64 encoded binary data as JsString, but got " + x)
     }
 
     override def write(obj: BinaryData): JsValue = JsString(Base64.getMimeEncoder.encodeToString(obj.data))
   }
 
-  implicit val serviceFormat = jsonFormat(
-    (node: String, address: String, serviceId: String, serviceName: String, serviceTags: Option[Set[String]], serviceAddress: String, servicePort: Int) ⇒
+  implicit val serviceFormat: RootJsonFormat[ServiceInstance] = jsonFormat(
+    (node: String, address: String, serviceId: String, serviceName: String, serviceTags: Option[Set[String]], serviceAddress: String, servicePort: Int) =>
       ServiceInstance(node, address, serviceId, serviceName, serviceTags.getOrElse(Set.empty), serviceAddress, servicePort),
     "Node", "Address", "ServiceID", "ServiceName", "ServiceTags", "ServiceAddress", "ServicePort"
   )
+
+  implicit val nodeFormat = jsonFormat(Node, "Node", "Address")
+  implicit val healthServiceFormat = jsonFormat(Service, "ID", "Service", "Tags", "Address", "Port")
+  implicit val healthServiceInstanceFormat = jsonFormat(HealthServiceInstance, "Node", "Service")
+
   implicit val httpCheckFormat = jsonFormat(HttpHealthCheck, "HTTP", "Interval")
   implicit val scriptCheckFormat = jsonFormat(ScriptHealthCheck, "Script", "Interval")
   implicit val ttlCheckFormat = jsonFormat(TTLHealthCheck, "TTL")
   implicit val checkWriter = lift {
     new JsonWriter[HealthCheck] {
       override def write(obj: HealthCheck): JsValue = obj match {
-        case obj: ScriptHealthCheck ⇒ obj.toJson
-        case obj: HttpHealthCheck   ⇒ obj.toJson
-        case obj: TTLHealthCheck    ⇒ obj.toJson
+        case obj: ScriptHealthCheck => obj.toJson
+        case obj: HttpHealthCheck   => obj.toJson
+        case obj: TTLHealthCheck    => obj.toJson
       }
     }
   }

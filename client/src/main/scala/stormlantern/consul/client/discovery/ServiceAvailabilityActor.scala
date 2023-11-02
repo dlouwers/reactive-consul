@@ -2,12 +2,12 @@ package stormlantern.consul.client
 package discovery
 
 import scala.concurrent.{ ExecutionContext, Future }
-import akka.actor._
-import akka.pattern.pipe
+import org.apache.pekko.actor._
+import org.apache.pekko.pattern.pipe
 import dao._
 import ServiceAvailabilityActor._
 
-class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceDefinition: ServiceDefinition, listener: ActorRef) extends Actor {
+class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceDefinition: ServiceDefinition, listener: ActorRef, onlyHealthServices: Boolean) extends Actor {
 
   implicit val ec: ExecutionContext = context.dispatcher
 
@@ -16,16 +16,16 @@ class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceDefinition: 
   var serviceAvailabilityState: IndexedServiceInstances = IndexedServiceInstances.empty
 
   def receive: Receive = {
-    case Start ⇒
+    case Start =>
       self ! UpdateServiceAvailability(None)
-    case UpdateServiceAvailability(services: Option[IndexedServiceInstances]) ⇒
+    case UpdateServiceAvailability(services: Option[IndexedServiceInstances]) =>
       val (update, serviceChange) = updateServiceAvailability(services.getOrElse(IndexedServiceInstances.empty))
       update.foreach(listener ! _)
       if (!initialized && services.isDefined) {
         initialized = true
         listener ! Started
       }
-      serviceChange.map(changes ⇒ UpdateServiceAvailability(Some(changes))) pipeTo self
+      serviceChange.map(changes => UpdateServiceAvailability(Some(changes))) pipeTo self
   }
 
   def updateServiceAvailability(services: IndexedServiceInstances): (Option[ServiceAvailabilityUpdate], Future[IndexedServiceInstances]) = {
@@ -36,7 +36,14 @@ class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceDefinition: 
     } else {
       None
     }
-    (update, httpClient.getService(
+    (update, if (onlyHealthServices)
+      httpClient.getServiceHealthAware(
+      serviceDefinition.serviceName,
+      serviceDefinition.serviceTags.headOption,
+      Some(services.index),
+      Some("1s")
+    )
+    else httpClient.getService(
       serviceDefinition.serviceName,
       serviceDefinition.serviceTags.headOption,
       Some(services.index),
@@ -54,7 +61,7 @@ class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceDefinition: 
 
 object ServiceAvailabilityActor {
 
-  def props(httpClient: ConsulHttpClient, serviceDefinition: ServiceDefinition, listener: ActorRef): Props = Props(new ServiceAvailabilityActor(httpClient, serviceDefinition, listener))
+  def props(httpClient: ConsulHttpClient, serviceDefinition: ServiceDefinition, listener: ActorRef, onlyHealthyServices: Boolean): Props = Props(new ServiceAvailabilityActor(httpClient, serviceDefinition, listener, onlyHealthyServices))
 
   // Messages
   case object Start

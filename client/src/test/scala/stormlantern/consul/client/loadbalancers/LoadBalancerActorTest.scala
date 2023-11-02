@@ -1,29 +1,18 @@
 package stormlantern.consul.client.loadbalancers
 
-import akka.actor.ActorSystem
-import akka.actor.Status.Failure
-import akka.testkit.{ ImplicitSender, TestActorRef, TestKit }
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.{ BeforeAndAfterAll, FlatSpecLike, Matchers }
-import stormlantern.consul.client.ServiceUnavailableException
-import stormlantern.consul.client.discovery.{ ConnectionHolder, ConnectionProvider }
-import stormlantern.consul.client.util.Logging
+import org.apache.pekko.actor.Status.Failure
+import org.apache.pekko.testkit.TestActorRef
+import stormlantern.consul.client.discovery.{ConnectionHolder, ConnectionProvider}
+import stormlantern.consul.client.{ClientSpec, ServiceUnavailableException}
 
 import scala.concurrent.Future
 
-class LoadBalancerActorSpec(_system: ActorSystem) extends TestKit(_system) with ImplicitSender with FlatSpecLike
-    with Matchers with BeforeAndAfterAll with MockFactory with Logging {
-
-  def this() = this(ActorSystem("LoadBalancerActorSpec"))
-
-  override def afterAll() {
-    TestKit.shutdownActorSystem(system)
-  }
+class LoadBalancerActorTest extends ClientSpec {
 
   trait TestScope {
-    val connectionHolder = mock[ConnectionHolder]
+    val connectionHolder   = mock[ConnectionHolder]
     val connectionProvider = mock[ConnectionProvider]
-    val loadBalancer = mock[LoadBalancer]
+    val loadBalancer       = mock[LoadBalancer]
   }
 
   "The LoadBalancerActor" should "hand out a connection holder when requested" in new TestScope {
@@ -39,7 +28,7 @@ class LoadBalancerActorSpec(_system: ActorSystem) extends TestKit(_system) with 
   }
 
   it should "return an error when a connectionprovider fails to provide a connection" in new TestScope {
-    val instanceKey = "instanceKey"
+    val instanceKey       = "instanceKey"
     val expectedException = new ServiceUnavailableException("service1")
     (loadBalancer.selectConnection _).expects().returns(Some(instanceKey))
     val sut = TestActorRef(new LoadBalancerActor(loadBalancer, "service1"))
@@ -70,7 +59,7 @@ class LoadBalancerActorSpec(_system: ActorSystem) extends TestKit(_system) with 
     (connectionProvider.destroy _).expects()
     val sut = TestActorRef(new LoadBalancerActor(loadBalancer, "service1"))
     sut ! LoadBalancerActor.AddConnectionProvider(instanceKey, connectionProvider)
-    sut.underlyingActor.connectionProviders should contain(instanceKey → connectionProvider)
+    sut.underlyingActor.connectionProviders should contain(instanceKey -> connectionProvider)
     sut.stop()
   }
 
@@ -81,7 +70,7 @@ class LoadBalancerActorSpec(_system: ActorSystem) extends TestKit(_system) with 
     val sut = TestActorRef(new LoadBalancerActor(loadBalancer, "service1"))
     sut.underlyingActor.connectionProviders.put(instanceKey, connectionProvider)
     sut ! LoadBalancerActor.RemoveConnectionProvider(instanceKey)
-    sut.underlyingActor.connectionProviders should not contain (instanceKey → connectionProvider)
+    sut.underlyingActor.connectionProviders should not contain (instanceKey -> connectionProvider)
   }
 
   it should "return true when it has at least one available connection provider for the service" in new TestScope {

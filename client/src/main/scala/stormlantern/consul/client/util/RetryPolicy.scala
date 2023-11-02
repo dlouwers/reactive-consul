@@ -4,8 +4,8 @@ package util
 import scala.concurrent._
 import scala.concurrent.duration._
 
-import akka.actor.Scheduler
-import akka.pattern.after
+import org.apache.pekko.actor.Scheduler
+import org.apache.pekko.pattern.after
 
 trait RetryPolicy {
   def maxRetries = 4
@@ -13,11 +13,11 @@ trait RetryPolicy {
     delay: FiniteDuration = 500.milli,
     retries: Int = 4,
     backoff: Int = 2,
-    predicate: T ⇒ Boolean = (r: T) ⇒ true
-  )(f: ⇒ Future[T])(implicit ec: ExecutionContext, s: Scheduler): Future[T] = {
+    predicate: T => Boolean = (r: T) => true
+  )(f: => Future[T])(implicit ec: ExecutionContext, s: Scheduler): Future[T] = {
     f.map {
-      case r if !predicate(r) ⇒ throw new IllegalStateException("Result does not satisfy the predicate specified")
-      case r                  ⇒ r
-    } recoverWith { case _ if retries > 0 ⇒ after(delay, s)(retry(delay * backoff, retries - 1, backoff, predicate)(f)) }
+      case r if !predicate(r) => throw new IllegalStateException("Result does not satisfy the predicate specified")
+      case r                  => r
+    } recoverWith { case _ if retries > 0 => after(delay, s)(retry(delay * backoff, retries - 1, backoff, predicate)(f)) }
   }
 }
