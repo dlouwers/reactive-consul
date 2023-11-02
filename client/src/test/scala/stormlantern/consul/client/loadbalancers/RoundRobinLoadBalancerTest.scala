@@ -1,8 +1,9 @@
 package stormlantern.consul.client.loadbalancers
 
-import org.scalatest.{ Matchers, FlatSpecLike }
+import org.scalatest.flatspec.AnyFlatSpecLike
+import org.scalatest.matchers.should.Matchers
 
-class RoundRobinLoadBalancerSpec extends FlatSpecLike with Matchers {
+class RoundRobinLoadBalancerTest extends AnyFlatSpecLike with Matchers {
 
   "The RoundRobinLoadBalancer" should "select a connection" in {
     val sut = new RoundRobinLoadBalancer

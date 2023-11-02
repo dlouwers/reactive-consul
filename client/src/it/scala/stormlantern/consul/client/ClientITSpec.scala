@@ -18,4 +18,7 @@ abstract class ClientITSpec(val config: Config = ConfigFactory.load())
     with IntegrationPatience {
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+
+  val host = "localhost"
+  val port = 8500
 }

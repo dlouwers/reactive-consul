@@ -1,8 +1,6 @@
-
-
 // Scala Formatting
 ThisBuild / scalafmtVersion := "1.5.1"
-ThisBuild / scalafmtOnCompile := false // all projects
+ThisBuild / scalafmtOnCompile := false     // all projects
 ThisBuild / scalafmtTestOnCompile := false // all projects
 
 releaseCrossBuild := true
@@ -66,14 +64,15 @@ lazy val client: Project = (project in file("client"))
     name := "client",
     sbtrelease.ReleasePlugin.autoImport.releasePublishArtifactsAction := PgpKeys.publishSigned.value,
     libraryDependencies ++= Seq(
-      "ch.qos.logback" % "logback-classic" % "1.4.7",
-      "io.spray" %% "spray-json" % "1.3.6",
-      "org.apache.pekko" %% "pekko-actor" % Dependencies.PekkoVersion,
-      "org.apache.pekko" %% "pekko-stream" % Dependencies.PekkoVersion,
-      "org.apache.pekko" %% "pekko-http" % Dependencies.PekkoHttpVersion,
+      "ch.qos.logback"   % "logback-classic" % "1.4.7",
+      "io.spray"         %% "spray-json"     % "1.3.6",
+      "org.apache.pekko" %% "pekko-actor"    % Dependencies.PekkoVersion,
+      "org.apache.pekko" %% "pekko-slf4j"    % Dependencies.PekkoVersion,
+      "org.apache.pekko" %% "pekko-stream"   % Dependencies.PekkoVersion,
+      "org.apache.pekko" %% "pekko-http"     % Dependencies.PekkoHttpVersion,
       // test dependencies
       "org.apache.pekko" %% "pekko-testkit" % Dependencies.PekkoVersion % Test,
-      "org.scalatest" %% "scalatest" % "3.2.15" % Test,
-      "org.scalamock" %% "scalamock" % "5.2.0" % Test
+      "org.scalatest"    %% "scalatest"     % "3.2.15"                  % Test,
+      "org.scalamock"    %% "scalamock"     % "5.2.0"                   % Test
     )
   )
