@@ -142,10 +142,12 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem)
 
     retry[Boolean]() {
       getResponse(request, JsonMediaType, validator).flatMap {
-        case ConsulResponse(OK, _, body)                               => Future successful Option(body.toBoolean).getOrElse(false)
-        case ConsulResponse(InternalServerError, _, "Invalid session") => Future successful false
+        case ConsulResponse(OK, _, body) =>
+          Future.successful(Option(body.toBoolean).getOrElse(false))
+        case ConsulResponse(InternalServerError, _, "Invalid session") =>
+          Future.successful(false)
         case ConsulResponse(status, _, body) =>
-          Future failed new Exception(s"Request returned status code $status - $body")
+          Future.failed(new Exception(s"Request returned status code $status - $body"))
       }
     }
   }
@@ -180,22 +182,18 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem)
   private def getResponse[T, U](
       request: HttpRequest,
       expectedMediaType: MediaType,
-      validator: HttpResponse => Boolean = (in) => in.status.isSuccess()
+      validator: HttpResponse => Boolean = in => in.status.isSuccess()
   ): Future[ConsulResponse] = {
 
     def validStatus(response: HttpResponse): Future[HttpResponse] =
       if (validator(response)) {
-        Future successful response
+        Future.successful(response)
       } else {
         parseBody(response).flatMap { body =>
-          Future failed ConsulException(s"Bad status code: ${response.status.intValue()} with body $body")
+          Future.failed(ConsulException(s"Bad status code: ${response.status.intValue()} with body $body"))
         }
       }
 
-    //
-    //  Consul does not return the Charset with the Response Content Type, so just MediaType comparison
-    //  Furthermore, when an error is returned the content type is text/plain, thank you HashiCorp ...
-    // /////////////////////
     def validContentType(resp: HttpResponse): Future[HttpResponse] = {
       val expected = resp.status match {
         case st if st.isSuccess()     => expectedMediaType
@@ -213,19 +211,22 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem)
       }
     }
 
-    def parseBody(response: HttpResponse): Future[String] =
-      response.entity.dataBytes.runFold(ByteString(""))(_ ++ _).map(_.utf8String)
+    def parseBody(response: HttpResponse): Future[String] = {
+      val body = response.entity.dataBytes.runFold(ByteString(""))(_ ++ _).map(_.utf8String)
+      response.entity.contentType match {
+        case ContentTypes.`application/json` => body.map(_.parseJson.toString())
+        case _                               => body
+      }
+    }
 
     // make the call
     Http()
       .singleRequest(request)
-      .map(response => { logger.info("RESPONSE: " + response); response })
+//      .map(response => { logger.info("RESPONSE: " + response); response })
       .flatMap(validStatus)
       .flatMap(validContentType)
       .flatMap { response: HttpResponse =>
-        parseBody(response).map { body: String =>
-          ConsulResponse(response.status, response.headers, body)
-        }
+        parseBody(response).map(body => ConsulResponse(response.status, response.headers, body))
       }
   }
 
@@ -240,15 +241,4 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem)
     }
 }
 
-//
-// Internal Objects
-// //////////////////////////
-case class ConsulResponse(status: StatusCode, headers: Seq[HttpHeader], body: String)
-
-case class ConsulException(message: String, response: HttpResponse, status: Option[StatusCode] = None)
-    extends Exception(message)
-
-object ConsulException {
-  def apply(status: StatusCode, msg: String) = new ConsulException(msg, null, Option(status)) // I feel dirty after this
-  def apply(msg: String)                     = new ConsulException(msg, null)                 // I feel dirty after this
-}
+object AkkaHttpConsulClient {}
