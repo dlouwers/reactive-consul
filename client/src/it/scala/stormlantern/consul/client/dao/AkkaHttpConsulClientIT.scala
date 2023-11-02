@@ -162,7 +162,7 @@ class AkkaHttpConsulClientIT extends ClientITSpec with RetryPolicy with Logging 
     keyDataSeq.head.value should equal(BinaryData(payload))
   }
 
-  it should "fail when aquiring a lock on a key with a non-existent session" in {
+  it should "fail when acquiring a lock on a key with a non-existent session" in {
     val payload = """ { "name" : "test" } """.getBytes("UTF-8")
     val key     = "my/key" + rnd.nextInt(100000)
     subject
