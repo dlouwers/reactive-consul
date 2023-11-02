@@ -10,7 +10,7 @@ import org.scalatest.matchers.should.Matchers
 import scala.concurrent.ExecutionContext
 
 abstract class ClientITSpec(val config: Config = ConfigFactory.load())
-    extends TestKit(ActorSystem("TestSystem", config.getConfig("crobox.clickhouse.client")))
+    extends TestKit(ActorSystem("TestSystem", config))
     with AnyFlatSpecLike
     with Matchers
     with ScalaFutures
