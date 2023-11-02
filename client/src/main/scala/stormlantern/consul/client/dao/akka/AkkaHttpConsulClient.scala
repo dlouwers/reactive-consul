@@ -183,7 +183,7 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem)
       validator: HttpResponse => Boolean = (in) => in.status.isSuccess()
   ): Future[ConsulResponse] = {
 
-    def validStatus(response: HttpResponse) =
+    def validStatus(response: HttpResponse): Future[HttpResponse] =
       if (validator(response)) {
         Future successful response
       } else {
@@ -196,7 +196,7 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem)
     //  Consul does not return the Charset with the Response Content Type, so just MediaType comparison
     //  Furthermore, when an error is returned the content type is text/plain, thank you HashiCorp ...
     // /////////////////////
-    def validContenType(resp: HttpResponse) = {
+    def validContentType(resp: HttpResponse): Future[HttpResponse] = {
       val expected = resp.status match {
         case st if st.isSuccess()     => expectedMediaType
         case st if st.isFailure()     => TextMediaType
@@ -250,5 +250,4 @@ case class ConsulException(message: String, response: HttpResponse, status: Opti
 object ConsulException {
   def apply(status: StatusCode, msg: String) = new ConsulException(msg, null, Option(status)) // I feel dirty after this
   def apply(msg: String)                     = new ConsulException(msg, null)                 // I feel dirty after this
-
 }
