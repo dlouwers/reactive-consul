@@ -6,7 +6,7 @@ import java.util.UUID
 import org.scalatest._
 import org.scalatest.concurrent.{ Eventually, IntegrationPatience, ScalaFutures }
 import stormlantern.consul.client.dao.org.apache.pekko.AkkaHttpConsulClient
-import stormlantern.consul.client.util.{ ConsulDockerContainer, Logging, RetryPolicy, TestActorSystem }
+import stormlantern.consul.client.util.{ ConsulDockerContainer, Logging, RetryPolicy }
 
 class AkkaHttpConsulClientIntegrationTest extends FlatSpec with Matchers with ScalaFutures with Eventually with IntegrationPatience with ConsulDockerContainer with TestActorSystem with RetryPolicy with Logging {
 

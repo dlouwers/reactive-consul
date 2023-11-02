@@ -1,16 +1,18 @@
 package stormlantern.consul.client
 
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
+import org.scalatest.flatspec.AnyFlatSpecLike
+import org.scalatest.matchers.should.Matchers
 import stormlantern.consul.client.dao.akka.AkkaHttpConsulClient
 import stormlantern.consul.client.dao.{ConsulHttpClient, ServiceRegistration}
 import stormlantern.consul.client.discovery.{ConnectionProvider, ConnectionProviderFactory, ConnectionStrategy, ServiceDefinition}
 import stormlantern.consul.client.loadbalancers.RoundRobinLoadBalancer
-import stormlantern.consul.client.util.{ConsulDockerContainer, Logging, TestActorSystem}
+import stormlantern.consul.client.util.{ConsulDockerContainer, Logging}
 
 import java.net.URL
 import scala.concurrent.Future
 
-class ServiceBrokerIntegrationTest extends FlatSpec with Matchers with ScalaFutures with Eventually with IntegrationPatience with ConsulDockerContainer with TestActorSystem with Logging {
+class ServiceBrokerIntegrationTest extends AnyFlatSpecLike with Matchers with ScalaFutures with Eventually with IntegrationPatience with ConsulDockerContainer with TestActorSystem with Logging {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
