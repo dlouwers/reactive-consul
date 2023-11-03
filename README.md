@@ -20,7 +20,7 @@ the low-level ConsulHttpClient.
 ### 0.2.0
 
 * Supports Scala 2.12
-* Uses akka-http instead of Spray, reducing the amount of dependencies (thanks [David Buschman](https://github.com/dbuschman7))
+* Uses pekko-http instead of Spray, reducing the amount of dependencies (thanks [David Buschman](https://github.com/dbuschman7))
 * Uses native JDK 8 base64, reducing the amount of dependencies (thanks [David Buschman](https://github.com/dbuschman7))
 * Bootstrapping the library with SRV record is now an extra dependency (thanks [David Buschman](https://github.com/dbuschman7)) 
 
