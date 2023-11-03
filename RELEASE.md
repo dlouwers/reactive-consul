@@ -58,4 +58,4 @@ sbt sonatypeRelease
 If something goes wrong and you want to cleanup/rollback, use `sbt sonatypeDropAll`
 
 You can verify if all has been published correctly by visiting the following url:<br>
-https://oss.sonatype.org/#nexus-search;quick~reactive%20crobox
+https://oss.sonatype.org/#nexus-search;quick~crobox

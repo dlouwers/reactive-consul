@@ -13,7 +13,7 @@ lazy val root = (project in file("."))
     publishArtifact := false,
     inThisBuild(
       List(
-        organization := "com.crobox",
+        organization := "com.crobox.stormlantern",
         scalaVersion := "2.13.8",
         crossScalaVersions := List("2.13.8"),
         javacOptions ++= Seq("-g", "-Xlint:unchecked", "-Xlint:deprecation", "-source", "11", "-target", "11"),
