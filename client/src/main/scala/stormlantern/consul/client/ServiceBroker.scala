@@ -5,9 +5,9 @@ import java.net.URL
 import scala.concurrent.duration._
 import scala.concurrent._
 
-import akka.actor._
-import akka.util.Timeout
-import akka.pattern.ask
+import org.apache.pekko.actor._
+import org.apache.pekko.util.Timeout
+import org.apache.pekko.pattern.ask
 
 import stormlantern.consul.client.dao._
 import stormlantern.consul.client.dao.akka.AkkaHttpConsulClient
@@ -20,12 +20,12 @@ class ServiceBroker(serviceBrokerActor: ActorRef, consulClient: ConsulHttpClient
 
   private[this] implicit val timeout = Timeout(10.seconds)
 
-  def withService[A, B](name: String)(f: A ⇒ Future[B]): Future[B] = {
+  def withService[A, B](name: String)(f: A => Future[B]): Future[B] = {
     logger.info(s"Trying to get connection for service $name")
-    serviceBrokerActor.ask(ServiceBrokerActor.GetServiceConnection(name)).mapTo[ConnectionHolder].flatMap { connectionHolder ⇒
+    serviceBrokerActor.ask(ServiceBrokerActor.GetServiceConnection(name)).mapTo[ConnectionHolder].flatMap { connectionHolder =>
       logger.info(s"Received connectionholder $connectionHolder")
       try {
-        connectionHolder.connection.flatMap(c ⇒ f(c.asInstanceOf[A]))
+        connectionHolder.connection.flatMap(c => f(c.asInstanceOf[A]))
       } finally {
         connectionHolder.loadBalancer ! LoadBalancerActor.ReturnConnection(connectionHolder)
       }
@@ -33,7 +33,7 @@ class ServiceBroker(serviceBrokerActor: ActorRef, consulClient: ConsulHttpClient
   }
 
   def registerService(registration: ServiceRegistration): Future[Unit] = {
-    consulClient.putService(registration).map { serviceId ⇒
+    consulClient.putService(registration).map { serviceId =>
       // Add shutdown hook
       val deregisterService = new Runnable {
         override def run(): Unit = consulClient.deleteService(serviceId)
@@ -42,7 +42,7 @@ class ServiceBroker(serviceBrokerActor: ActorRef, consulClient: ConsulHttpClient
     }
   }
 
-  def withLeader[A](key: String)(f: Option[LeaderInfo] ⇒ Future[A]): Future[A] = {
+  def withLeader[A](key: String)(f: Option[LeaderInfo] => Future[A]): Future[A] = {
     ???
   }
 
@@ -55,7 +55,7 @@ object ServiceBroker {
 
   def apply(rootActor: ActorSystem, httpClient: ConsulHttpClient, services: Set[ConnectionStrategy]): ServiceBroker = {
     implicit val ec = ExecutionContext.Implicits.global
-    val serviceAvailabilityActorFactory = (factory: ActorRefFactory, service: ServiceDefinition, listener: ActorRef, onlyHealthyServices: Boolean) ⇒
+    val serviceAvailabilityActorFactory = (factory: ActorRefFactory, service: ServiceDefinition, listener: ActorRef, onlyHealthyServices: Boolean) =>
       factory.actorOf(ServiceAvailabilityActor.props(httpClient, service, listener, onlyHealthyServices))
     val actorRef = rootActor.actorOf(ServiceBrokerActor.props(services, serviceAvailabilityActorFactory), "ServiceBroker")
     new ServiceBroker(actorRef, httpClient)

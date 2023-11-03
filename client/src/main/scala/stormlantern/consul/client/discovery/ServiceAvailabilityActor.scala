@@ -2,8 +2,8 @@ package stormlantern.consul.client
 package discovery
 
 import scala.concurrent.{ ExecutionContext, Future }
-import akka.actor._
-import akka.pattern.pipe
+import org.apache.pekko.actor._
+import org.apache.pekko.pattern.pipe
 import dao._
 import ServiceAvailabilityActor._
 
@@ -16,16 +16,16 @@ class ServiceAvailabilityActor(httpClient: ConsulHttpClient, serviceDefinition: 
   var serviceAvailabilityState: IndexedServiceInstances = IndexedServiceInstances.empty
 
   def receive: Receive = {
-    case Start ⇒
+    case Start =>
       self ! UpdateServiceAvailability(None)
-    case UpdateServiceAvailability(services: Option[IndexedServiceInstances]) ⇒
+    case UpdateServiceAvailability(services: Option[IndexedServiceInstances]) =>
       val (update, serviceChange) = updateServiceAvailability(services.getOrElse(IndexedServiceInstances.empty))
       update.foreach(listener ! _)
       if (!initialized && services.isDefined) {
         initialized = true
         listener ! Started
       }
-      serviceChange.map(changes ⇒ UpdateServiceAvailability(Some(changes))) pipeTo self
+      serviceChange.map(changes => UpdateServiceAvailability(Some(changes))) pipeTo self
   }
 
   def updateServiceAvailability(services: IndexedServiceInstances): (Option[ServiceAvailabilityUpdate], Future[IndexedServiceInstances]) = {

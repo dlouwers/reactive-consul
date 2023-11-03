@@ -1,6 +1,6 @@
 package stormlantern.consul.client.discovery
 
-import akka.actor.ActorRef
+import org.apache.pekko.actor.ActorRef
 
 import scala.concurrent.Future
 

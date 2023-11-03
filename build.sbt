@@ -1,155 +1,78 @@
-import Dependencies._
-import sbt.Keys._
-import com.typesafe.sbt.SbtScalariform
-import com.typesafe.sbt.pgp.PgpKeys
-import scalariform.formatter.preferences._
+// Scala Formatting
+ThisBuild / scalafmtVersion := "1.5.1"
+ThisBuild / scalafmtOnCompile := false     // all projects
+ThisBuild / scalafmtTestOnCompile := false // all projects
+
+releaseCrossBuild := true
+
 sonatypeProfileName := "com.crobox"
 
-// Common variables
-lazy val commonSettings = Seq(
-  scalaVersion := "2.13.1",
-  crossScalaVersions := Seq("2.12.11", "2.13.1"),
-  organization := "com.crobox",
-  resolvers ++= Dependencies.resolutionRepos,
-  scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
-  )
-
-lazy val reactiveConsul = (project in file("."))
-  .settings( commonSettings: _* )
-  .settings( publishSettings: _* )
-  .aggregate(client, dnsHelper, dockerTestkit/*, example*/)
-
-
-lazy val dnsHelper = (project in file("dns-helper"))
-  .settings( commonSettings: _* )
-  .settings( publishSettings: _* )
+lazy val root = (project in file("."))
   .settings(
-    name := "reactive-consul-dns",
-    publishArtifact in Compile := true,
-    publishArtifact in makePom := true,
-    publishArtifact in Test := false,
-    publishArtifact in IntegrationTest := false,
-    fork := true,
-    libraryDependencies ++= Seq(
-      spotifyDns
-    )
+    publish := {},
+    publishArtifact := false,
+    inThisBuild(
+      List(
+        organization := "com.crobox",
+        scalaVersion := "2.13.8",
+        crossScalaVersions := List("2.13.8"),
+        javacOptions ++= Seq("-g", "-Xlint:unchecked", "-Xlint:deprecation", "-source", "11", "-target", "11"),
+        scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-language:_", "-encoding", "UTF-8"),
+        publishTo := {
+          val nexus = "https://oss.sonatype.org/"
+          if (version.value.trim.endsWith("SNAPSHOT"))
+            Some("snapshots" at nexus + "content/repositories/snapshots")
+          else
+            Some("releases" at nexus + "service/local/staging/deploy/maven2")
+        },
+        pomExtra := {
+          <url>https://github.com/crobox/reactive-consul</url>
+            <licenses>
+              <license>
+                <name>MIT</name>
+                <url>https://opensource.org/licenses/MIT</url>
+                <distribution>repo</distribution>
+              </license>
+            </licenses>
+            <scm>
+              <url>git@github.com:crobox/reactive-consul.git</url>
+              <connection>scm:git@github.com:crobox/reactive-consul.git</connection>
+            </scm>
+            <developers>
+              <developer>
+                <id>crobox</id>
+                <name>crobox</name>
+                <url>https://github.com/crobox</url>
+              </developer>
+              <developer>
+                <id>dlouwers</id>
+                <name>Dirk Louwers</name>
+                <url>http://github.com/dlouwers</url>
+              </developer>
+            </developers>
+        }
+      )
+    ),
+    name := "reactive-consul"
   )
+  .aggregate(client)
 
-lazy val client = (project in file("client"))
-  .settings( commonSettings: _* )
-  .settings( publishSettings: _* )
+lazy val client: Project = (project in file("client"))
+  .configs(Config.CustomIntegrationTest)
+  .settings(Config.testSettings: _*)
   .settings(
-    name := "reactive-consul",
-    publishArtifact in Compile := true,
-    publishArtifact in makePom := true,
-    publishArtifact in Test := false,
-    publishArtifact in IntegrationTest := false,
-    fork := true,
+    name := "client",
+    sbtrelease.ReleasePlugin.autoImport.releasePublishArtifactsAction := PgpKeys.publishSigned.value,
     libraryDependencies ++= Seq(
-      akkaHttp,
-      akkaHttpSprayJson,
-      akkaActor,
-      akkaStream,
-      slf4j,
-      akkaSlf4j,
-      scalaTest % "it,test",
-      scalaMock % "test",
-      logback % "it,test",
-      akkaTestKit % "it,test",
-      spotifyDocker % "it,test"
+      "ch.qos.logback"   % "logback-classic" % "1.4.7",
+      "io.spray"         %% "spray-json"     % "1.3.6",
+      "org.apache.pekko" %% "pekko-actor"    % Dependencies.PekkoVersion,
+      "org.apache.pekko" %% "pekko-slf4j"    % Dependencies.PekkoVersion,
+      "org.apache.pekko" %% "pekko-stream"   % Dependencies.PekkoVersion,
+      "org.apache.pekko" %% "pekko-http"     % Dependencies.PekkoHttpVersion,
+      // test dependencies
+      "org.apache.pekko" %% "pekko-testkit" % Dependencies.PekkoVersion % Test,
+      "org.scalatest"    %% "scalatest"     % "3.2.15"                  % Test,
+      "org.scalamock"    %% "scalamock"     % "5.2.0"                   % Test
     )
   )
-  .configs( IntegrationTest )
-  .settings( Defaults.itSettings : _* )
-  .settings( SbtScalariform.scalariformSettingsWithIt : _* )
-  .dependsOn(dockerTestkit % "it-internal")
-
-lazy val dockerTestkit = (project in file("docker-testkit"))
-  .settings( commonSettings: _* )
-  .settings(
-    libraryDependencies ++= Seq(
-      slf4j,
-      scalaTest,
-      spotifyDocker
-    )
-  )
-  .configs( IntegrationTest )
-  .settings( Defaults.itSettings : _* )
-  .settings( SbtScalariform.scalariformSettingsWithIt : _* )
-  .settings( publishSettings: _* )
-
-
-//lazy val example = (project in file("example"))
-//  .aggregate(client)
-//  .dependsOn(client, dnsHelper)
-//  .settings( commonSettings: _* )
-//  .settings(
-//    crossScalaVersions := Seq()
-//  )
-//  .settings(
-//      libraryDependencies ++= Seq(
-//        sprayClient,
-//        sprayRouting,
-//        sprayJson,
-//        slf4j,
-//        logback
-//      )
-//  )
-//  .settings(
-//    fork := true,
-//    libraryDependencies ++= Seq(
-//      akkaActor,
-//      sprayClient,
-//      sprayJson
-//    )
-//  )
-//  .settings( publishSettings: _* )
-//  .enablePlugins(JavaAppPackaging)
-//  .settings(
-//    packageName in Docker := "reactive-consul-example",
-//    maintainer in Docker := "Dirk Louwers <dirk.louwers@stormlantern.nl>",
-//    dockerExposedPorts in Docker := Seq(8080),
-//    dockerExposedVolumes in Docker := Seq("/opt/docker/logs")
-//  )
-
-lazy val publishSettings = Seq(
-  publishArtifact := false,
-  publishMavenStyle := true,
-  pomIncludeRepository := { _ => false },
-  sbtrelease.ReleasePlugin.autoImport.releasePublishArtifactsAction := PgpKeys.publishSigned.value,
-  publishTo := {
-    val nexus = "https://oss.sonatype.org/"
-    if (isSnapshot.value)
-      Some("snapshots" at nexus + "content/repositories/snapshots")
-    else
-      Some("releases" at nexus + "service/local/staging/deploy/maven2")
-  },
-  pomExtra := (
-    <url>http://github.com/crobox/reactive-consul</url>
-      <licenses>
-        <license>
-          <name>MIT</name>
-          <url>https://opensource.org/licenses/MIT</url>
-          <distribution>repo</distribution>
-        </license>
-      </licenses>
-      <scm>
-        <url>git@github.com:crobox/reactive-consul.git</url>
-        <connection>scm:git@github.com:crobox/reactive-consul.git</connection>
-      </scm>
-      <developers>
-        <developer>
-          <id>sjoerdmulder</id>
-          <name>Sjoerd Mulder</name>
-          <url>http://github.com/sjoerdmulder</url>
-        </developer>
-        <developer>
-          <id>dlouwers</id>
-          <name>Dirk Louwers</name>
-          <url>http://github.com/dlouwers</url>
-        </developer>
-      </developers>
-    )
-)
-
-Revolver.settings.settings
