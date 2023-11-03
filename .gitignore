@@ -30,3 +30,4 @@ bin/
 .idea_modules
 projectFilesBackup
 
+/.bsp/sbt.json
