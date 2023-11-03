@@ -13,7 +13,7 @@ lazy val root = (project in file("."))
     publishArtifact := false,
     inThisBuild(
       List(
-        organization := "com.crobox.stormlantern",
+        organization := "com.crobox",
         scalaVersion := "2.13.8",
         crossScalaVersions := List("2.13.8"),
         javacOptions ++= Seq("-g", "-Xlint:unchecked", "-Xlint:deprecation", "-source", "11", "-target", "11"),
@@ -61,7 +61,7 @@ lazy val client: Project = (project in file("client"))
   .configs(Config.CustomIntegrationTest)
   .settings(Config.testSettings: _*)
   .settings(
-    name := "client",
+    name := "reactive-consul",
     sbtrelease.ReleasePlugin.autoImport.releasePublishArtifactsAction := PgpKeys.publishSigned.value,
     libraryDependencies ++= Seq(
       "ch.qos.logback"   % "logback-classic" % "1.4.7",
