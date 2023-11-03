@@ -161,6 +161,9 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem)
           mediaType match {
             case JsonMediaType => Future.successful(Option(body.parseJson.convertTo[Boolean]).getOrElse(false))
             case TextMediaType => Future.successful(Option(body.toBoolean).getOrElse(false))
+            case _ =>
+              logger.info(s"Unknown content/media type: $mediaType. Falling back to $TextMediaType")
+              Future.successful(Option(body.toBoolean).getOrElse(false))
           }
         case ConsulResponse(InternalServerError, _, _, body) if body.startsWith("invalid session") =>
           Future.successful(false)
@@ -220,7 +223,6 @@ class AkkaHttpConsulClient(host: URL)(implicit actorSystem: ActorSystem)
       .flatMap(validStatus)
       .flatMap { response: HttpResponse =>
         parseBody(response).map(body => {
-//          logger.info("BODY: " + body)
           ConsulResponse(response.status, response.entity.contentType.mediaType, response.headers, body)
         })
       }

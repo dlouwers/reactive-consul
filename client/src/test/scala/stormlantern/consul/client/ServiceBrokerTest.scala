@@ -17,8 +17,8 @@ class ServiceBrokerTest extends ClientSpec {
   }
 
   "The ServiceBroker" should "return a service connection when requested" in new TestScope {
-    (connectionHolder.connection _).expects().returns(Future.successful(true))
-    (connectionHolder.loadBalancer _).expects().returns(loadBalancer)
+    (() => connectionHolder.connection).expects().returns(Future.successful(true))
+    (() => connectionHolder.loadBalancer).expects().returns(loadBalancer)
     val sut = new ServiceBroker(self, httpClient)
 
     val result: Future[Boolean] = sut.withService("service1") { service: Boolean =>
@@ -33,8 +33,8 @@ class ServiceBrokerTest extends ClientSpec {
   }
 
   it should "return the connection when an error occurs" in new TestScope {
-    (connectionHolder.connection _).expects().returns(Future.successful(true))
-    (connectionHolder.loadBalancer _).expects().returns(loadBalancer)
+    (() => connectionHolder.connection).expects().returns(Future.successful(true))
+    (() => connectionHolder.loadBalancer).expects().returns(loadBalancer)
     val sut = new ServiceBroker(self, httpClient)
 
     val result: Future[Boolean] = sut.withService[Boolean, Boolean]("service1") { service: Boolean =>

@@ -17,7 +17,7 @@ class LoadBalancerActorTest extends ClientSpec {
 
   "The LoadBalancerActor" should "hand out a connection holder when requested" in new TestScope {
     val instanceKey = "instanceKey"
-    (loadBalancer.selectConnection _).expects().returns(Some(instanceKey))
+    (() => loadBalancer.selectConnection).expects().returns(Some(instanceKey))
     val sut = TestActorRef(new LoadBalancerActor(loadBalancer, "service1"))
     (connectionProvider.getConnectionHolder _).expects(instanceKey, sut).returns(Future.successful(connectionHolder))
     (connectionProvider.destroy _).expects()
@@ -30,7 +30,7 @@ class LoadBalancerActorTest extends ClientSpec {
   it should "return an error when a connectionprovider fails to provide a connection" in new TestScope {
     val instanceKey       = "instanceKey"
     val expectedException = new ServiceUnavailableException("service1")
-    (loadBalancer.selectConnection _).expects().returns(Some(instanceKey))
+    (() => loadBalancer.selectConnection).expects().returns(Some(instanceKey))
     val sut = TestActorRef(new LoadBalancerActor(loadBalancer, "service1"))
     (connectionProvider.getConnectionHolder _).expects(instanceKey, sut).returns(Future.failed(expectedException))
     (connectionProvider.destroy _).expects()
@@ -42,9 +42,9 @@ class LoadBalancerActorTest extends ClientSpec {
 
   it should "return a connection holder when requested" in new TestScope {
     val instanceKey = "instanceKey"
-    (connectionHolder.id _).expects().returns(instanceKey)
+    (() => connectionHolder.id).expects().returns(instanceKey)
     (connectionProvider.returnConnection _).expects(connectionHolder)
-    (connectionHolder.id _).expects().returns(instanceKey)
+    (() => connectionHolder.id).expects().returns(instanceKey)
     (loadBalancer.connectionReturned _).expects(instanceKey)
     (connectionProvider.destroy _).expects()
     val sut = TestActorRef(new LoadBalancerActor(loadBalancer, "service1"))
