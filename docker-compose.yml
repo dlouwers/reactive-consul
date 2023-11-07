@@ -1,0 +1,9 @@
+version: '3'
+services:
+  consul:
+    image: consul:1.5.3
+    expose:
+      - "8500"
+    ports:
+      - "${CI_JOB-8500:}8500"
+    command: "agent -dev -client 0.0.0.0"
